@@ -1425,7 +1425,7 @@
     "toast_flush_failed": "Error de descarga: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Clonación de voz local. Nada sale de tu máquina.",
+    "tagline": "Crea voces, dobla y transcribe con Nimi.",
     "coming_soon": "Muy pronto",
     "switch_to_light": "Cambiar al tema claro",
     "switch_to_dark": "Cambiar al tema oscuro"
@@ -2423,7 +2423,7 @@
     "asr_hint": "Corrija cualquier error de ASR ahora: la dicción precisa ahorra intentos de TTS más adelante.",
     "translate_title": "Traducciones listas",
     "translate_cta": "Generar doblaje",
-    "translate_hint": "Hojee el texto de destino. Las líneas demasiado largas aumentan la velocidad; También puedes editar directamente.",
+    "translate_hint": "Revisa y edita la traducción antes de generar el audio.",
     "done_title": "doblaje completo",
     "done_hint": "Revise las proporciones de sincronización y sincronización. Modifica cualquier línea y presiona \"Regeneración cambiada\" para una rehacer parcial rápida.",
     "segment_one": "{{count}} segmento",
@@ -2571,5 +2571,25 @@
     "captured": "Se capturaron {{count}} líneas de registro con problemas",
     "contextNotice": "El agente seleccionado recibe este informe, la pantalla actual, los registros recientes de la aplicación y del backend, y los diagnósticos del sistema.",
     "complete": "Completado"
+  },
+  "nimi": {
+    "configuration": "Configuración de IA de Nimi",
+    "configuration_description": "Elige los recursos de IA para voces, transcripción y traducción.",
+    "provenance": "Los metadatos de los archivos exportados identifican el audio sintético. No se aplica una marca de agua neuronal.",
+    "referenceControls": "Las voces de referencia no admiten etiquetas expresivas ni indicaciones de estilo. Quita las etiquetas antes de generar; el texto se conserva para editarlo."
+  },
+  "voiceSelector": {
+    "engineDefault": "Valor predeterminado del motor",
+    "clone": "Voces clonadas",
+    "designed": "Voces diseñadas",
+    "presets": "Preajustes",
+    "fromVideo": "Del vídeo",
+    "missingVoice": "Voz no encontrada (volver a elegir)",
+    "preview": "Vista previa de voz",
+    "openGallery": "Abrir en la galería de voz",
+    "createVoice": "Crea una nueva voz",
+    "gallery": "Galería",
+    "addingVoice": "Añadiendo voz…",
+    "addVoiceFailed": "No se pudo añadir esa voz"
   }
 }

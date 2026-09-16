@@ -1,4 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { installNimiElectronRuntimeBridge } from '@nimiplatform/kit/shell/electron/preload-cjs';
+
+installNimiElectronRuntimeBridge({ contextBridge, ipcRenderer });
 import type {
   BackendStatus,
   DataRelocationStage,

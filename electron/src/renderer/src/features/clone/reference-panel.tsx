@@ -391,7 +391,6 @@ export function OptionalDetails({
       setOpen(true);
   }, [refText, transcription?.state]);
   const transcriptId = useId();
-  const styleId = useId();
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="rounded-lg bg-muted/30">
       <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-[length:var(--text-label)] font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
@@ -453,17 +452,7 @@ export function OptionalDetails({
               </Button>
             )}
           </div>
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <Label htmlFor={styleId} className="text-[length:var(--text-label)]">
-              {t('clone.style')}
-            </Label>
-            <Input
-              id={styleId}
-              value={instruct}
-              onChange={(event) => setCloneSetting('instruct', event.target.value)}
-              placeholder={t('clone.style_placeholder')}
-            />
-          </div>
+
         </div>
       </CollapsibleContent>
     </Collapsible>

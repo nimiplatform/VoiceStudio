@@ -61,9 +61,6 @@ def _ensure_short_hf_cache_on_windows():
     os.environ["HF_HOME"] = short_cache
     os.environ["HF_HUB_CACHE"] = short_cache
 
-_ensure_short_hf_cache_on_windows()
-
-
 DATA_DIR = get_app_data_dir()
 VOICES_DIR = os.path.join(DATA_DIR, "voices")       # Reference audio for profiles
 OUTPUTS_DIR = os.path.join(DATA_DIR, "outputs")      # Generated audio files

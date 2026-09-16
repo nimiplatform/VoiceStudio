@@ -1425,7 +1425,7 @@
     "toast_flush_failed": "Échec du rinçage : {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Clonage de voix locale. Rien ne quitte votre machine.",
+    "tagline": "Créez des voix, doublez et transcrivez avec Nimi.",
     "coming_soon": "À venir",
     "switch_to_light": "Passer au thème clair",
     "switch_to_dark": "Passer au thème sombre"
@@ -2423,7 +2423,7 @@
     "asr_hint": "Corrigez toutes les erreurs ASR maintenant : une diction serrée enregistre les tentatives TTS plus tard.",
     "translate_title": "Traductions prêtes",
     "translate_cta": "Générer un doublage",
-    "translate_hint": "Parcourez le texte cible. Les lignes trop longues sont accélérées ; vous pouvez également modifier directement.",
+    "translate_hint": "Relisez et modifiez la traduction avant de générer l’audio.",
     "done_title": "Doublage terminé",
     "done_hint": "Examinez les ratios de synchronisation et de synchronisation. Ajustez n'importe quelle ligne et appuyez sur \"Regen changé\" pour une restauration partielle rapide.",
     "segment_one": "{{count}} segment",
@@ -2571,5 +2571,25 @@
     "captured": "{{count}} lignes de journal problématiques capturées",
     "contextNotice": "L’agent sélectionné reçoit ce rapport, l’écran actuel, les journaux récents de l’application et du backend, ainsi que les diagnostics système.",
     "complete": "Complet"
+  },
+  "nimi": {
+    "configuration": "Configuration IA de Nimi",
+    "configuration_description": "Choisissez les ressources IA pour les voix, la transcription et la traduction.",
+    "provenance": "Les métadonnées des fichiers exportés identifient les voix synthétiques. Aucun filigrane neuronal n’est appliqué.",
+    "referenceControls": "Les voix de référence ne prennent pas en charge les balises expressives ni les consignes de style. Retirez ces balises avant la génération ; le texte reste modifiable."
+  },
+  "voiceSelector": {
+    "engineDefault": "Moteur par défaut",
+    "clone": "Voix clonées",
+    "designed": "Voix conçues",
+    "presets": "Préréglages",
+    "fromVideo": "À partir de la vidéo",
+    "missingVoice": "Voix introuvable (re-sélectionner)",
+    "preview": "Aperçu de la voix",
+    "openGallery": "Ouvrir dans la galerie vocale",
+    "createVoice": "Créer une nouvelle voix",
+    "gallery": "Galerie",
+    "addingVoice": "Ajout de la voix…",
+    "addVoiceFailed": "Impossible d'ajouter cette voix"
   }
 }

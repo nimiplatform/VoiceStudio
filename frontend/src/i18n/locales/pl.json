@@ -2024,7 +2024,7 @@
     "asr_hint": "Napraw teraz wszelkie błędy ASR — ścisła dykcja pozwala uniknąć późniejszych prób TTS.",
     "translate_title": "Tłumaczenia gotowe",
     "translate_cta": "Wygeneruj dubbing",
-    "translate_hint": "Przejrzyj tekst docelowy. Linie o zbyt dużej długości uzyskują zwiększoną prędkość; możesz także edytować bezpośrednio.",
+    "translate_hint": "Sprawdź i edytuj tłumaczenie przed wygenerowaniem dźwięku.",
     "done_title": "Dubbing ukończony",
     "done_hint": "Przejrzyj współczynniki synchronizacji i synchronizacji. Popraw dowolną linię i naciśnij „Regen zmieniony”, aby szybko wykonać częściowe ponowne wykonanie.",
     "segment_one": "Segment {{count}}",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· model rozładowany",
     "toast_flush_failed": "Spłukiwanie nie powiodło się: {{message}}",
     "toast_project_saved": "Projekt zapisany",
-    "toast_project_created": "Projekt stworzony"
+    "toast_project_created": "Projekt stworzony",
+    "tagline": "Twórz głosy, dubbing i transkrypcje z Nimi."
   },
   "update": {
     "available": "Dostępna aktualizacja {{version}}",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Wstrzymaj",
     "play": "Odtwórz"
+  },
+  "nimi": {
+    "configuration": "Konfiguracja AI Nimi",
+    "configuration_description": "Wybierz zasoby AI do głosów, transkrypcji i tłumaczenia.",
+    "provenance": "Metadane eksportowanych plików oznaczają dźwięk syntetyczny. Neuronowy znak wodny nie jest stosowany.",
+    "referenceControls": "Głosy referencyjne nie obsługują znaczników ekspresji ani wskazówek stylu. Usuń znaczniki przed generowaniem; tekst pozostaje do edycji."
   }
 }

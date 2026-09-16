@@ -6,7 +6,6 @@ import { BarChart3Icon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { apiJson } from '@/lib/api/client';
 import { useBackendStatus } from '@/hooks/use-backend-status';
-import { setupWasStarted } from '@/lib/setup-progress';
 import { disableAnalytics, enableAnalytics } from '../../../../../frontend/src/utils/analytics';
 
 interface AnalyticsState {
@@ -139,17 +138,9 @@ export function AnalyticsConsentBanner() {
     enabled: backend.stage === 'ready',
     retry: false,
   });
-  const setup = useQuery({
-    queryKey: ['setup-status'],
-    queryFn: ({ signal }) => apiJson<{ models_ready: boolean }>('/setup/status', { signal }),
-    enabled: backend.stage === 'ready',
-    retry: false,
-  });
   const state = analytics.data;
   if (
     hidden ||
-    setupWasStarted() ||
-    setup.data?.models_ready !== true ||
     !state?.available ||
     state.prompted ||
     state.opted_in

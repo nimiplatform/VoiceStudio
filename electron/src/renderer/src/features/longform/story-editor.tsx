@@ -1,3 +1,5 @@
+import SearchableSelect from '../../../../../../frontend/src/components/SearchableSelect';
+import VoiceSelector from '../../../../../../frontend/src/components/VoiceSelector';
 import { StoryStems } from './story-stems';
 import { WaveformPlayer } from '@/components/waveform-player';
 import { previewStoryLine } from './story-preview';
@@ -16,10 +18,6 @@ import {
   ArrowUpIcon,
   BookOpenTextIcon,
   ChevronRightIcon,
-  CircleCheckIcon,
-  CircleQuestionMarkIcon,
-  LaughIcon,
-  AnnoyedIcon,
   PauseIcon,
   PlayIcon,
   PlusIcon,
@@ -27,8 +25,6 @@ import {
   SparklesIcon,
   TrashIcon,
   UsersIcon,
-  WindIcon,
-  ZapIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,14 +41,6 @@ interface Props {
   onBusy?: (busy: boolean) => void;
 }
 
-const STORY_TONES = [
-  { tag: '[laughter]', icon: LaughIcon, key: 'laugh' },
-  { tag: '[sigh]', icon: WindIcon, key: 'sigh' },
-  { tag: '[question-en]', icon: CircleQuestionMarkIcon, key: 'question' },
-  { tag: '[surprise-wa]', icon: ZapIcon, key: 'surprise' },
-  { tag: '[confirmation-en]', icon: CircleCheckIcon, key: 'confirm' },
-  { tag: '[dissatisfaction-hnn]', icon: AnnoyedIcon, key: 'dissatisfaction' },
-] as const;
 
 function insertStoryToken(text: string, caret: number, token: string) {
   const before = text.slice(0, caret);
@@ -108,32 +96,9 @@ export function StoryCast({ draft, profiles, disabled, onChange }: Props) {
               <TrashIcon />
             </Button>
           </div>
-          <details>
-            <summary className="cursor-pointer text-xs text-muted-foreground">
-              {profiles.find((p) => p.id === character.profileId)?.name ||
-                t('stories.defaultVoice')}
-            </summary>
-            <div className="max-h-40 overflow-y-auto">
-              {[{ id: null, name: t('stories.defaultVoice') }, ...profiles].map((profile) => (
-                <Button
-                  key={profile.id || 'default'}
-                  variant={character.profileId === profile.id ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="w-full justify-start"
-                  disabled={disabled}
-                  onClick={() =>
-                    onChange({
-                      cast: draft.cast.map((c) =>
-                        c.id === character.id ? { ...c, profileId: profile.id } : c,
-                      ),
-                    })
-                  }
-                >
-                  {profile.name}
-                </Button>
-              ))}
-            </div>
-          </details>
+          <VoiceSelector value={character.profileId || ''} profiles={profiles} gallery={false} menuPortal
+            ariaLabel={t('stories.voice')} defaultLabel={t('stories.defaultVoice')} disabled={disabled}
+            onChange={(value: string) => onChange({ cast: draft.cast.map((c) => c.id === character.id ? { ...c, profileId: value || null } : c) })} />
         </div>
       ))}
       <Button
@@ -311,7 +276,7 @@ export function StoryEditor({
       })),
     });
   return (
-    <div className="min-h-0 flex-1 space-y-4">
+    <div className="shrink-0 space-y-4">
       {previewError && (
         <PipelineFailure fallback={previewError} onDismiss={() => setPreviewError(null)} />
       )}
@@ -507,43 +472,10 @@ export function StoryEditor({
           {preview?.id === line.id && (
             <WaveformPlayer showWaveform={false} src={preview.url} source="story-line-preview" />
           )}
-          <details>
-            <summary className="cursor-pointer text-xs text-muted-foreground">
-              {draft.cast.find((c) => c.id === line.character)?.name || t('stories.defaultVoice')}
-            </summary>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {[{ id: '', name: t('stories.defaultVoice') }, ...draft.cast].map((character) => (
-                <Button
-                  key={character.id}
-                  size="sm"
-                  variant={line.character === character.id ? 'secondary' : 'ghost'}
-                  disabled={disabled}
-                  onClick={() => update(line.id, { character: character.id || undefined })}
-                >
-                  {character.name}
-                </Button>
-              ))}
-            </div>
-          </details>
-          <details>
-            <summary className="cursor-pointer text-xs text-muted-foreground">
-              {t('stories.voice')} ?{' '}
-              {profiles.find((p) => p.id === line.profileId)?.name || t('stories.defaultVoice')}
-            </summary>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {[{ id: null, name: t('stories.defaultVoice') }, ...profiles].map((profile) => (
-                <Button
-                  key={profile.id || 'default'}
-                  size="sm"
-                  variant={line.profileId === profile.id ? 'secondary' : 'ghost'}
-                  disabled={disabled}
-                  onClick={() => update(line.id, { profileId: profile.id })}
-                >
-                  {profile.name}
-                </Button>
-              ))}
-            </div>
-          </details>
+          <SearchableSelect value={line.character || ''} options={[{value:'',label:t('stories.defaultVoice')},...draft.cast.map(c=>({value:c.id,label:c.name}))]} onChange={(value)=>update(line.id,{character:value||undefined})} disabled={disabled} ariaLabel={t('stories.character')} menuPortal />
+          <VoiceSelector value={line.profileId || ''} profiles={profiles} gallery={false} menuPortal
+            ariaLabel={t('stories.voice')} defaultLabel={t('stories.defaultVoice')} disabled={disabled}
+            onChange={(value: string) => update(line.id, { profileId: value || null })} />
           <details>
             <summary className="cursor-pointer text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
@@ -578,27 +510,10 @@ export function StoryEditor({
             <summary className="cursor-pointer text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <SlidersHorizontalIcon className="size-3.5" />
-                {t('stories.tune')} · {(line.speed ?? draft.globalSpeed).toFixed(2)}×
+                {t('stories.speed')} · {(line.speed ?? draft.globalSpeed).toFixed(2)}×
               </span>
             </summary>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {STORY_TONES.map((tone) => {
-                const Icon = tone.icon;
-                return (
-                  <Button
-                    key={tone.tag}
-                    size="xs"
-                    variant="outline"
-                    disabled={disabled}
-                    title={tone.tag}
-                    onClick={() => insertIntoLine(line, tone.tag)}
-                  >
-                    <Icon />
-                    {t(`stories.tones.${tone.key}`)}
-                  </Button>
-                );
-              })}
-            </div>
+            <p className="mt-3 text-xs text-muted-foreground">{t('nimi.referenceControls')}</p>
             <input
               className="mt-3 w-full accent-primary"
               aria-label={t('stories.speed')}

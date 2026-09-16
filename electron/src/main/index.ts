@@ -4,14 +4,15 @@ import { isTrustedRenderer } from './trusted-renderer';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { mkdirSync } from 'node:fs';
 import { app, BrowserWindow, ipcMain, nativeImage, session, shell, Tray } from 'electron';
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
-import { BackendSupervisor, backendRoot } from './backend';
+import { BackendSupervisor, backendRoot } from './business-backend';
+import { registerNimiHost, readDevelopmentRendererUrl } from './nimi-host';
+import { NimiJobs } from './nimi-jobs';
 import { registerIpc, wireWindowMaximizeEvents } from './ipc';
 import { APP_ORIGIN, installAppProtocol, registerAppScheme } from './protocol';
 import { startDevBackendProxy } from './dev-backend-proxy';
-import { DesktopUpdater, registerUpdateIpc } from './updater';
-import { registerRepairAgents } from './repair-agents';
 import { installRendererPermissions } from './media-permissions';
 import { installBlankWindowGuard } from './blank-window-guard';
 import { shouldOpenDevTools } from './devtools-policy';
@@ -30,9 +31,19 @@ process.stdout?.on('error', () => {});
 process.stderr?.on('error', () => {});
 
 const APP_USER_MODEL_ID = 'com.voicestudio.desktop';
+app.setName('VoiceStudio');
+// Development must retain Desktop's --user-data-dir for its supervised profile
+// and automatic CDP discovery. Installed versions keep one disclosed App root.
+if (app.isPackaged) {
+  const profileDirectory = join(app.getPath('appData'), 'OmniVoice', 'electron-profile');
+  mkdirSync(profileDirectory, { recursive: true });
+  app.setPath('userData', profileDirectory);
+}
 const here = dirname(fileURLToPath(import.meta.url));
-const PRELOAD_PATH = join(here, '../preload/index.mjs');
-const RENDERER_DIR = join(here, '../renderer');
+const PRELOAD_PATH = join(here, 'preload.cjs');
+const RENDERER_DIR = join(here, '../dist');
+const supervisedRenderer = readDevelopmentRendererUrl();
+if (supervisedRenderer) Object.assign(process.env, { ELECTRON_RENDERER_URL: supervisedRenderer });
 
 // Neutral startup surface; transparent caption controls follow the CSS title bar.
 const BACKGROUND = '#0a0a0a';
@@ -53,8 +64,6 @@ let quitting = false;
 let tray: Tray | null = null;
 let closeCapture: (() => void) | null = null;
 let closeDevProxy: (() => Promise<void>) | null = null;
-let closeUpdates: (() => void) | null = null;
-let closeRepairAgents: (() => void) | null = null;
 let quitPreparation: Promise<void> | null = null;
 
 const PERSISTENCE_FLUSH_REQUEST = 'app:flush-persistence';
@@ -91,10 +100,6 @@ async function tearDownNativeResources(): Promise<void> {
   closeWatch = null;
   closeCapture?.();
   closeCapture = null;
-  closeUpdates?.();
-  closeUpdates = null;
-  closeRepairAgents?.();
-  closeRepairAgents = null;
   tray?.destroy();
   tray = null;
   const proxyTeardown = closeDevProxy?.() ?? Promise.resolve();
@@ -126,6 +131,7 @@ function createWindow(): BrowserWindow {
     is.dev && process.env.ELECTRON_RENDERER_URL
       ? process.env.ELECTRON_RENDERER_URL
       : `${APP_ORIGIN}/index.html`;
+  console.info('[renderer] loading', appUrl);
   const win = new BrowserWindow({
     icon: brandIconPath(process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     width: 1280,
@@ -141,13 +147,14 @@ function createWindow(): BrowserWindow {
     webPreferences: {
       preload: PRELOAD_PATH,
       contextIsolation: true,
-      // ESM preload scripts (electron-vite emits .mjs) require an unsandboxed renderer.
-      sandbox: false,
+      sandbox: true,
       nodeIntegration: false,
     },
   });
 
   win.on('ready-to-show', () => activateLiveWindow(win));
+  win.webContents.on('did-finish-load', () => console.info('[renderer] loaded', win.webContents.getURL()));
+  win.webContents.on('did-fail-load', (_event, code, description, url) => console.error('[renderer] failed', code, description, url));
   win.on('close', (event) => {
     if (quitting) return;
     event.preventDefault();
@@ -236,7 +243,10 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
       installRendererPermissions(session.defaultSession, process.env.ELECTRON_RENDERER_URL);
       app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window));
 
-      const backend = new BackendSupervisor();
+      let jobs: NimiJobs | undefined;
+      const nimi = registerNimiHost(supervisedRenderer || APP_ORIGIN + '/index.html', () => { jobs?.invalidate(); supervisor?.cancelTasks(); });
+      jobs = new NimiJobs(nimi.services);
+      const backend = new BackendSupervisor(jobs);
       supervisor = backend;
       console.log(`[supervisor] backend root: ${backendRoot()} (packaged=${app.isPackaged})`);
       backend.subscribe((s) => {
@@ -257,12 +267,6 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
           app.exit(0);
         },
       );
-      closeRepairAgents = registerRepairAgents(
-        backend,
-        backendRoot(),
-        () => mainWindow,
-        () => mainErrors.recent(),
-      );
       if (is.dev) {
         const proxy = await startDevBackendProxy(
           () => backend.baseUrl,
@@ -271,29 +275,6 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
         );
         closeDevProxy = proxy.close;
       }
-      const updater = new DesktopUpdater();
-      const closeUpdateIpc = registerUpdateIpc(
-        updater,
-        () => mainWindow,
-        async () => {
-          await flushRendererPersistence();
-          await tearDownNativeResources();
-          quitting = true;
-        },
-      );
-      const startupUpdateCheck = setTimeout(
-        () => observeMainProcessTask(updater.check(true), mainErrors, 'Startup update check'),
-        10_000,
-      );
-      const periodicUpdateCheck = setInterval(
-        () => observeMainProcessTask(updater.check(true), mainErrors, 'Periodic update check'),
-        6 * 60 * 60 * 1_000,
-      );
-      closeUpdates = () => {
-        clearTimeout(startupUpdateCheck);
-        clearInterval(periodicUpdateCheck);
-        closeUpdateIpc();
-      };
       mainWindow = createWindow();
       closeWatch = installWatchFolders(
         () => mainWindow,

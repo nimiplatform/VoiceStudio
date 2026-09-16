@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Spolning misslyckades: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Lokal röstkloning. Inget lämnar din maskin.",
+    "tagline": "Skapa röster, dubbning och transkription med Nimi.",
     "coming_soon": "Kommer snart",
     "switch_to_light": "Byt till ljustema",
     "switch_to_dark": "Byt till mörkt tema"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Åtgärda eventuella ASR-fel nu – tight diction sparar TTS-försök senare.",
     "translate_title": "Översättningarna är klara",
     "translate_cta": "Generera dub",
-    "translate_hint": "Skumma måltexten. Överlånga linjer får fart; du kan också redigera direkt.",
+    "translate_hint": "Granska och redigera översättningen innan du genererar ljudet.",
     "done_title": "Dubbningen är klar",
     "done_hint": "Granska timing och synkroniseringsförhållanden. Justera vilken linje som helst och tryck på \"Regen ändrad\" för en snabb delvis redo.",
     "segment_one": "{{count}} segment",
@@ -2569,5 +2569,25 @@
     "captured": "{{count}} problemrader i loggen samlades in",
     "contextNotice": "Den valda agenten får den här rapporten, den aktuella vyn, aktuella app- och backendloggar samt systemdiagnostik.",
     "complete": "Klart"
+  },
+  "nimi": {
+    "configuration": "Nimi AI-konfiguration",
+    "configuration_description": "Välj AI-resurser för röster, transkribering och översättning.",
+    "provenance": "Exporterade filers metadata markerar syntetiskt ljud. Ingen neural vattenstämpel används.",
+    "referenceControls": "Referensröster stöder inte uttryckstaggar eller stilinstruktioner. Ta bort taggarna före generering; texten finns kvar för redigering."
+  },
+  "voiceSelector": {
+    "engineDefault": "Standard för motor",
+    "clone": "Klonade röster",
+    "designed": "Designade röster",
+    "presets": "Förinställningar",
+    "fromVideo": "Från video",
+    "missingVoice": "Rösten hittades inte (välj om)",
+    "preview": "Förhandsgranska röst",
+    "openGallery": "Öppna i Voice Gallery",
+    "createVoice": "Skapa en ny röst",
+    "gallery": "Galleri",
+    "addingVoice": "Lägger till röst…",
+    "addVoiceFailed": "Kunde inte lägga till den rösten"
   }
 }

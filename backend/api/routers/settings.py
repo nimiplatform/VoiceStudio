@@ -318,7 +318,6 @@ class _RefinementBody(BaseModel):
 
 def _refinement_state():
     from services.refinement import (
-        _skill_llm,
         get_last_refine_status,
         get_refinement_config,
     )
@@ -331,7 +330,10 @@ def _refinement_state():
     # `last_refine_status`: {ok, reason, at} from the most recent final, so the
     # panel can flag a configured-but-failing LLM (the real safety is the hard
     # refine timeout, which keeps a dead endpoint from ever stalling the final).
-    cfg["llm_ready"] = _skill_llm().id != "off"
+    from business.carrier import call_sync
+    status = call_sync('status', {})
+    cfg["llm_ready"] = any(item['capabilityContract'] == 'text.generate' and item['state'] == 'ready'
+                           for item in status['effectiveSelections'])
     cfg["last_refine_status"] = get_last_refine_status()
     return cfg
 
@@ -880,7 +882,6 @@ async def get_storage_report(refresh: bool = Query(False)):
     reuses the setup wizard's constant so both surfaces warn at the same
     threshold.
     """
-    from api.routers.setup.wizard import MIN_FREE_GB
     from core.config import DATA_DIR
     from services import storage_report
 
@@ -890,7 +891,7 @@ async def get_storage_report(refresh: bool = Query(False)):
             data_dir=DATA_DIR,
             hf_cache_dir=_effective_models_dir(),
             app_venv=storage_report.default_app_venv(),
-            min_free_gb=MIN_FREE_GB,
+            min_free_gb=storage_report.DEFAULT_MIN_FREE_GB,
             refresh=refresh,
         )
     except Exception:

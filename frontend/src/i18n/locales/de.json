@@ -2024,7 +2024,7 @@
     "asr_hint": "Beheben Sie jetzt alle ASR-Fehler – eine straffe Diktion erspart spätere TTS-Versuche.",
     "translate_title": "Übersetzungen bereit",
     "translate_cta": "Dub generieren",
-    "translate_hint": "Überfliegen Sie den Zieltext. Überlange Leitungen werden schneller; Sie können es auch direkt bearbeiten.",
+    "translate_hint": "Prüfe und bearbeite die Übersetzung vor der Audioerzeugung.",
     "done_title": "Dub abgeschlossen",
     "done_hint": "Überprüfen Sie Timing und Synchronisierungsverhältnisse. Optimieren Sie eine beliebige Zeile und klicken Sie auf „Geändert regenerieren“, um eine teilweise Wiederherstellung durchzuführen.",
     "segment_one": "{{count}}-Segment",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· Modell entladen",
     "toast_flush_failed": "Spülung fehlgeschlagen: {{message}}",
     "toast_project_saved": "Projekt gespeichert",
-    "toast_project_created": "Projekt erstellt"
+    "toast_project_created": "Projekt erstellt",
+    "tagline": "Stimmen erstellen, synchronisieren und transkribieren mit Nimi."
   },
   "update": {
     "available": "Update {{version}} verfügbar",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Pausieren",
     "play": "Abspielen"
+  },
+  "nimi": {
+    "configuration": "Nimi-KI-Konfiguration",
+    "configuration_description": "Wähle die KI-Ressourcen für Stimmen, Transkription und Übersetzung.",
+    "provenance": "Exportierte Dateien kennzeichnen synthetisches Audio in den Metadaten. Neuronale Wasserzeichen werden nicht angewendet.",
+    "referenceControls": "Referenzstimmen unterstützen keine Ausdruckstags oder Stilhinweise. Entferne Ausdruckstags vor der Erzeugung; dein Text bleibt bearbeitbar."
   }
 }

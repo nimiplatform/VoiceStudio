@@ -22,7 +22,6 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.llm_backend import get_active_llm_backend, OffBackend
 
 logger = logging.getLogger("omnivoice.director")
 
@@ -152,6 +151,7 @@ def parse(text: str) -> Direction:
         return Direction(source=text or "")
 
     from services import llm_skills
+    from services.llm_backend import get_active_llm_backend, OffBackend
     # `active=` forwards this module's (monkeypatch-able) name so the
     # no-override path is byte-identical to the pre-skills behavior.
     llm = llm_skills.skill_backend(_SKILL_ID, active=lambda: get_active_llm_backend())

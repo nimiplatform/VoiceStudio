@@ -6,7 +6,7 @@
 #   • CodeQL     — Python + JS/TS SAST. Results land in the Security tab.
 #   • bandit     — Python SAST (SARIF → Security tab). Reporting, non-gating.
 #   • pip-audit  — Python dependency advisories. Reporting, non-gating.
-#   • bun audit  — frontend dependency advisories. Reporting, non-gating.
+#   • pnpm audit  — frontend dependency advisories. Reporting, non-gating.
 #
 # Only the secret scan gates the PR. Dependency advisories and bandit findings
 # are surfaced as signal (Security tab / job log) rather than blocking every PR
@@ -162,7 +162,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "backend/business/uv.lock"
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
@@ -174,20 +174,20 @@ jobs:
       - name: pip-audit (Python)
         continue-on-error: true
         run: |
-          bash scripts/uv-sync-retry.sh
-          uv run --with pip-audit pip-audit
+          uv sync --project backend/business --frozen
+          uv run --project backend/business --with pip-audit pip-audit
 
-      # Pin a floor: `bun audit` was added in bun 1.2.x, so guarantee it exists.
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      # Use the same package manager as the Nimi App.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: "1.2"
+          version: "10.34.5"
 
-      # `bun audit` reports advisories against the frontend lockfile. Non-gating
-      # for the same reason; also tolerant of older bun without the subcommand.
-      - name: bun audit (frontend)
+      # `pnpm audit` reports advisories against the frontend lockfile. Non-gating
+      # for the same reason as the Python audit.
+      - name: pnpm audit (frontend)
         continue-on-error: true
         working-directory: frontend
         run: |
-          bun install --frozen-lockfile
-          bun audit
+          pnpm install --frozen-lockfile
+          pnpm audit

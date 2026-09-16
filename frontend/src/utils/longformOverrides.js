@@ -20,17 +20,7 @@ export function overridesToRequest(overrides, language) {
   const o = overrides || DEFAULT_OVERRIDES;
   const body = {};
   if (language && language !== 'Auto') body.language = language;
-  if (o.numStep != null) body.num_step = o.numStep;
-  if (o.guidanceScale != null) body.guidance_scale = o.guidanceScale;
-  if (o.posTemp != null) body.position_temperature = o.posTemp;
-  if (o.classTemp != null) body.class_temperature = o.classTemp;
   if (o.postprocess != null) body.postprocess_output = o.postprocess;
-  if (o.seed != null) body.seed = o.seed;
   if (o.varyRepeats) body.vary_repeats = true;
-  const emo = (o.emoText || '').trim();
-  if (emo) {
-    body.emo_text = emo;
-    if (o.emoAlpha != null) body.emo_alpha = o.emoAlpha;
-  }
   return body;
 }

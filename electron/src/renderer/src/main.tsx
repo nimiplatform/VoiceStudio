@@ -3,6 +3,7 @@ import { installConsoleCapture } from '../../../../frontend/src/utils/consoleBuf
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/inter';
+import '@nimiplatform/kit/ui/styles.css';
 import './styles/globals.css';
 import './i18n';
 import './hooks/use-appearance';

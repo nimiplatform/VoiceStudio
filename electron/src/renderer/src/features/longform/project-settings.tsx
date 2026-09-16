@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { SaveIcon, TrashIcon } from 'lucide-react';
+import { SaveIcon, TrashIcon, DownloadIcon, UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { blankLongformDraft, type Draft, type Mode } from './longform-session';
 import { projectLibrary, type LongformProject } from './project-library';
 import { describeError } from '@/lib/api/client';
+import { saveLocalFile } from '@/lib/local-export';
+import { decodeProjectFile, encodeProjectFile } from './project-file';
 export function ProjectSettings({
   mode,
   draft,
@@ -65,6 +67,16 @@ export function ProjectSettings({
       onChange({ projectId: project.id });
       setSaved(true);
     });
+  const exportProject = () => run(async () => {
+    await saveLocalFile(new Blob([encodeProjectFile(name || draft.title, mode, draft)], { type: 'application/json' }),
+      (name || 'VoiceStudio').replace(/[<>:"/\\|?*]/g, '_') + '.voicestudio.json');
+  });
+  const importProject = (file: File) => run(async () => {
+    const imported = decodeProjectFile(await file.text());
+    if (imported.mode !== mode) throw new Error('Open this file in its matching Stories or Audiobook workspace');
+    const project = await projectLibrary.save(imported.name, mode, { ...blankLongformDraft(), ...imported.draft }, null);
+    setConfirmation({ action: 'open', project });
+  });
   const apply = () =>
     run(async () => {
       if (!confirmation) return;
@@ -101,6 +113,16 @@ export function ProjectSettings({
         />
       </label>
       <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="ghost" disabled={locked || !name.trim()} onClick={() => void exportProject()}>
+          <DownloadIcon />{t('projects.export')}
+        </Button>
+        <label className="inline-flex cursor-pointer items-center gap-1 text-xs">
+          <UploadIcon className="size-3.5" />{t('audiobook.import')}
+          <input type="file" accept=".json" aria-label={t('stories.projects') + ' ' + t('audiobook.import')}
+            className="sr-only" disabled={locked} onChange={(event) => {
+              const file = event.target.files?.[0]; event.target.value = ''; if (file) void importProject(file);
+            }} />
+        </label>
         <Button size="sm" disabled={locked || !name.trim()} onClick={() => void save(false)}>
           <SaveIcon />
           {t('common.save')}

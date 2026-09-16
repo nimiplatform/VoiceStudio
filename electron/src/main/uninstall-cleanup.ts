@@ -10,7 +10,7 @@ export function nativeCleanupHelperPath(): string {
   const name = 'voicestudio-desktop-bridge' + (process.platform === 'win32' ? '.exe' : '');
   return app.isPackaged
     ? join(process.resourcesPath, 'native', name)
-    : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'debug', name);
+    : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'release', name);
 }
 
 export async function scheduleUninstallCleanup(paths: string[]): Promise<void> {

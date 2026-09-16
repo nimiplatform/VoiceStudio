@@ -1,4 +1,5 @@
 import { useBackendStatus } from '@/hooks/use-backend-status';
+import { getNimiClient } from '@/lib/nimi-client';
 import { ChevronRightIcon, LanguagesIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,12 +32,14 @@ export function useTranslationEngines() {
   return useQuery({
     enabled: status.stage === 'ready',
     queryKey: ['translation-engines'],
-    queryFn: () =>
-      apiJson<{
-        active: string;
-        sandboxed: boolean;
-        engines: TranslationEngine[];
-      }>('/engines/translation'),
+    queryFn: async () => {
+      const snapshot = await getNimiClient().aiConfig.get();
+      const selection = snapshot.effectiveSelections.find((item) => item.capabilityContract === 'text.generate');
+      const ready = selection?.state === 'ready';
+      return { active: 'nimi', sandboxed: true, engines: [{ id: 'nimi', display_name: 'Nimi',
+        category: 'llm', installed: ready, ready, configured: ready, needs_key: false,
+        pip_package: null } as TranslationEngine] };
+    },
     staleTime: 30_000,
   });
 }

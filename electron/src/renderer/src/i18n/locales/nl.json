@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Spoelen mislukt: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Lokaal stemklonen. Niets verlaat uw machine.",
+    "tagline": "Maak stemmen, nasynchronisaties en transcripties met Nimi.",
     "coming_soon": "Binnenkort beschikbaar",
     "switch_to_light": "Schakel over naar het lichtthema",
     "switch_to_dark": "Schakel over naar een donker thema"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Los eventuele ASR-fouten nu op: strakke dictie bespaart TTS-pogingen later.",
     "translate_title": "Vertalingen klaar",
     "translate_cta": "Dub genereren",
-    "translate_hint": "Blader door de doeltekst. Lijnen die te lang zijn, krijgen een snelheidsboost; u kunt ook rechtstreeks bewerken.",
+    "translate_hint": "Controleer en bewerk de vertaling voordat je audio genereert.",
     "done_title": "Dubben voltooid",
     "done_hint": "Controleer de timing en synchronisatieverhoudingen. Pas een willekeurige regel aan en druk op \"Regen gewijzigd\" voor een snelle gedeeltelijke herhaling.",
     "segment_one": "{{count}} segment",
@@ -2569,5 +2569,25 @@
     "captured": "{{count}} problematische logregels vastgelegd",
     "contextNotice": "De geselecteerde agent ontvangt dit rapport, het huidige scherm, recente app- en backendlogboeken en systeemdiagnostiek.",
     "complete": "Voltooid"
+  },
+  "nimi": {
+    "configuration": "Nimi AI-configuratie",
+    "configuration_description": "Kies de AI-bronnen voor stemmen, transcriptie en vertaling.",
+    "provenance": "Geëxporteerde bestanden vermelden synthetische audio in de metadata. Er wordt geen neuraal watermerk toegepast.",
+    "referenceControls": "Referentiestemmen ondersteunen geen expressietags of stijlinstructies. Verwijder de tags vóór het genereren; de tekst blijft bewerkbaar."
+  },
+  "voiceSelector": {
+    "engineDefault": "Standaard motor",
+    "clone": "Gekloonde stemmen",
+    "designed": "Ontworpen stemmen",
+    "presets": "Voorinstellingen",
+    "fromVideo": "Van video",
+    "missingVoice": "Stem niet gevonden (opnieuw kiezen)",
+    "preview": "Voorbeeldstem",
+    "openGallery": "Openen in Voice Gallery",
+    "createVoice": "Creëer een nieuwe stem",
+    "gallery": "Galerij",
+    "addingVoice": "Stem toevoegen…",
+    "addVoiceFailed": "Kon die stem niet toevoegen"
   }
 }

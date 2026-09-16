@@ -1,12 +1,12 @@
 {
   "name": "omnivoice-studio",
-  "version": "0.5.2",
+  "version": "0.5.4",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "desktop": "bun ../scripts/desktop-dev.mjs",
+    "dev": "pnpm --dir .. run dev",
+    "desktop": "pnpm --dir .. run dev",
     "build": "vite build",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -20,7 +20,6 @@
     "test:watch": "vitest",
     "test:legacy": "node --experimental-strip-types --no-warnings --test ../tests/frontend/*.test.mjs",
     "preview": "vite preview",
-    "tauri": "tauri",
     "e2e": "playwright test",
     "test:prod-bundle": "playwright test --config=playwright.prod.config.ts",
     "test:visual": "playwright test --config=playwright.visual.config.ts",

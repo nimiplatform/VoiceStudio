@@ -5,19 +5,12 @@ import { Progress as ProgressPrimitive } from '@base-ui/react/progress';
 import {
   AudioLinesIcon,
   ChevronDownIcon,
-  ClockIcon,
-  FocusIcon,
   GaugeIcon,
-  LayersIcon,
   PlayIcon,
   LoaderCircleIcon,
   RotateCcwIcon,
   Settings2Icon,
-  ShuffleIcon,
-  SlidersHorizontalIcon,
   SparklesIcon,
-  ThermometerIcon,
-  TimerIcon,
   XIcon,
   type LucideIcon,
 } from 'lucide-react';
@@ -26,7 +19,6 @@ import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/popover';
-import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
 import { Label } from '@/components/ui/label';
 import { ProgressIndicator, ProgressTrack } from '@/components/ui/progress';
@@ -44,77 +36,9 @@ import { LanguagePicker } from './language-picker';
 import { CloneDemoAction } from './clone-demo';
 import { useCloneDemo } from '@/hooks/use-clone-demo';
 
-type NumericKey = 'steps' | 'cfg' | 'speed' | 'tShift' | 'posTemp' | 'classTemp' | 'layerPenalty';
-
-interface SliderSpec {
-  key: NumericKey;
-  labelKey: string;
-  icon: LucideIcon;
-  min: number;
-  max: number;
-  step: number;
-  suffix?: string;
-}
-
-const SLIDERS: SliderSpec[] = [
-  {
-    key: 'steps',
-    labelKey: 'clone.steps',
-    icon: SlidersHorizontalIcon,
-    min: 8,
-    max: 64,
-    step: 1,
-  },
-  {
-    key: 'cfg',
-    labelKey: 'clone.cfg',
-    icon: FocusIcon,
-    min: 1,
-    max: 4,
-    step: 0.1,
-  },
-  {
-    key: 'speed',
-    labelKey: 'clone.speed',
-    icon: GaugeIcon,
-    min: 0.5,
-    max: 2,
-    step: 0.1,
-    suffix: '×',
-  },
-  {
-    key: 'tShift',
-    labelKey: 'clone.tshift',
-    icon: TimerIcon,
-    min: 0,
-    max: 1,
-    step: 0.05,
-  },
-  {
-    key: 'posTemp',
-    labelKey: 'clone.pos_temp',
-    icon: ThermometerIcon,
-    min: 0,
-    max: 10,
-    step: 0.5,
-  },
-  {
-    key: 'classTemp',
-    labelKey: 'clone.class_temp',
-    icon: ShuffleIcon,
-    min: 0,
-    max: 2,
-    step: 0.1,
-  },
-  {
-    key: 'layerPenalty',
-    labelKey: 'clone.layer_pen',
-    icon: LayersIcon,
-    min: 0,
-    max: 10,
-    step: 0.5,
-  },
-];
+type NumericKey = 'speed';
+interface SliderSpec { key: NumericKey; labelKey: string; icon: LucideIcon; min: number; max: number; step: number; suffix?: string }
+const SLIDERS: SliderSpec[] = [{key: 'speed', labelKey: 'clone.speed', icon: GaugeIcon, min: 0.5, max: 2, step: 0.1, suffix: '×'}];
 
 function decimals(step: number): number {
   const text = String(step);
@@ -193,29 +117,12 @@ interface OverridesProps {
 
 function Overrides({ settings }: OverridesProps) {
   const { t } = useTranslation();
-  const durationId = useId();
   return (
     <div className="flex flex-col gap-3 pt-3">
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-2">
         {SLIDERS.map((spec) => (
           <SliderRow key={spec.key} spec={spec} value={settings[spec.key]} />
         ))}
-        <div className="flex min-w-0 flex-col gap-2 rounded-lg bg-muted/40 p-3">
-          <Label htmlFor={durationId} className="gap-1.5 text-[length:var(--text-label)]">
-            <ClockIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
-            {t('clone.duration')}
-          </Label>
-          <Input
-            id={durationId}
-            inputMode="decimal"
-            value={settings.duration}
-            onChange={(event) => setCloneSetting('duration', event.target.value)}
-            placeholder={t('clone.auto')}
-            className="h-7 text-[length:var(--text-label)] tabular-nums"
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-2">
         <SwitchRow
           settingKey="denoise"
           labelKey="clone.denoise"

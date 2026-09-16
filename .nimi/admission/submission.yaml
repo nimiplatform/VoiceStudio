@@ -1,0 +1,39 @@
+app_id: nimiplatform.voicestudio
+display_name: VoiceStudio
+version: 0.5.4
+profile: standalone
+npm_package_name: omnivoice-studio-monorepo
+cargo_package_name: omnivoice-studio-monorepo-shell
+tauri_identifier: ai.nimi.apps.nimiplatform.voicestudio
+package_author: VoiceStudio contributors
+submission_role: developer-submitted-input
+capability_contract_refs:
+  - audio.synthesize
+  - audio.transcribe
+  - voice.create
+  - text.generate
+  - audio.separate
+required_standardized_feature_refs: []
+storage_policy:
+  kind: app-owned-os-storage
+  os_storage_disclosure:
+    - path_pattern: "%APPDATA%/OmniVoice"
+      purpose: VoiceStudio voices, media, projects, settings and installed Electron browser profile
+      expected_size_band: Varies with imported and generated media
+support_manifest:
+  diagnostics_bundle_fields:
+    - app_version
+    - runtime_status
+  redaction_rules:
+    - credentials
+  user_visible_issue_categories:
+    - startup
+    - runtime
+  escalation_path: README.md#support
+  kill_switch_visibility: visible
+  recovery_instructions: Restart the App from Nimi. If the problem persists, reinstall the current admitted release.
+review_inputs:
+  manifest: nimi.app.yaml
+  build_profile: .nimi/config/build-profile.yaml
+  scaffold_boundary: .nimi/contracts/scaffold-boundary.yaml
+admission_truth: platform-owned-after-review

@@ -34,11 +34,6 @@ import {
 } from '../../../../../../frontend/src/utils/segmentParts';
 import { commitMoveResize } from '../../../../../../frontend/src/utils/timeline';
 import type { PasteTranslationRow } from '../../../../../../frontend/src/utils/pasteTranslations';
-import type {
-  DubAgentTranslationRequest,
-  DubAgentTranslationResult,
-  RepairAgentId,
-} from '../../../../preload/index.d';
 export interface DubSegment {
   gain?: number;
   speed?: number;
@@ -125,7 +120,6 @@ export interface DubSession {
   multiTargets?: Array<{ lang: string; code: string }>;
   batchProgress?: { current: number; total: number; language: string };
   quality: 'fast' | 'autofit' | 'cinematic' | 'agent';
-  agentCli?: RepairAgentId;
   agentPass?: {
     stage: 'measuring' | 'adapting' | 'rerendering';
     pass: number;
@@ -297,7 +291,7 @@ export const setDubExportPreferences = (value: Partial<DubExportPreferences>) =>
 };
 export const setDubQuality = (quality: DubSession['quality']) => {
   if (['idle', 'editing', 'done'].includes(dubSession.state.phase) && !dubSession.state.recovery)
-    patch({ quality, ...(quality === 'agent' ? {} : { agentCli: undefined }) });
+    patch({ quality });
 };
 export const setDubTranslationOptions = (
   value: Pick<Partial<DubSession>, 'autoGlossary' | 'reflectPass' | 'condenseSuggest' | 'dialect'>,
@@ -948,7 +942,6 @@ export async function uploadDub(file: File) {
     target: current.target,
     multiTargets: current.multiTargets,
     quality: current.quality,
-    agentCli: current.agentCli,
     autoGlossary: current.autoGlossary,
     reflectPass: current.reflectPass,
     condenseSuggest: current.condenseSuggest,
@@ -1002,7 +995,6 @@ export async function ingestDubUrl(value: string, cookieFile?: File, fetchSubs =
     target: current.target,
     multiTargets: current.multiTargets,
     quality: current.quality,
-    agentCli: current.agentCli,
     autoGlossary: current.autoGlossary,
     reflectPass: current.reflectPass,
     condenseSuggest: current.condenseSuggest,
@@ -1046,92 +1038,9 @@ export async function ingestDubUrl(value: string, cookieFile?: File, fetchSubs =
   });
 }
 
-async function runLocalTranslationAgent(
-  request: DubAgentTranslationRequest,
-  signal: AbortSignal,
-): Promise<DubAgentTranslationResult> {
-  const bridge = window.voicestudio?.repair;
-  if (!bridge?.translate) throw new Error('LOCAL_TRANSLATION_AGENT_UNAVAILABLE');
-  const stop = () => void bridge.stopTranslation().catch(() => {});
-  if (signal.aborted) {
-    stop();
-    throw new DOMException('Cancelled', 'AbortError');
-  }
-  signal.addEventListener('abort', stop, { once: true });
-  try {
-    return await bridge.translate(request);
-  } finally {
-    signal.removeEventListener('abort', stop);
-  }
-}
 
-export async function translateDubWithAgent(
-  target: string,
-  agent: RepairAgentId,
-  targetLabel = target,
-): Promise<boolean> {
-  const snapshot = dubSession.state;
-  if (!snapshot.jobId || !snapshot.segments.length || snapshot.recovery) return false;
-  const finishActivity = beginAppActivity('translation');
-  try {
-    return await run('translating', async (signal) => {
-      const glossary = await apiJson<Array<{ source: string; target: string; note?: string }>>(
-        `/glossary/${encodeURIComponent(snapshot.jobId!)}`,
-        { signal },
-      );
-      const translated = await runLocalTranslationAgent(
-        {
-          agent,
-          purpose: 'translate',
-          sourceLanguage: snapshot.sourceLang || snapshot.sourceLanguage || undefined,
-          targetLanguage: targetLabel,
-          dialect: snapshot.dialect,
-          glossary,
-          segments: snapshot.segments.map((segment) => ({
-            id: segment.id,
-            sourceText: segment.text_original || segment.text,
-            start: segment.start,
-            end: segment.end,
-          })),
-        },
-        signal,
-      );
-      const rows = new Map(translated.translations.map((row) => [row.id, row.text]));
-      clearDubEditHistory();
-      patch({
-        quality: 'agent',
-        agentCli: agent,
-        translationFallback: false,
-        segments: snapshot.segments.map((segment) => {
-          const text = rows.get(segment.id);
-          if (!text) return segment;
-          const translateErrors = { ...segment.translate_errors };
-          delete translateErrors[target];
-          const agentLanguages = new Set(segment.agent_generated_langs || []);
-          agentLanguages.add(target);
-          return {
-            ...segment,
-            text,
-            translations: { ...segment.translations, [target]: text },
-            translate_error: undefined,
-            translate_errors: Object.keys(translateErrors).length ? translateErrors : undefined,
-            translate_degraded: undefined,
-            translation_skipped: undefined,
-            translate_literal: undefined,
-            translate_critique: undefined,
-            rate_error: undefined,
-            plan: undefined,
-            agent_generated_lang: target,
-            agent_generated_langs: [...agentLanguages],
-          };
-        }),
-        phase: 'editing',
-      });
-    });
-  } finally {
-    finishActivity();
-  }
-}
+
+
 
 export async function translateDub(
   target: string,
@@ -1408,32 +1317,7 @@ export async function generateDub(
             remaining: misses.length,
           },
         });
-        const fitted = current.agentCli
-          ? await runLocalTranslationAgent(
-              {
-                agent: current.agentCli,
-                purpose: 'fit',
-                sourceLanguage: current.sourceLang || current.sourceLanguage || undefined,
-                targetLanguage: language,
-                dialect: current.dialect,
-                segments: misses.map((segment) => ({
-                  id: segment.id,
-                  sourceText: segment.source_text || segment.text,
-                  currentText: segment.text,
-                  start: 0,
-                  end: segment.slot_seconds,
-                  measuredSeconds: segment.measured_seconds,
-                })),
-              },
-              signal,
-            ).then((result) => ({
-              segments: result.translations.map((row) => ({
-                ...row,
-                changed: row.text !== misses.find((segment) => segment.id === row.id)?.text,
-                error: undefined as string | undefined,
-              })),
-            }))
-          : await apiJson<{
+        const fitted = await apiJson<{
               segments: Array<{ id: string; text: string; changed: boolean; error?: string }>;
             }>('/dub/agent-fit', {
               method: 'POST',
@@ -1528,7 +1412,7 @@ export async function generateDubBatch(
     });
     let translated = true;
     if (
-      (dubSession.state.quality !== 'agent' || Boolean(dubSession.state.agentCli)) &&
+      dubSession.state.quality !== 'agent' &&
       hasCompleteTranslation(dubSession.state.segments, target.code)
     ) {
       patch({
@@ -1609,42 +1493,7 @@ export async function translateDubBatch(
   return skipped;
 }
 
-export async function translateDubBatchWithAgent(
-  targets: Array<{ lang: string; code: string }>,
-  agent: RepairAgentId,
-): Promise<string[]> {
-  const unique = targets.filter(
-    (target, index, all) =>
-      target.code && all.findIndex((candidate) => candidate.code === target.code) === index,
-  );
-  if (!unique.length || controller || cancelling || dubSession.state.recovery) return [];
-  const runId = ++batchRunId;
-  const skipped: string[] = [];
-  for (const [index, target] of unique.entries()) {
-    if (runId !== batchRunId || dubSession.state.recovery) break;
-    patch({
-      batchProgress: { current: index + 1, total: unique.length, language: target.lang },
-    });
-    if (!(await translateDubWithAgent(target.code, agent, target.lang)) && runId === batchRunId)
-      skipped.push(target.lang);
-  }
-  if (runId === batchRunId) {
-    const primary = unique[0];
-    patch({
-      target: primary.lang,
-      phase: 'editing',
-      segments: dubSession.state.segments.map((segment) => ({
-        ...segment,
-        text: segment.translations?.[primary.code] || segment.text_original || segment.text,
-        agent_generated_lang: segment.agent_generated_langs?.includes(primary.code)
-          ? primary.code
-          : undefined,
-      })),
-      batchProgress: undefined,
-    });
-  }
-  return skipped;
-}
+
 export async function cancelDub() {
   if (cancelling) return;
   const { jobId, taskId, phase, batchProgress } = dubSession.state;
@@ -1705,7 +1554,6 @@ export function discardDubRecovery(): void {
     target: current.target,
     multiTargets: current.multiTargets,
     quality: current.quality,
-    agentCli: current.agentCli,
     autoGlossary: current.autoGlossary,
     reflectPass: current.reflectPass,
     condenseSuggest: current.condenseSuggest,

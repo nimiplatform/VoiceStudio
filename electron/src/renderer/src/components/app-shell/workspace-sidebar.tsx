@@ -10,8 +10,6 @@ import { setWorkspace, useWorkspace } from '@/lib/store/workspace';
 import { VoicesSidebar } from '@/features/clone/voices-sidebar';
 import { WorkspaceNavigation } from './workspace-menu';
 import { StatusBar } from './status-bar';
-import { SystemNotifications } from './system-notifications';
-import { useBackendStatus } from '@/hooks/use-backend-status';
 import { useState, useSyncExternalStore } from 'react';
 
 const SECONDARY_ROUTES = new Set([
@@ -58,7 +56,6 @@ function useCompactViewport(): boolean {
 }
 
 export function WorkspaceSidebar() {
-  const backend = useBackendStatus();
   const { t } = useTranslation();
   const { libraryOpen, libraryTab } = useWorkspace();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -117,7 +114,7 @@ export function WorkspaceSidebar() {
             >
               <SettingsIcon />
             </Link>
-            <SystemNotifications enabled={backend.stage === 'ready'} compact />
+
           </div>
         </aside>
       )}
@@ -174,7 +171,7 @@ export function WorkspaceSidebar() {
                 <SettingsIcon />
                 {t('nav.settings')}
               </Link>
-              <SystemNotifications enabled={backend.stage === 'ready'} />
+
             </div>
           </div>
         </aside>

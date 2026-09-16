@@ -91,7 +91,7 @@ describe('shared generation lifecycle', () => {
     const view = render(tree(true));
     fireEvent.click(screen.getByText('editor:idle'));
     await screen.findByText('composer:running');
-    await waitFor(() => expect(screen.getByTestId('composer-stage')).toHaveTextContent('loading'));
+    await waitFor(() => expect(screen.getByTestId('composer-stage')).toHaveTextContent('generating'));
     act(() => {
       vi.mocked(generateClone).mock.calls[0]?.[1]?.onProgress?.(25);
     });
@@ -115,11 +115,11 @@ describe('shared generation lifecycle', () => {
     });
     await waitFor(() => expect(screen.getByText('composer:idle')).toBeInTheDocument());
     expect(generateClone).toHaveBeenCalledTimes(1);
-    expect(setLatestOutput).toHaveBeenCalledWith(result, 'Hello');
+    expect(setLatestOutput).toHaveBeenCalledWith(result, 'Hello', expect.objectContaining({mode:'clone'}));
     expect(toast.success).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces the backend model-loading sub-stage and progress', async () => {
+  it('keeps unavailable model-internal progress unknown', async () => {
     patchCloneSettings({ text: 'Hello', selectedProfileId: 'voice-1', autoPlay: false });
     modelStatus.value = {
       status: 'loading',
@@ -146,9 +146,9 @@ describe('shared generation lifecycle', () => {
 
     try {
       await waitFor(() =>
-        expect(screen.getByTestId('runtime-model-stage')).toHaveTextContent('compiling'),
+        expect(screen.getByTestId('runtime-model-stage')).toHaveTextContent(''),
       );
-      expect(screen.getByTestId('runtime-model-progress')).toHaveTextContent('62');
+      expect(screen.getByTestId('runtime-model-progress')).toHaveTextContent('');
     } finally {
       await act(async () => {
         complete({

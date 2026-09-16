@@ -84,7 +84,7 @@ it('shows package installation after the last large download instead of a stale 
   expect(screen.queryByText('Downloaded scipy')).not.toBeInTheDocument();
 });
 
-it('keeps agent repair available when the backend is down', () => {
+it('keeps worker retry available without an unrelated model configuration action', () => {
   backendStatus.stage = 'failed';
 
   render(
@@ -94,5 +94,6 @@ it('keeps agent repair available when the backend is down', () => {
   );
 
   expect(screen.getByText('repair dock')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: i18n.t('repairAgent.fix') })).toBeEnabled();
+  expect(screen.getByRole('button', { name: i18n.t('backend.retry') })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: i18n.t('nimi.configuration') })).toBeNull();
 });

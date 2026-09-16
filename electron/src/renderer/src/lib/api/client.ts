@@ -79,7 +79,8 @@ export async function errorFromResponse(res: Response): Promise<ApiError> {
       // Plain-text body.
     }
   }
-  const detail = payload && 'detail' in payload ? detailToString(payload.detail) : text.trim();
+  const rawDetail = payload && 'detail' in payload ? detailToString(payload.detail) : text.trim();
+  const detail = rawDetail === 'NIMI_EXPRESSION_TAGS' ? tr('nimi.referenceControls') : rawDetail;
   const statusLine = `HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}`;
   return new ApiError(res.status, detail || statusLine, payload);
 }

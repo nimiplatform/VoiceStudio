@@ -522,6 +522,7 @@ def build_render_cmd(
     if filt:
         cmd += ["-af", filt]
 
+    cmd += ['-metadata', 'comment=VoiceStudio synthetic audio; neural watermark not applied']
     if is_mp3:
         cmd += ["-c:a", "libmp3lame", "-b:a", bitrate, "-f", "mp3", str(out_path)]
     else:  # m4b — AAC in an mp4 container

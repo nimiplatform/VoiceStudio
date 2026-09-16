@@ -454,7 +454,7 @@ function TakeRow({ item, onStar, onReuse, onDelete }: TakeRowProps) {
         )}
         <span className="truncate">{displayTitle(item.text)}</span>
       </button>
-      <div className="pointer-events-none absolute right-1 z-10 flex items-center gap-0.5 rounded-md bg-sidebar-accent/95 p-0.5 opacity-0 backdrop-blur-xl transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+      <div className="absolute right-1 z-10 flex items-center gap-0.5 rounded-md bg-sidebar-accent/95 p-0.5 backdrop-blur-xl">
         {item.audio_path && (
           <AudioPreviewButton src={audioUrl(item.audio_path)} source={'take-' + item.id} />
         )}

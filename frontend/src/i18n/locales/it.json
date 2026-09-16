@@ -2024,7 +2024,7 @@
     "asr_hint": "Correggi subito eventuali errori ASR: la dizione precisa salva i tentativi TTS in un secondo momento.",
     "translate_title": "Traduzioni pronte",
     "translate_cta": "Genera doppiaggio",
-    "translate_hint": "Scorri il testo di destinazione. Le linee troppo lunghe aumentano la velocità; puoi anche modificare direttamente.",
+    "translate_hint": "Controlla e modifica la traduzione prima di generare l’audio.",
     "done_title": "Duplicazione completata",
     "done_hint": "Rivedi i tempi e i rapporti di sincronizzazione. Modifica qualsiasi riga e premi \"Regen change\" per una rapida ripetizione parziale.",
     "segment_one": "{{count}} segmento",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· modello scarico",
     "toast_flush_failed": "Eliminazione non riuscita: {{message}}",
     "toast_project_saved": "Progetto salvato",
-    "toast_project_created": "Progetto creato"
+    "toast_project_created": "Progetto creato",
+    "tagline": "Crea voci, doppia e trascrivi con Nimi."
   },
   "update": {
     "available": "Aggiornamento {{version}} disponibile",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Pausa",
     "play": "Riproduci"
+  },
+  "nimi": {
+    "configuration": "Configurazione IA di Nimi",
+    "configuration_description": "Scegli le risorse IA per voci, trascrizione e traduzione.",
+    "provenance": "I metadati dei file esportati identificano l’audio sintetico. Non viene applicata una filigrana neurale.",
+    "referenceControls": "Le voci di riferimento non supportano tag espressivi o indicazioni di stile. Rimuovi i tag prima della generazione; il testo resta modificabile."
   }
 }

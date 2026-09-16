@@ -9,44 +9,13 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { queryClient } from '@/lib/query';
 import { router } from './router';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { toast } from 'sonner';
 import { AnalyticsConsentBanner, AnalyticsRuntime } from '@/components/analytics-consent';
 import { getBridge } from '@/components/bridge';
 import { FirstSoundHandoff } from '@/components/first-sound-handoff';
 import { stepAppearanceScale } from '@/hooks/use-appearance';
 import { recordRouteBreadcrumb } from '@/lib/report-breadcrumb';
-import { ModelInstallSync } from '@/hooks/use-model-install-sync';
 import { RealtimeEventSync } from '@/hooks/use-realtime-events';
 import { runRendererTask } from '@/lib/global-error-recovery';
-
-const notifiedUpdates = new Set<string>();
-
-function UpdateNotifier() {
-  const { t } = useTranslation();
-  useEffect(() => {
-    const updates = getBridge()?.updates;
-    if (!updates) return;
-    return updates.onState((state) => {
-      if (
-        (state.status !== 'available' && state.status !== 'downloaded') ||
-        !state.availableVersion ||
-        notifiedUpdates.has(state.availableVersion)
-      )
-        return;
-      notifiedUpdates.add(state.availableVersion);
-      toast.info(t('update.toast_available', { version: state.availableVersion }), {
-        action: {
-          label: t('common.open'),
-          onClick: () =>
-            runRendererTask('Navigate to updates', () =>
-              router.navigate({ to: '/settings/updates' }),
-            ),
-        },
-      });
-    });
-  }, [t]);
-  return null;
-}
 
 export function App() {
   const { t } = useTranslation();
@@ -112,9 +81,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <NativeDictationSync />
-        <ModelInstallSync />
         <RealtimeEventSync />
-        <UpdateNotifier />
         <AnalyticsRuntime />
         <AnalyticsConsentBanner />
         <GenerationProvider>

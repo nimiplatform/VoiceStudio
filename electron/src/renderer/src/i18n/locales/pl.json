@@ -1427,7 +1427,7 @@
     "toast_flush_failed": "Spłukiwanie nie powiodło się: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Lokalne klonowanie głosu. Nic nie opuszcza Twojej maszyny.",
+    "tagline": "Twórz głosy, dubbing i transkrypcje z Nimi.",
     "coming_soon": "Już wkrótce",
     "switch_to_light": "Przełącz na jasny motyw",
     "switch_to_dark": "Przełącz na ciemny motyw"
@@ -2425,7 +2425,7 @@
     "asr_hint": "Napraw teraz wszelkie błędy ASR — ścisła dykcja pozwala uniknąć późniejszych prób TTS.",
     "translate_title": "Tłumaczenia gotowe",
     "translate_cta": "Wygeneruj dubbing",
-    "translate_hint": "Przejrzyj tekst docelowy. Linie o zbyt dużej długości uzyskują zwiększoną prędkość; możesz także edytować bezpośrednio.",
+    "translate_hint": "Sprawdź i edytuj tłumaczenie przed wygenerowaniem dźwięku.",
     "done_title": "Dubbing ukończony",
     "done_hint": "Przejrzyj współczynniki synchronizacji i synchronizacji. Popraw dowolną linię i naciśnij „Regen zmieniony”, aby szybko wykonać częściowe ponowne wykonanie.",
     "segment_one": "Segment {{count}}",
@@ -2573,5 +2573,25 @@
     "captured": "Przechwycono {{count}} problematycznych wierszy dziennika",
     "contextNotice": "Wybrany agent otrzyma to zgłoszenie, bieżący ekran, ostatnie dzienniki aplikacji i backendu oraz diagnostykę systemu.",
     "complete": "Zakończono"
+  },
+  "nimi": {
+    "configuration": "Konfiguracja AI Nimi",
+    "configuration_description": "Wybierz zasoby AI do głosów, transkrypcji i tłumaczenia.",
+    "provenance": "Metadane eksportowanych plików oznaczają dźwięk syntetyczny. Neuronowy znak wodny nie jest stosowany.",
+    "referenceControls": "Głosy referencyjne nie obsługują znaczników ekspresji ani wskazówek stylu. Usuń znaczniki przed generowaniem; tekst pozostaje do edycji."
+  },
+  "voiceSelector": {
+    "engineDefault": "Domyślne ustawienie silnika",
+    "clone": "Sklonowane głosy",
+    "designed": "Zaprojektowane głosy",
+    "presets": "Ustawienia wstępne",
+    "fromVideo": "Z wideo",
+    "missingVoice": "Nie znaleziono głosu (wybierz ponownie)",
+    "preview": "Podgląd głosu",
+    "openGallery": "Otwórz w Galerii Voice",
+    "createVoice": "Utwórz nowy głos",
+    "gallery": "Galeria",
+    "addingVoice": "Dodawanie głosu…",
+    "addVoiceFailed": "Nie udało się dodać tego głosu"
   }
 }

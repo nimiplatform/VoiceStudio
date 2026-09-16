@@ -1,7 +1,7 @@
 from pydantic import BaseModel, field_validator
 from typing import List, Literal, Optional
 
-from services.audio_dsp import EFFECT_PRESETS
+from services.effect_presets import EFFECT_PRESETS
 
 class ExportRequest(BaseModel):
     source_filename: str

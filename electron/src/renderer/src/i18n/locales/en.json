@@ -53,7 +53,7 @@
   },
   "app": {
     "name": "VoiceStudio",
-    "tagline": "Local voice cloning. Nothing leaves your machine.",
+    "tagline": "Voice creation, dubbing and transcription with Nimi.",
     "coming_soon": "Coming soon",
     "version": "v{{version}}",
     "switch_to_light": "Switch to light theme",
@@ -2470,7 +2470,7 @@
     "asr_hint": "Fix any ASR errors now — tight diction saves TTS attempts later.",
     "translate_title": "Translations ready",
     "translate_cta": "Generate dub",
-    "translate_hint": "Skim the target text. Over-length lines get speed-boosted; you can also edit directly.",
+    "translate_hint": "Review and edit the translation before generating the audio.",
     "done_title": "Dub complete",
     "done_hint": "Review timing and sync ratios. Tweak any line and hit \"Regen changed\" for a fast partial redo.",
     "segment_one": "{{count}} segment",
@@ -2569,5 +2569,25 @@
     "captured": "Captured {{count}} problem log lines",
     "contextNotice": "The selected agent receives this report, the current screen, recent app and backend logs, and system diagnostics.",
     "complete": "Complete"
+  },
+  "nimi": {
+    "configuration": "Nimi AI configuration",
+    "configuration_description": "Choose the AI resources used for voices, transcription and translation.",
+    "provenance": "Exports identify synthetic audio in file metadata. Neural watermarking is not applied.",
+    "referenceControls": "Reference voices do not support expression tags or style hints. Remove expression tags before generating; your text is kept for editing."
+  },
+  "voiceSelector": {
+    "engineDefault": "Engine default",
+    "clone": "Cloned voices",
+    "designed": "Designed voices",
+    "presets": "Presets",
+    "fromVideo": "From video",
+    "missingVoice": "Voice not found (re-pick)",
+    "preview": "Preview voice",
+    "openGallery": "Open in Voice Gallery",
+    "createVoice": "Create a new voice",
+    "gallery": "Gallery",
+    "addingVoice": "Adding voice…",
+    "addVoiceFailed": "Couldn't add that voice — please try again."
   }
 }

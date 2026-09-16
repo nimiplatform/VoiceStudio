@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "フラッシュに失敗しました: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "ローカル音声のクローン作成。マシンからは何も残りません。",
+    "tagline": "Nimi で音声作成、吹き替え、文字起こし。",
     "coming_soon": "近日公開",
     "switch_to_light": "ライトテーマに切り替える",
     "switch_to_dark": "ダークテーマに切り替える"
@@ -2421,7 +2421,7 @@
     "asr_hint": "ASR エラーを今すぐ修正します。厳密なディクショニングにより、後で TTS の試行を節約できます。",
     "translate_title": "翻訳準備完了",
     "translate_cta": "ダブの生成",
-    "translate_hint": "対象のテキストをざっと読んでください。長すぎる回線の速度が向上します。直接編集することもできます。",
+    "translate_hint": "音声を生成する前に翻訳を確認し、編集してください。",
     "done_title": "ダビング完了",
     "done_hint": "タイミングと同期率を確認します。任意の行を微調整し、「Regen Changed」を押すと、部分的に素早くやり直すことができます。",
     "segment_one": "{{count}} セグメント",
@@ -2569,5 +2569,25 @@
     "captured": "問題のあるログを{{count}}行取得しました",
     "contextNotice": "選択したエージェントには、この報告、現在の画面、最近のアプリとバックエンドのログ、システム診断が渡されます。",
     "complete": "完了"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 設定",
+    "configuration_description": "音声、文字起こし、翻訳に使用する AI リソースを選択します。",
+    "provenance": "書き出したファイルのメタデータに合成音声と記録します。ニューラル透かしは適用されません。",
+    "referenceControls": "参照音声は表情タグや話し方の指示に対応していません。生成前に表情タグを削除してください。元のテキストは編集用に保持されます。"
+  },
+  "voiceSelector": {
+    "engineDefault": "エンジンのデフォルト",
+    "clone": "クローン音声",
+    "designed": "デザインされた音声",
+    "presets": "プリセット",
+    "fromVideo": "ビデオから",
+    "missingVoice": "音声が見つかりません (再選択)",
+    "preview": "プレビュー音声",
+    "openGallery": "ボイスギャラリーで開く",
+    "createVoice": "新しい音声を作成する",
+    "gallery": "ギャラリー",
+    "addingVoice": "音声を追加中…",
+    "addVoiceFailed": "その音声を追加できませんでした"
   }
 }

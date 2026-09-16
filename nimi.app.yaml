@@ -1,0 +1,29 @@
+app_id: nimiplatform.voicestudio
+display_name: VoiceStudio
+version: 0.5.4
+profile: standalone
+manifest_role: submitted-input
+app_access:
+  - runtime.consume
+capability_contract_refs:
+  - audio.synthesize
+  - audio.transcribe
+  - voice.create
+  - text.generate
+  - audio.separate
+required_standardized_feature_refs: []
+storage_policy:
+  kind: app-owned-os-storage
+  os_storage_disclosure:
+    - path_pattern: "%APPDATA%/OmniVoice"
+      purpose: VoiceStudio voices, media, projects, settings and installed Electron browser profile
+      expected_size_band: Varies with imported and generated media
+metadata:
+  summary: Create voices, dub video, transcribe speech and produce audiobooks with Nimi.
+  icon: frontend/src-tauri/icons/128x128.png
+  readme: README.md
+  author: VoiceStudio contributors
+local_development:
+  electron:
+    renderer_origin: http://127.0.0.1:3902
+    host_source_directory: electron

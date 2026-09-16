@@ -1425,7 +1425,7 @@
     "toast_flush_failed": "Eliminazione non riuscita: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Clonazione vocale locale. Niente lascia la tua macchina.",
+    "tagline": "Crea voci, doppia e trascrivi con Nimi.",
     "coming_soon": "Prossimamente",
     "switch_to_light": "Passa al tema chiaro",
     "switch_to_dark": "Passa al tema scuro"
@@ -2423,7 +2423,7 @@
     "asr_hint": "Correggi subito eventuali errori ASR: la dizione precisa salva i tentativi TTS in un secondo momento.",
     "translate_title": "Traduzioni pronte",
     "translate_cta": "Genera doppiaggio",
-    "translate_hint": "Scorri il testo di destinazione. Le linee troppo lunghe aumentano la velocità; puoi anche modificare direttamente.",
+    "translate_hint": "Controlla e modifica la traduzione prima di generare l’audio.",
     "done_title": "Duplicazione completata",
     "done_hint": "Rivedi i tempi e i rapporti di sincronizzazione. Modifica qualsiasi riga e premi \"Regen change\" per una rapida ripetizione parziale.",
     "segment_one": "{{count}} segmento",
@@ -2571,5 +2571,25 @@
     "captured": "Acquisite {{count}} righe di log problematiche",
     "contextNotice": "L’agente selezionato riceve questa segnalazione, la schermata corrente, i log recenti dell’app e del backend e la diagnostica di sistema.",
     "complete": "Completato"
+  },
+  "nimi": {
+    "configuration": "Configurazione IA di Nimi",
+    "configuration_description": "Scegli le risorse IA per voci, trascrizione e traduzione.",
+    "provenance": "I metadati dei file esportati identificano l’audio sintetico. Non viene applicata una filigrana neurale.",
+    "referenceControls": "Le voci di riferimento non supportano tag espressivi o indicazioni di stile. Rimuovi i tag prima della generazione; il testo resta modificabile."
+  },
+  "voiceSelector": {
+    "engineDefault": "Motore difettoso",
+    "clone": "Voci clonate",
+    "designed": "Voci progettate",
+    "presets": "Preimpostazioni",
+    "fromVideo": "Dal video",
+    "missingVoice": "Voce non trovata (riseleziona)",
+    "preview": "Anteprima della voce",
+    "openGallery": "Apri nella Galleria vocale",
+    "createVoice": "Crea una nuova voce",
+    "gallery": "Galleria",
+    "addingVoice": "Aggiunta voce…",
+    "addVoiceFailed": "Impossibile aggiungere quella voce"
   }
 }

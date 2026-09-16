@@ -2345,7 +2345,7 @@
     "asr_hint": "立即修正所有 ASR 错误——严谨的措辞能省下后续 TTS 的返工。",
     "translate_title": "翻译已就绪",
     "translate_cta": "生成配音",
-    "translate_hint": "浏览译文。超长句子的语速已提升；你也可以直接编辑。",
+    "translate_hint": "生成音频前，请检查并编辑译文。",
     "done_title": "配音完成",
     "done_hint": "检查时序和同步比率。调整任意句子并点击“重新生成已改”即可快速部分重做。",
     "segment_one": "{{count}} 段",
@@ -2681,7 +2681,8 @@
     "toast_model_unloaded": "· 模型卸载",
     "toast_flush_failed": "刷新失败：{{message}}",
     "toast_project_saved": "项目已保存",
-    "toast_project_created": "项目已创建"
+    "toast_project_created": "项目已创建",
+    "tagline": "通过 Nimi 创作声音、配音和转写。"
   },
   "update": {
     "available": "有可用更新 {{version}}",
@@ -3312,5 +3313,11 @@
     "transcript": "识别到的内容",
     "result_kicker": "转换后的音频",
     "need_source_and_voice": "请先添加源音频并选择目标声音。"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 配置",
+    "configuration_description": "选择声音、转写和翻译使用的 AI 资源。",
+    "provenance": "导出文件会在元数据中标明合成音频，未嵌入神经水印。",
+    "referenceControls": "参考声音不支持表情标签或语气指令。生成前请移除表情标签；原文会保留供编辑。"
   }
 }

@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Spülung fehlgeschlagen: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Klonen lokaler Stimmen. Nichts verlässt Ihre Maschine.",
+    "tagline": "Stimmen erstellen, synchronisieren und transkribieren mit Nimi.",
     "coming_soon": "Kommt bald",
     "switch_to_light": "Wechseln Sie zum Lichtthema",
     "switch_to_dark": "Wechseln Sie zum dunklen Thema"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Beheben Sie jetzt alle ASR-Fehler – eine straffe Diktion erspart spätere TTS-Versuche.",
     "translate_title": "Übersetzungen bereit",
     "translate_cta": "Dub generieren",
-    "translate_hint": "Überfliegen Sie den Zieltext. Überlange Leitungen werden schneller; Sie können es auch direkt bearbeiten.",
+    "translate_hint": "Prüfe und bearbeite die Übersetzung vor der Audioerzeugung.",
     "done_title": "Dub abgeschlossen",
     "done_hint": "Überprüfen Sie Timing und Synchronisierungsverhältnisse. Optimieren Sie eine beliebige Zeile und klicken Sie auf „Geändert regenerieren“, um eine teilweise Wiederherstellung durchzuführen.",
     "segment_one": "{{count}}-Segment",
@@ -2569,5 +2569,25 @@
     "captured": "{{count}} problematische Protokollzeilen erfasst",
     "contextNotice": "Der ausgewählte Agent erhält diesen Bericht, die aktuelle Ansicht, aktuelle App- und Backend-Protokolle sowie Systemdiagnosen.",
     "complete": "Abgeschlossen"
+  },
+  "nimi": {
+    "configuration": "Nimi-KI-Konfiguration",
+    "configuration_description": "Wähle die KI-Ressourcen für Stimmen, Transkription und Übersetzung.",
+    "provenance": "Exportierte Dateien kennzeichnen synthetisches Audio in den Metadaten. Neuronale Wasserzeichen werden nicht angewendet.",
+    "referenceControls": "Referenzstimmen unterstützen keine Ausdruckstags oder Stilhinweise. Entferne Ausdruckstags vor der Erzeugung; dein Text bleibt bearbeitbar."
+  },
+  "voiceSelector": {
+    "engineDefault": "Motorstandard",
+    "clone": "Geklonte Stimmen",
+    "designed": "Gestaltete Stimmen",
+    "presets": "Voreinstellungen",
+    "fromVideo": "Aus Video",
+    "missingVoice": "Stimme nicht gefunden (erneut auswählen)",
+    "preview": "Vorschau der Stimme",
+    "openGallery": "In der Sprachgalerie öffnen",
+    "createVoice": "Erstellen Sie eine neue Stimme",
+    "gallery": "Galerie",
+    "addingVoice": "Stimme wird hinzugefügt…",
+    "addVoiceFailed": "Diese Stimme konnte nicht hinzugefügt werden"
   }
 }

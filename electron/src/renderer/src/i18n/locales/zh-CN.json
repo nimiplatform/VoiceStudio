@@ -1427,7 +1427,7 @@
     "toast_flush_failed": "刷新失败：{{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "本地语音克隆。没有任何东西离开你的机器。",
+    "tagline": "通过 Nimi 创作声音、配音和转写。",
     "coming_soon": "即将推出",
     "switch_to_light": "切换到浅色主题",
     "switch_to_dark": "切换到深色主题"
@@ -2425,7 +2425,7 @@
     "asr_hint": "立即修正所有 ASR 错误——严谨的措辞能省下后续 TTS 的返工。",
     "translate_title": "翻译已就绪",
     "translate_cta": "生成配音",
-    "translate_hint": "浏览译文。超长句子的语速已提升；你也可以直接编辑。",
+    "translate_hint": "生成音频前，请检查并编辑译文。",
     "done_title": "配音完成",
     "done_hint": "检查时序和同步比率。调整任意句子并点击“重新生成已改”即可快速部分重做。",
     "segment_one": "{{count}} 段",
@@ -2573,5 +2573,25 @@
     "captured": "已捕获 {{count}} 行问题日志",
     "contextNotice": "所选代理将收到此报告、当前界面、最近的应用与后端日志以及系统诊断信息。",
     "complete": "已完成"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 配置",
+    "configuration_description": "选择声音、转写和翻译使用的 AI 资源。",
+    "provenance": "导出文件会在元数据中标明合成音频，未嵌入神经水印。",
+    "referenceControls": "参考声音不支持表情标签或语气指令。生成前请移除表情标签；原文会保留供编辑。"
+  },
+  "voiceSelector": {
+    "engineDefault": "引擎默认",
+    "clone": "克隆声音",
+    "designed": "设计的声音",
+    "presets": "预设",
+    "fromVideo": "来自视频",
+    "missingVoice": "找不到语音（重新选择）",
+    "preview": "预览语音",
+    "openGallery": "在音色库中打开",
+    "createVoice": "创建新声音",
+    "gallery": "音色库",
+    "addingVoice": "正在添加声音…",
+    "addVoiceFailed": "无法添加该声音——请重试。"
   }
 }

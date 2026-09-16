@@ -2024,7 +2024,7 @@
     "asr_hint": "立即修復所有 ASR 錯誤 - 嚴格的措辭可以節省以後的 TTS 嘗試。",
     "translate_title": "翻譯準備就緒",
     "translate_cta": "生成配音",
-    "translate_hint": "瀏覽目標文字。超長線路速度提升；您也可以直接編輯。",
+    "translate_hint": "生成音訊前，請檢查並編輯譯文。",
     "done_title": "配音完成",
     "done_hint": "檢查時序和同步比率。調整任何線條並點擊“Regen Changed”即可快速部分重做。",
     "segment_one": "{{count}} 段",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· 模型卸載",
     "toast_flush_failed": "刷新失敗：{{message}}",
     "toast_project_saved": "項目已儲存",
-    "toast_project_created": "專案已建立"
+    "toast_project_created": "專案已建立",
+    "tagline": "透過 Nimi 創作聲音、配音和轉寫。"
   },
   "update": {
     "available": "有可用更新 {{version}}",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "暫停",
     "play": "播放"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 設定",
+    "configuration_description": "選擇聲音、轉寫和翻譯使用的 AI 資源。",
+    "provenance": "匯出檔案會在中繼資料中標明合成音訊，未嵌入神經浮水印。",
+    "referenceControls": "參考聲音不支援表情標籤或語氣指令。生成前請移除表情標籤；原文會保留供編輯。"
   }
 }

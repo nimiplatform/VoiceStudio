@@ -50,11 +50,7 @@ beforeEach(() => {
     getTracks: () => [{ stop: stopTrack }],
   }));
   vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: microphone } });
-  mocks.api.mockImplementation(async (path: string) =>
-    path.endsWith('/prefs')
-      ? { enabled: true, model_id: 'sherpa-test' }
-      : { engine_available: true, models: [{ id: 'sherpa-test', installed: true }] },
-  );
+  mocks.api.mockResolvedValue({ready:true});
   mocks.capture.mockImplementation(async (_stream: MediaStream, callback: typeof emit) => {
     emit = callback;
     return stopGraph;
@@ -83,7 +79,7 @@ it('streams PCM and preserves repeated utterances without duplicating the EOF su
   const result = vi.fn();
   await live.start(result, 'studio-mic');
   const socket = Socket.instances[0];
-  expect(socket.url.searchParams.get('model')).toBe('sherpa-test');
+  expect(socket.url.searchParams.get('model')).toBeNull();
   expect(microphone.mock.calls[0]?.[0]).toMatchObject({
     audio: { deviceId: { exact: 'studio-mic' } },
   });
@@ -180,7 +176,8 @@ it('uses the dev WebSocket proxy even when the native bridge supplies a backend 
   expect(Socket.instances[0].url.origin).toBe('ws://localhost:3912');
   expect(Socket.instances[0].url.pathname).toBe('/api/ws/transcribe');
 });
-it('uses the trusted backend URL from the packaged app scheme', async () => {
+it('uses the Host-issued business URL from the packaged app scheme', async () => {
+  mocks.bridge={backend:{websocketUrl:vi.fn(async()=>"ws://127.0.0.1:3900/ws/transcribe?worker_token=test")}};
   vi.stubGlobal('window', {
     location: { href: 'app://voicestudio/index.html#/capture', protocol: 'app:' },
   });
@@ -188,11 +185,11 @@ it('uses the trusted backend URL from the packaged app scheme', async () => {
   expect(Socket.instances[0].url.origin).toBe('ws://127.0.0.1:3900');
   expect(Socket.instances[0].url.pathname).toBe('/ws/transcribe');
 });
-it('preserves a main-issued ticket for authenticated remote dictation', async () => {
+it('preserves the main-issued business-worker token', async () => {
   mocks.bridge = {
     backend: {
       websocketUrl: vi.fn(
-        async () => `wss://gpu-box:3900/ws/transcribe?ws_ticket=ovs_ws_ticket_${'b'.repeat(43)}`,
+        async () => `ws://127.0.0.1:3900/ws/transcribe?worker_token=ovs_worker_token_${'b'.repeat(43)}`,
       ),
     },
   };
@@ -201,7 +198,17 @@ it('preserves a main-issued ticket for authenticated remote dictation', async ()
     voicestudio: mocks.bridge,
   });
   await live.start(vi.fn());
-  expect(Socket.instances[0].url.origin).toBe('wss://gpu-box:3900');
-  expect(Socket.instances[0].url.searchParams.get('ws_ticket')).toMatch(/^ovs_ws_ticket_/);
-  expect(Socket.instances[0].url.searchParams.get('model')).toBe('sherpa-test');
+  expect(Socket.instances[0].url.origin).toBe('ws://127.0.0.1:3900');
+  expect(Socket.instances[0].url.searchParams.get('worker_token')).toMatch(/^ovs_worker_token_/);
+  expect(Socket.instances[0].url.searchParams.get('model')).toBeNull();
+});
+
+it('deduplicates raw EOF against raw utterances while preserving the refined display', async () => {
+  const result = vi.fn();
+  await live.start(result);
+  const socket = Socket.instances[0];
+  socket.frame({ type: 'final', final_kind: 'utterance', text: 'meet pat at 3', refined_text: 'Meet Pat at three.' });
+  socket.frame({ type: 'final', final_kind: 'summary', text: 'meet pat at 3' });
+  expect(result).toHaveBeenCalledTimes(1);
+  expect(live.getSnapshot()).toMatchObject({ stage: 'done', text: 'Meet Pat at three.' });
 });

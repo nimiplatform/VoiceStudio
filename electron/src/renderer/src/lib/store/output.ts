@@ -9,6 +9,7 @@ export interface OutputState {
   objectUrl: string | null;
   /** The script that produced `result`. */
   text: string;
+  details?: { mode: 'clone' | 'design'; instruct: string; language: string };
 }
 
 export const outputStore = new Store<OutputState>({ result: null, objectUrl: null, text: '' });
@@ -17,9 +18,9 @@ export function useLatestOutput(): OutputState {
   return useStore(outputStore);
 }
 
-export function setLatestOutput(result: GenerateResult, text: string): void {
+export function setLatestOutput(result: GenerateResult, text: string, details?: OutputState['details']): void {
   revokeObjectUrl(outputStore.state.objectUrl);
-  outputStore.setState(() => ({ result, objectUrl: createObjectUrl(result.blob), text }));
+  outputStore.setState(() => ({ result, objectUrl: createObjectUrl(result.blob), text, ...(details ? { details } : {}) }));
 }
 
 export function clearLatestOutput(): void {

@@ -19,8 +19,7 @@ import {
   moveResizeDubSegment,
   redoDubEdit,
   translateDub,
-  translateDubBatchWithAgent,
-  translateDubWithAgent,
+  translateDubBatch,
   setDubTarget,
   splitDubSegment,
   undoDubEdit,
@@ -31,125 +30,22 @@ vi.mock('@/lib/api/event-stream', async (load) => ({
   consumeTaskStream: vi.fn(),
 }));
 
-it('translates the current dubbing segments with an installed local CLI agent', async () => {
-  const translate = vi.fn().mockResolvedValue({
-    agent: 'codex',
-    translations: [
-      { id: 'a', text: 'Hola' },
-      { id: 'b', text: 'Adiós' },
-    ],
+it('keeps voice assignments and per-language provenance through Nimi translation', async () => {
+  vi.mocked(apiJson).mockReset().mockImplementation(async (path, init) => {
+    if (String(path).startsWith('/glossary/')) return [];
+    const request = JSON.parse(init?.body as string);
+    return { translated: request.segments.map((segment: {id: string}) => ({ id: segment.id, text: request.target_lang + ' line' })), provider: 'Nimi' };
   });
-  Object.defineProperty(window, 'voicestudio', {
-    configurable: true,
-    value: {
-      repair: { translate, stopTranslation: vi.fn().mockResolvedValue(undefined) },
-    } as unknown as Window['voicestudio'],
-  });
-  vi.mocked(apiJson).mockReset();
-  vi.mocked(apiJson).mockResolvedValueOnce([
-    { source: 'VoiceStudio', target: 'VoiceStudio', note: '' },
-  ]);
-  dubSession.setState((current) => ({
-    ...current,
-    jobId: 'agent-job',
-    phase: 'editing',
-    recovery: null,
-    sourceLang: 'en',
-    dialect: 'es-MX',
-    segments: [
-      { id: 'a', start: 0, end: 1.25, text: 'Hello', text_original: 'Hello' },
-      { id: 'b', start: 1.25, end: 3, text: 'Goodbye', text_original: 'Goodbye' },
-    ],
-  }));
-
-  await expect(translateDubWithAgent('es', 'codex')).resolves.toBe(true);
-
-  expect(translate).toHaveBeenCalledWith(
-    expect.objectContaining({
-      agent: 'codex',
-      purpose: 'translate',
-      sourceLanguage: 'en',
-      targetLanguage: 'es',
-      dialect: 'es-MX',
-      segments: [
-        expect.objectContaining({ id: 'a', sourceText: 'Hello', start: 0, end: 1.25 }),
-        expect.objectContaining({ id: 'b', sourceText: 'Goodbye', start: 1.25, end: 3 }),
-      ],
-    }),
-  );
-  expect(dubSession.state).toMatchObject({ quality: 'agent', agentCli: 'codex', phase: 'editing' });
-  expect(dubSession.state.segments.map((segment) => segment.text)).toEqual(['Hola', 'Adiós']);
-  expect(dubSession.state.segments.map((segment) => segment.translations?.es)).toEqual([
-    'Hola',
-    'Adiós',
-  ]);
-  expect(dubSession.state.segments.map((segment) => segment.agent_generated_langs)).toEqual([
-    ['es'],
-    ['es'],
-  ]);
-  dubSession.setState((current) => ({ ...current, quality: 'fast', agentCli: undefined }));
+  dubSession.setState((current) => ({ ...current, jobId: 'nimi-batch', phase: 'editing', recovery: null,
+    sourceLang: 'en', quality: 'agent', segments: [{id: 'a',start: 0,end: 2,text: 'Hello',text_original: 'Hello',profile_id: 'voice-1'}] }));
+  await expect(translateDubBatch([{lang:'Spanish',code:'es'},{lang:'French',code:'fr'}], 'nimi')).resolves.toEqual([]);
+  expect(dubSession.state.segments[0]).toMatchObject({profile_id:'voice-1',translations:{es:'es line',fr:'fr line'},agent_generated_langs:['es','fr']});
+  setDubTarget('French','fr');
+  expect(dubSession.state.segments[0]).toMatchObject({text:'fr line',agent_generated_lang:'fr'});
+  editDubSegment('a',{text:'Manually edited'});
+  expect(dubSession.state.segments[0].agent_generated_langs).toEqual(['es']);
+  dubSession.setState((current)=>({...current,quality:'fast'}));
   vi.clearAllMocks();
-  delete (window as Partial<Window>).voicestudio;
-});
-
-it('keeps timing-fit provenance for every agent-translated target language', async () => {
-  const translate = vi.fn(
-    async (request: { targetLanguage: string; segments: Array<{ id: string }> }) => ({
-      agent: 'codex',
-      translations: request.segments.map((segment) => ({
-        id: segment.id,
-        text: `${request.targetLanguage} line`,
-      })),
-    }),
-  );
-  Object.defineProperty(window, 'voicestudio', {
-    configurable: true,
-    value: {
-      repair: { translate, stopTranslation: vi.fn().mockResolvedValue(undefined) },
-    } as unknown as Window['voicestudio'],
-  });
-  vi.mocked(apiJson).mockReset().mockResolvedValue([]);
-  dubSession.setState((current) => ({
-    ...current,
-    jobId: 'agent-batch',
-    phase: 'editing',
-    recovery: null,
-    sourceLang: 'en',
-    quality: 'fast',
-    agentCli: undefined,
-    segments: [{ id: 'a', start: 0, end: 2, text: 'Hello', text_original: 'Hello' }],
-  }));
-
-  await expect(
-    translateDubBatchWithAgent(
-      [
-        { lang: 'Spanish', code: 'es' },
-        { lang: 'French', code: 'fr' },
-      ],
-      'codex',
-    ),
-  ).resolves.toEqual([]);
-
-  expect(translate).toHaveBeenCalledTimes(2);
-  expect(dubSession.state.segments[0]).toMatchObject({
-    text: 'Spanish line',
-    translations: { es: 'Spanish line', fr: 'French line' },
-    agent_generated_lang: 'es',
-    agent_generated_langs: ['es', 'fr'],
-  });
-  setDubTarget('French', 'fr');
-  expect(dubSession.state.segments[0]).toMatchObject({
-    text: 'French line',
-    agent_generated_lang: 'fr',
-  });
-  editDubSegment('a', { text: 'Manually edited' });
-  expect(dubSession.state.segments[0]).toMatchObject({
-    agent_generated_langs: ['es'],
-  });
-  expect(dubSession.state.segments[0].agent_generated_lang).toBeUndefined();
-  dubSession.setState((current) => ({ ...current, quality: 'fast', agentCli: undefined }));
-  vi.clearAllMocks();
-  delete (window as Partial<Window>).voicestudio;
 });
 
 it('supports reversible insert, delete, merge, and split edits without losing speaker attribution', () => {

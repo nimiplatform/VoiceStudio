@@ -24,10 +24,8 @@ import {
   CopyIcon,
   DownloadIcon,
   FileTextIcon,
-  GaugeIcon,
   HistoryIcon,
   MicIcon,
-  ScanTextIcon,
   SquareIcon,
   UploadIcon,
   Trash2Icon,
@@ -36,11 +34,9 @@ import { toast } from 'sonner';
 import { runRendererTask } from '@/lib/global-error-recovery';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Textarea } from '@/components/ui/textarea';
 import { WaveformPlayer } from '@/components/waveform-player';
 import { useRecording } from '@/hooks/use-recording';
-import { useDictationSelection } from '@/hooks/use-dictation-selection';
-import { useEngines } from '@/hooks/use-engines';
 import { apiJson, describeError } from '@/lib/api/client';
 import { setCloneSetting } from '@/lib/store/clone-settings';
 import { cn } from '@/lib/utils';
@@ -54,22 +50,10 @@ import {
 } from '../../../../../../frontend/src/utils/transcriptionsStore';
 import { beginAppActivity } from '@/lib/app-activity';
 import { formatRelative } from '@/features/clone/format';
-import { useModelCatalogue } from '@/features/settings/model-catalogue-query';
 import { useNativeShortcut } from '@/hooks/use-native-dictation';
 import { recordActionBreadcrumb } from '@/lib/report-breadcrumb';
 import { saveLocalFile } from '@/lib/local-export';
 import { formatShortcut } from '../../../../../../frontend/src/utils/dictationShortcut';
-
-type TranscriptionMode = 'fast' | 'accurate';
-const TRANSCRIPTION_MODE_KEY = 'voicestudio.transcription.mode';
-
-function initialTranscriptionMode(): TranscriptionMode {
-  try {
-    return localStorage.getItem(TRANSCRIPTION_MODE_KEY) === 'accurate' ? 'accurate' : 'fast';
-  } catch {
-    return 'fast';
-  }
-}
 
 export function TranscriptionsPage() {
   const { t, i18n } = useTranslation();
@@ -83,57 +67,31 @@ export function TranscriptionsPage() {
   const [search, setSearch] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string | null>(null);
-  const [mode, setMode] = useState<TranscriptionMode>(initialTranscriptionMode);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const request = useRef<AbortController | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  const engines = useEngines();
-  const dictation = useDictationSelection();
   const shortcut = useNativeShortcut();
-  const catalogue = useModelCatalogue();
   const dictationReadiness = useQuery({
     queryKey: ['transcription-readiness'],
     queryFn: () => apiJson<{ ready: boolean }>('/dictation/readiness'),
     refetchInterval: (query) => (query.state.data?.ready === false ? 15_000 : false),
   });
-  const accurateReadiness = useQuery({
-    queryKey: ['transcription-readiness', 'accurate'],
-    queryFn: () => apiJson<{ ready: boolean }>('/dictation/readiness?purpose=transcribe'),
-    enabled: mode === 'accurate',
-    refetchInterval: (query) =>
-      mode === 'accurate' && query.state.data?.ready === false ? 15_000 : false,
-  });
-  const fileReadiness = mode === 'accurate' ? accurateReadiness : dictationReadiness;
-  const selectedModel = useMemo(() => {
-    if (mode === 'fast') return dictation.data?.model?.label;
-    const modelId = engines.data?.asr.active_model;
-    return catalogue.data?.models.find((entry) => entry.repo_id === modelId)?.label ?? modelId;
-  }, [catalogue.data?.models, dictation.data?.model?.label, engines.data?.asr.active_model, mode]);
-  const chooseMode = (next: string | undefined) => {
-    if (next !== 'fast' && next !== 'accurate') return;
-    setMode(next);
-    setFailed(null);
-    try {
-      localStorage.setItem(TRANSCRIPTION_MODE_KEY, next);
-    } catch {
-      // A denied storage write should not prevent the current selection.
-    }
-  };
+  const fileReadiness = dictationReadiness;
   const transcribe = async (audio: File) => {
     if (request.current) return;
-    const reportMode = mode;
+    const reportMode = 'accurate';
     recordActionBreadcrumb(`transcribe:${reportMode}:start`);
     const controller = new AbortController();
     request.current = controller;
     setBusy(true);
     setFailed(null);
     setFile(audio);
-    const finishActivity = beginAppActivity(mode === 'accurate' ? 'transcription' : 'dictation');
+    const finishActivity = beginAppActivity('transcription');
     try {
       const ready = await apiJson<{ ready: boolean }>(
-        mode === 'accurate' ? '/dictation/readiness?purpose=transcribe' : '/dictation/readiness',
+        '/dictation/readiness',
         { signal: controller.signal },
       );
       if (!ready.ready) {
@@ -143,7 +101,7 @@ export function TranscriptionsPage() {
       }
       const body = new FormData();
       body.set('audio', audio);
-      body.set('mode', mode);
+      body.set('mode', 'file');
       const refinement = await apiJson<{ auto: boolean }>('/api/settings/dictation-refinement', {
         signal: controller.signal,
       }).catch(() => ({ auto: false }));
@@ -155,6 +113,10 @@ export function TranscriptionsPage() {
         signal: controller.signal,
       });
       if (!controller.signal.aborted) {
+        if (!result.text?.trim()) {
+          setFailed(t('capture.no_speech'));
+          return;
+        }
         const saved = addTranscription(result);
         setSelectedId(saved.id);
         recordActionBreadcrumb(`transcribe:${reportMode}:complete`);
@@ -201,6 +163,21 @@ export function TranscriptionsPage() {
     [entries, search],
   );
   const selected = visible.find((entry) => entry.id === selectedId);
+  const [correction, setCorrection] = useState<string | null>(null);
+  useEffect(() => setCorrection(null), [selectedId]);
+  const saveCorrection = () => {
+    if (!selected || correction === null || !correction.trim()) return;
+    try {
+      const next = loadTranscriptions().map((entry) => entry.id === selected.id
+        ? { ...entry, refined_text: correction.trim() } : entry);
+      localStorage.setItem(TRANSCRIPTIONS_KEY, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent(TRANSCRIPTION_EVENT));
+      setEntries(next);
+      setCorrection(null);
+    } catch {
+      toast.error(t('modelSettings.failed'));
+    }
+  };
   useEffect(() => {
     const next = visible[0]?.id ?? null;
     if (!visible.some((entry) => entry.id === selectedId) && selectedId !== next) {
@@ -356,51 +333,9 @@ export function TranscriptionsPage() {
         <section className="flex min-w-0 flex-1 flex-col">
           <div className="border-b border-border/50 px-6 py-4">
             <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
-              <ToggleGroup
-                value={[mode]}
-                onValueChange={(value) => chooseMode(value[0])}
-                disabled={busy || capturing}
-                size="sm"
-                spacing={0}
-                aria-label={t('transcriptions.mode_label')}
-                className="rounded-lg border border-border/50 bg-background/25 p-0.5"
-              >
-                <ToggleGroupItem
-                  value="fast"
-                  title={t('transcriptions.mode_fast_desc')}
-                  className="gap-1.5"
-                >
-                  <GaugeIcon />
-                  {t('transcriptions.mode_fast')}
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="accurate"
-                  title={t('transcriptions.mode_accurate_desc')}
-                  className="gap-1.5"
-                >
-                  <ScanTextIcon />
-                  {t('transcriptions.mode_accurate')}
-                </ToggleGroupItem>
-              </ToggleGroup>
-              {selectedModel ? (
-                <span
-                  className="inline-flex min-w-0 max-w-72 items-center gap-1.5 px-1 text-xs text-muted-foreground"
-                  title={`${t(
-                    mode === 'accurate' ? 'engineSidebar.asr' : 'engineSidebar.dictation',
-                  )} · ${selectedModel}`}
-                >
-                  {mode === 'accurate' ? (
-                    <ScanTextIcon className="size-3.5 shrink-0" aria-hidden="true" />
-                  ) : (
-                    <KeyboardIcon className="size-3.5 shrink-0" aria-hidden="true" />
-                  )}
-                  <span className="shrink-0">
-                    {t(mode === 'accurate' ? 'engineSidebar.asr' : 'engineSidebar.dictation')}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span className="truncate">{selectedModel}</span>
-                </span>
-              ) : null}
+              <Link to="/settings/models" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+                {t('nimi.configuration')}
+              </Link>
               <input
                 ref={input}
                 type="file"
@@ -502,30 +437,9 @@ export function TranscriptionsPage() {
               )}
             </div>
           </div>
-          {mode === 'fast' && !dictationReadiness.data?.ready && !dictationReadiness.isPending && (
+          {!dictationReadiness.data?.ready && !dictationReadiness.isPending && (
             <DictationSetup onReady={() => void dictationReadiness.refetch()} />
           )}
-          {mode === 'accurate' &&
-            !accurateReadiness.data?.ready &&
-            !accurateReadiness.isPending && (
-              <div className="border-b border-border/50 px-6 py-3">
-                <div className="mx-auto flex w-full max-w-4xl items-center gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm">
-                  <ScanTextIcon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1">{t('transcriptions.missing_model')}</span>
-                  <AgentFixButton request="Restore accurate file transcription. Install and activate the best compatible local ASR model through VoiceStudio, preserve the selected media and mode, then verify transcription is ready to start." />
-                  <Link
-                    to="/settings/models/$family"
-                    params={{ family: 'asr' }}
-                    className={buttonVariants({
-                      variant: 'outline',
-                      size: 'sm',
-                    })}
-                  >
-                    {t('engineSidebar.asr')}
-                  </Link>
-                </div>
-              </div>
-            )}
           <div className="border-b border-border/50 px-6 py-3">
             <details className="mx-auto w-full max-w-4xl">
               <summary className="cursor-pointer text-xs text-muted-foreground">
@@ -698,9 +612,21 @@ export function TranscriptionsPage() {
                     </Button>
                   </div>
                 </div>
-                <p className="whitespace-pre-wrap text-base leading-7">
-                  {preferredTranscript(selected)}
-                </p>
+                {correction === null ? (
+                  <div className="space-y-2">
+                    <p className="whitespace-pre-wrap text-base leading-7">{preferredTranscript(selected)}</p>
+                    <Button size="sm" variant="ghost" onClick={() => setCorrection(preferredTranscript(selected))}>
+                      {t('clone.edit')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Textarea value={correction} onChange={(event) => setCorrection(event.target.value)}
+                      aria-label={t('transcriptions.original_transcript')} className="min-h-32" />
+                    <Button size="sm" disabled={!correction.trim()} onClick={saveCorrection}>{t('common.save')}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setCorrection(null)}>{t('common.cancel')}</Button>
+                  </div>
+                )}
                 {selected.refined_text && selected.refined_text.trim() !== selected.text.trim() ? (
                   <details className="rounded-lg border border-border/50 p-4">
                     <summary className="cursor-pointer text-sm font-medium text-muted-foreground">

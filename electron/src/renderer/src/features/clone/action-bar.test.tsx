@@ -127,9 +127,8 @@ describe('ActionBar', () => {
     render(<ActionBar />);
     // Base UI exposes the slider root as a labelled group (the thumb input is
     // only materialised with layout, which jsdom lacks).
-    expect(screen.getByRole('group', { name: 'Steps' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'CFG' })).toBeInTheDocument();
-    expect(screen.getByText('32')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Steps' })).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Speed' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Postprocess' })).toBeChecked();
     expect(screen.getByText('1.0×')).toBeInTheDocument();
 

@@ -51,19 +51,11 @@ it('opens optional details and explains a failed automatic transcription', async
   expect(retry).toHaveBeenCalledOnce();
 });
 
-it('hands missing reference ASR to the app-operation repair flow without losing retry', () => {
+it('opens formal Nimi configuration for missing reference ASR and preserves retry', () => {
   const retry = vi.fn();
-  const listener = vi.fn();
-  window.addEventListener('voicestudio:repair-agent-open', listener);
   render(<OptionalDetails transcription={{ state: 'unavailable', retry }} />);
-
-  fireEvent.click(screen.getByRole('button', { name: 'repairAgent.fix' }));
-
-  expect(listener).toHaveBeenCalledOnce();
-  const event = listener.mock.calls[0]?.[0] as CustomEvent<{ report: string; autoFix: boolean }>;
-  expect(event.detail.autoFix).toBe(true);
-  expect(event.detail.report).toContain('ACTION_REQUEST: Restore local reference-audio');
+  fireEvent.click(screen.getByRole('button', { name: 'nimi.configuration' }));
+  expect(window.location.hash).toBe('#/settings/models');
   fireEvent.click(screen.getByRole('button', { name: 'referenceAsr.retry' }));
   expect(retry).toHaveBeenCalledOnce();
-  window.removeEventListener('voicestudio:repair-agent-open', listener);
 });

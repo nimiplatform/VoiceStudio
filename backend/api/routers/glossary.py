@@ -183,30 +183,12 @@ Keep the list to at most {max_terms} entries. Prefer shorter is better."""
 
 
 @router.post("/glossary/{project_id}/auto-extract")
-def auto_extract(project_id: str, req: AutoExtractRequest):
+async def auto_extract(project_id: str, req: AutoExtractRequest):
     """Ask the LLM to propose glossary entries from the project's source segments.
 
     Writes them as `auto=1` rows. Existing terms with the same (source,target)
     are NOT duplicated. Returns the full current glossary after the pass.
     """
-    # Resolved through the LLM Skills registry so auto-extract can be toggled
-    # or routed to its own provider (Settings → LLM Skills) independently of
-    # the translation pipeline. None == disabled or no provider configured.
-    from services import llm_skills
-
-    handle = llm_skills.resolve_skill_client("glossary_extract")
-    if handle is None:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Auto-extract needs an LLM. Set one up in Settings → LLM Providers "
-                "(pick a provider, add its key, choose a model, Test) — or use local "
-                "Ollama / LM Studio for a fully offline setup — and make sure the "
-                "Glossary auto-extract skill is enabled in Settings → LLM Skills, "
-                "then try again."
-            ),
-        )
-
     # Concat all text — capped so we don't blow the context window on long projects.
     source_text = "\n".join(
         (s.get("text") or "").strip() for s in req.segments if (s.get("text") or "").strip()
@@ -225,31 +207,9 @@ def auto_extract(project_id: str, req: AutoExtractRequest):
         f"Segments:\n{source_text}"
     )
 
-    try:
-        res = handle.client.chat.completions.create(
-            model=handle.model,
-            timeout=handle.timeout,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
-        body = (res.choices[0].message.content or "").strip()
-    except Exception as e:
-        logger.warning("auto-extract LLM call failed: %s", e)
-        # Scrub the provider error — some OpenAI-compatible providers echo the
-        # API key or a user_id in the body, which must not reach the UI verbatim.
-        from core.scrub import scrub_provider_error
-        from services import llm_providers
-        _p = llm_providers.active_provider()
-        _key = llm_providers.resolve_api_key(_p) if _p else None
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                "LLM didn't respond. Check Settings → Logs → Backend for the trace. "
-                f"Error: {scrub_provider_error(e, _key)}"
-            ),
-        )
+    from business.carrier import call
+    result = await call('translate', {'text': user, 'instruction': system})
+    body = result['text']
 
     # Parse: SOURCE || TARGET || note (lines are allowed to be sloppy — we're forgiving).
     proposed: list[tuple[str, str, str]] = []

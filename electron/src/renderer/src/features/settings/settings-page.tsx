@@ -1,6 +1,5 @@
 import { SupportSettings } from './support-settings';
 import { UpdateSettings } from './update-settings';
-import { MirrorSettings } from './mirror-settings';
 import { StorageSettings } from './storage-settings';
 import { PrivacySettings } from './privacy-settings';
 import { PerformanceSettings } from './performance-settings';
@@ -15,8 +14,8 @@ import { UsageSettings } from './usage-settings';
 import { WorkersSettings } from './workers-settings';
 import { OpenApiSettings } from './openapi-settings';
 import { DiagnosticsSettings } from './diagnostics-settings';
-import { ModelSettings } from './model-settings';
-import { familyIcons, modelFamilies } from './model-family';
+import { NimiSettings } from './nimi-settings';
+import { modelFamilies } from './model-family';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { runRendererTask } from '@/lib/global-error-recovery';
 import {
@@ -93,7 +92,7 @@ const settingsNavIconClass =
 const settingsNavActiveClass =
   'bg-[var(--sidebar-row-active)] font-medium shadow-[inset_2px_0_0_var(--primary)]';
 
-const extraSettings = [
+const upstreamSettings = [
   {
     to: '/settings/pronunciation',
     label: 'pronunciation.title',
@@ -233,6 +232,10 @@ const extraSettings = [
     fields: ['openapi.title', 'openapi.copy_url', 'openapi.open_raw'],
   },
 ] as const;
+
+const extraSettings = upstreamSettings.filter((item) => new Set([
+  '/settings/support', '/settings/pronunciation', '/settings/privacy', '/settings/permissions', '/settings/storage', '/settings/usage',
+]).has(item.to));
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -396,33 +399,6 @@ export function SettingsPage() {
                 {t('modelSettings.models')}
               </span>
             </Link>
-            {isModels &&
-              modelFamilies.map((family) => {
-                const FamilyIcon = familyIcons[family];
-                return (
-                  <Link
-                    key={family}
-                    title={t('engineSidebar.' + family)}
-                    to="/settings/models/$family"
-                    params={{ family }}
-                    aria-current={modelFamily === family ? 'page' : undefined}
-                    className={cn(
-                      buttonVariants({ variant: 'ghost' }),
-                      settingsNavItemClass,
-                      'justify-start gap-2 pl-7 text-muted-foreground',
-                      modelFamily === family && 'bg-sidebar-accent text-foreground',
-                    )}
-                  >
-                    <FamilyIcon className={cn(settingsNavIconClass, 'size-3.5')} />
-                    <span
-                      data-slot="settings-nav-label"
-                      className="min-w-0 flex-1 truncate text-left"
-                    >
-                      {t('engineSidebar.' + family)}
-                    </span>
-                  </Link>
-                );
-              })}
             {extraMatches
               .filter(({ to }) => to !== '/settings/support')
               .map(({ to, label, Icon }) => (
@@ -574,8 +550,8 @@ export function SettingsPage() {
             <LogSettings />
           ) : isModels ? (
             <>
-              <ModelSettings key={modelFamily ?? 'all'} family={modelFamily} />
-              {!modelFamily && <MirrorSettings />}
+              <NimiSettings />
+
             </>
           ) : (
             <SettingsSection

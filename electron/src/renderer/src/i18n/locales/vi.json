@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Xóa không thành công: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Nhân bản giọng nói địa phương. Không có gì rời khỏi máy của bạn.",
+    "tagline": "Tạo giọng nói, lồng tiếng và phiên âm với Nimi.",
     "coming_soon": "Sắp ra mắt",
     "switch_to_light": "Chuyển sang giao diện nhẹ nhàng",
     "switch_to_dark": "Chuyển sang chủ đề tối"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Hãy khắc phục mọi lỗi ASR ngay bây giờ — chuyển hướng chặt chẽ sẽ giúp tiết kiệm các lần thử TTS sau này.",
     "translate_title": "Bản dịch đã sẵn sàng",
     "translate_cta": "Tạo lồng tiếng",
-    "translate_hint": "Đọc lướt văn bản mục tiêu. Các dòng quá dài được tăng tốc độ; bạn cũng có thể chỉnh sửa trực tiếp.",
+    "translate_hint": "Kiểm tra và chỉnh sửa bản dịch trước khi tạo âm thanh.",
     "done_title": "Lồng tiếng hoàn tất",
     "done_hint": "Xem lại tỷ lệ thời gian và đồng bộ hóa. Tinh chỉnh bất kỳ dòng nào và nhấn \"Regen đã thay đổi\" để làm lại một phần nhanh chóng.",
     "segment_one": "Đoạn {{count}}",
@@ -2569,5 +2569,25 @@
     "captured": "Đã thu thập {{count}} dòng nhật ký có vấn đề",
     "contextNotice": "Tác nhân đã chọn nhận báo cáo này, màn hình hiện tại, nhật ký ứng dụng và backend gần đây cùng thông tin chẩn đoán hệ thống.",
     "complete": "Hoàn thành"
+  },
+  "nimi": {
+    "configuration": "Cấu hình AI Nimi",
+    "configuration_description": "Chọn tài nguyên AI cho giọng nói, phiên âm và dịch thuật.",
+    "provenance": "Siêu dữ liệu của tệp xuất đánh dấu âm thanh tổng hợp. Không áp dụng thủy vân mạng nơ-ron.",
+    "referenceControls": "Giọng tham chiếu không hỗ trợ thẻ biểu cảm hay chỉ dẫn phong cách. Xóa thẻ trước khi tạo; văn bản vẫn được giữ để chỉnh sửa."
+  },
+  "voiceSelector": {
+    "engineDefault": "Mặc định công cụ",
+    "clone": "Giọng nói nhân bản",
+    "designed": "Giọng nói được thiết kế",
+    "presets": "cài đặt trước",
+    "fromVideo": "Từ video",
+    "missingVoice": "Không tìm thấy giọng nói (chọn lại)",
+    "preview": "Xem trước giọng nói",
+    "openGallery": "Mở trong Thư viện giọng nói",
+    "createVoice": "Tạo một giọng nói mới",
+    "gallery": "Thư viện",
+    "addingVoice": "Đang thêm giọng nói…",
+    "addVoiceFailed": "Không thể thêm giọng nói đó"
   }
 }

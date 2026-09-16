@@ -1,4 +1,3 @@
-import { SetupGate } from './setup-gate';
 import { ReportBug } from './report-bug';
 import { CrashDetails } from './crash-details';
 import {
@@ -11,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AgentFixButton } from '@/components/agent-fix-button';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -116,7 +114,7 @@ export function BackendGate({ children, repairDock }: BackendGateProps) {
   if (status.stage === 'ready')
     return (
       <div className="contents">
-        <SetupGate>{children}</SetupGate>
+        <>{children}</>
       </div>
     );
 
@@ -469,15 +467,7 @@ export function BackendGate({ children, repairDock }: BackendGateProps) {
                   {t('settings.remote_backend_use_local')}
                 </Button>
               )}
-              <AgentFixButton
-                request={`Restore the VoiceStudio local backend. Current stage: ${status.stage}. ${status.message || ''} Inspect Electron status, restart or resume runtime setup as needed, wait until the backend is ready, and verify health. Do not clean reinstall or change user consent.`}
-              />
             </div>
-          ) : null}
-          {setupFailed ? (
-            <AgentFixButton
-              request={`Resume and repair the interrupted VoiceStudio runtime setup. Current issue: ${status.setupIssue || 'unknown'}. ${status.message || ''} Use the Electron runtime setup control, wait for completion, and verify backend health. Do not clean reinstall or change user consent.`}
-            />
           ) : null}
           {status.logTail.length > 0 ? (
             <Collapsible open={logOpen} onOpenChange={setLogOpen} className="w-full">
@@ -516,7 +506,7 @@ export function BackendGate({ children, repairDock }: BackendGateProps) {
   if (recovering)
     return (
       <div className="contents">
-        <SetupGate>{children}</SetupGate>
+        <>{children}</>
         {gate}
       </div>
     );

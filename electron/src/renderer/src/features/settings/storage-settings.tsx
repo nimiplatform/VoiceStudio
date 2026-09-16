@@ -11,10 +11,6 @@ import { SettingsSection } from './settings-layout';
 import { HistoryRetention } from './privacy-settings';
 import { useSettingsAction } from './use-settings-action';
 import { fmtBytes } from '../../../../../../frontend/src/components/settings/models/format';
-import { ModelsDirectorySettings } from './models-directory-settings';
-import { ResetSettings } from './reset-settings';
-import { DataDirectorySettings } from './data-directory-settings';
-import { UninstallSettings } from './uninstall-settings';
 import {
   warningText,
   type StorageWarning,
@@ -83,8 +79,6 @@ export function StorageSettings() {
     });
   return (
     <>
-      <DataDirectorySettings />
-      <ModelsDirectorySettings />
       <SettingsSection icon={HardDriveIcon} title={t('settings.storage_usage')}>
         <div className="flex items-center justify-between gap-3 p-4">
           <p className="text-sm text-muted-foreground">{t('settings.storage_desc')}</p>
@@ -287,8 +281,6 @@ export function StorageSettings() {
         </div>
       </SettingsSection>
       <HistoryRetention />
-      <ResetSettings />
-      <UninstallSettings />
     </>
   );
 }

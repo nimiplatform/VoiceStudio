@@ -42,6 +42,7 @@ export class LiveDictation {
   private unsubscribeFarEnd: (() => void) | null = null;
   private deadline: ReturnType<typeof setTimeout> | null = null;
   private committed: string[] = [];
+  private rawCommitted: string[] = [];
   private onResult: (entry: Partial<TranscriptEntry>) => void = () => {};
   private startedAt = 0;
   private finishActivity: (() => void) | null = null;
@@ -71,6 +72,7 @@ export class LiveDictation {
     this.request = request;
     this.onResult = onResult;
     this.committed = [];
+    this.rawCommitted = [];
     this.publish({
       stage: 'starting',
       text: '',
@@ -80,24 +82,9 @@ export class LiveDictation {
     });
     let issue: DictationState['issue'] = 'connection';
     try {
-      const [prefs, catalogue] = await Promise.all([
-        apiJson<{ enabled: boolean; model_id: string }>('/dictation/prefs', {
-          signal: request.signal,
-        }),
-        apiJson<{
-          engine_available: boolean;
-          models: { id: string; installed: boolean }[];
-        }>('/dictation/models', { signal: request.signal }),
-      ]);
+      const readiness = await apiJson<{ ready: boolean }>('/dictation/readiness', { signal: request.signal });
       if (!current()) return;
-      if (
-        !prefs.enabled ||
-        !catalogue.engine_available ||
-        !catalogue.models.some((model) => model.id === prefs.model_id && model.installed)
-      ) {
-        this.fail('model');
-        return;
-      }
+      if (!readiness.ready) { this.fail('model'); return; }
       issue = 'microphone';
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -112,7 +99,6 @@ export class LiveDictation {
       this.stream = stream;
       issue = 'connection';
       const url = new URL(await backendWebSocketUrl('/ws/transcribe'));
-      url.searchParams.set('model', prefs.model_id);
       url.searchParams.set('pcm', '1');
       url.searchParams.set('sr', '16000');
       const aecEnabled = getAecEnabled();
@@ -241,6 +227,7 @@ export class LiveDictation {
     const text = message.refined_text || message.text || '';
     if (kind === 'utterance') {
       this.committed.push(text);
+      this.rawCommitted.push(message.text || '');
       this.publish({ text: this.committed.join(' ') });
       try {
         this.onResult(message);
@@ -250,8 +237,8 @@ export class LiveDictation {
       return;
     }
     if (kind === 'ignore') return;
-    const tail = sherpaSummaryTail(message.text || '', this.committed);
-    this.publish({ text: text || this.committed.join(' ') });
+    const tail = sherpaSummaryTail(message.text || '', this.rawCommitted);
+    this.publish({ text: this.committed.length ? [...this.committed, tail].filter(Boolean).join(' ') : text });
     try {
       if (tail)
         this.onResult(

@@ -2024,7 +2024,7 @@
     "asr_hint": "Perbaiki kesalahan ASR sekarang — diksi yang ketat akan menghemat upaya TTS nanti.",
     "translate_title": "Terjemahan sudah siap",
     "translate_cta": "Hasilkan sulih suara",
-    "translate_hint": "Telusuri teks target. Jalur yang terlalu panjang akan ditingkatkan kecepatannya; Anda juga dapat mengedit secara langsung.",
+    "translate_hint": "Tinjau dan edit terjemahan sebelum membuat audio.",
     "done_title": "Sulih suara selesai",
     "done_hint": "Tinjau waktu dan rasio sinkronisasi. Sesuaikan baris mana pun dan tekan \"Regen berubah\" untuk pengulangan sebagian yang cepat.",
     "segment_one": "segmen {{count}}",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· model dibongkar",
     "toast_flush_failed": "Gagal menyiram: {{message}}",
     "toast_project_saved": "Proyek disimpan",
-    "toast_project_created": "Proyek dibuat"
+    "toast_project_created": "Proyek dibuat",
+    "tagline": "Buat suara, sulih suara, dan transkripsi dengan Nimi."
   },
   "update": {
     "available": "Pembaruan {{version}} tersedia",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Jeda",
     "play": "Putar"
+  },
+  "nimi": {
+    "configuration": "Konfigurasi AI Nimi",
+    "configuration_description": "Pilih sumber daya AI untuk suara, transkripsi, dan terjemahan.",
+    "provenance": "Metadata berkas ekspor menandai audio sintetis. Tanda air neural tidak diterapkan.",
+    "referenceControls": "Suara referensi tidak mendukung tag ekspresi atau petunjuk gaya. Hapus tag ekspresi sebelum membuat audio; teks tetap tersedia untuk diedit."
   }
 }

@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Temizleme başarısız oldu: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Yerel ses klonlama. Hiçbir şey makinenizden ayrılmaz.",
+    "tagline": "Nimi ile ses oluşturun, dublaj ve deşifre yapın.",
     "coming_soon": "Yakında gelecek",
     "switch_to_light": "Açık temaya geç",
     "switch_to_dark": "Koyu temaya geç"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Tüm ASR hatalarını şimdi düzeltin; sıkı diksiyon, daha sonra TTS denemelerini önler.",
     "translate_title": "Çeviriler hazır",
     "translate_cta": "Dublaj oluştur",
-    "translate_hint": "Hedef metni gözden geçirin. Aşırı uzunluktaki hatların hızı artırılıyor; doğrudan da düzenleyebilirsiniz.",
+    "translate_hint": "Sesi üretmeden önce çeviriyi gözden geçirin ve düzenleyin.",
     "done_title": "Dublaj tamamlandı",
     "done_hint": "Zamanlamayı ve senkronizasyon oranlarını inceleyin. Herhangi bir satırda ince ayar yapın ve hızlı bir kısmi yineleme için \"Yenileme değişti\" tuşuna basın.",
     "segment_one": "{{count}} segmenti",
@@ -2569,5 +2569,25 @@
     "captured": "{{count}} sorunlu günlük satırı yakalandı",
     "contextNotice": "Seçilen aracı bu raporu, mevcut ekranı, son uygulama ve arka uç günlüklerini ve sistem tanılamasını alır.",
     "complete": "Tamamlandı"
+  },
+  "nimi": {
+    "configuration": "Nimi AI yapılandırması",
+    "configuration_description": "Sesler, deşifre ve çeviri için AI kaynaklarını seçin.",
+    "provenance": "Dışa aktarılan dosyaların meta verileri sentetik sesi belirtir. Sinir ağı filigranı uygulanmaz.",
+    "referenceControls": "Referans sesler ifade etiketlerini veya stil yönergelerini desteklemez. Üretmeden önce etiketleri kaldırın; metin düzenleme için korunur."
+  },
+  "voiceSelector": {
+    "engineDefault": "Motor varsayılanı",
+    "clone": "Klonlanmış sesler",
+    "designed": "Tasarlanmış sesler",
+    "presets": "Ön ayarlar",
+    "fromVideo": "Videodan",
+    "missingVoice": "Ses bulunamadı (yeniden seç)",
+    "preview": "Sesi önizle",
+    "openGallery": "Ses Galerisinde aç",
+    "createVoice": "Yeni bir ses oluştur",
+    "gallery": "Galeri",
+    "addingVoice": "Ses ekleniyor…",
+    "addVoiceFailed": "Bu ses eklenemedi"
   }
 }

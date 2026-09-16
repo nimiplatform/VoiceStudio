@@ -1428,7 +1428,7 @@
     "coming_soon": "Em breve",
     "switch_to_light": "Mudar para tema claro",
     "switch_to_dark": "Mudar para tema escuro",
-    "tagline": "Clonagem de voz local. Nada sai da sua máquina."
+    "tagline": "Crie vozes, dublagens e transcrições com Nimi."
   },
   "stories": {
     "title": "Editor de histórias",
@@ -2423,7 +2423,7 @@
     "asr_hint": "Corrija quaisquer erros de ASR agora – a dicção precisa salva tentativas de TTS posteriormente.",
     "translate_title": "Traduções prontas",
     "translate_cta": "Gerar dublagem",
-    "translate_hint": "Dê uma olhada no texto de destino. Linhas longas aumentam a velocidade; você também pode editar diretamente.",
+    "translate_hint": "Revise e edite a tradução antes de gerar o áudio.",
     "done_title": "Dublagem concluída",
     "done_hint": "Revise as proporções de tempo e sincronização. Ajuste qualquer linha e clique em \"Regen alterado\" para um refazer parcial rápido.",
     "segment_one": "segmento {{count}}",
@@ -2571,5 +2571,25 @@
     "captured": "{{count}} linhas de log com problemas capturadas",
     "contextNotice": "O agente selecionado recebe este relatório, a tela atual, os logs recentes do aplicativo e do backend e os diagnósticos do sistema.",
     "complete": "Completo"
+  },
+  "nimi": {
+    "configuration": "Configuração de IA do Nimi",
+    "configuration_description": "Escolha os recursos de IA para vozes, transcrição e tradução.",
+    "provenance": "Os metadados dos arquivos exportados identificam o áudio sintético. Nenhuma marca d’água neural é aplicada.",
+    "referenceControls": "As vozes de referência não aceitam etiquetas expressivas nem instruções de estilo. Remova as etiquetas antes de gerar; o texto continua disponível para edição."
+  },
+  "voiceSelector": {
+    "engineDefault": "Padrão do mecanismo",
+    "clone": "Vozes clonadas",
+    "designed": "Vozes projetadas",
+    "presets": "Predefinições",
+    "fromVideo": "Do vídeo",
+    "missingVoice": "Voz não encontrada (re-escolha)",
+    "preview": "Visualizar voz",
+    "openGallery": "Abrir na Galeria de Voz",
+    "createVoice": "Crie uma nova voz",
+    "gallery": "Galeria",
+    "addingVoice": "Adicionando voz…",
+    "addVoiceFailed": "Não foi possível adicionar essa voz"
   }
 }

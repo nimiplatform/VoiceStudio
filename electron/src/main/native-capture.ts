@@ -37,7 +37,7 @@ export function installNativeCapture(
   const name = 'voicestudio-desktop-bridge' + (process.platform === 'win32' ? '.exe' : '');
   const executable = app.isPackaged
     ? join(process.resourcesPath, 'native', name)
-    : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'debug', name);
+    : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'release', name);
   const trayIcon = (file: string) =>
     app.isPackaged
       ? join(process.resourcesPath, 'brand', file)

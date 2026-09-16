@@ -3,8 +3,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { SecondarySidebar } from '@/components/workspace-sidebar';
 import { PipelineFailure } from '@/components/pipeline-failure';
 import { EngineNotice } from '@/components/engine-notice';
-import { AgentFixButton } from '@/components/agent-fix-button';
-import { getBridge } from '@/components/bridge';
 import { WorkspaceHeader } from '@/components/app-shell/workspace-header';
 import { Switch } from '@/components/ui/switch';
 import { MAX_COOKIE_EXPORT_BYTES } from '../../../../../../frontend/src/utils/cookieExport';
@@ -29,8 +27,6 @@ import { CheckpointBanner, type CheckpointStage } from './checkpoint-banner';
 import { useDubOnsets } from './use-dub-onsets';
 import { useDubLivePreview } from './use-dub-live-preview';
 import { setDubQuality, setDubProduction, setDubTranslationOptions } from './dub-session';
-import { DEFAULT_REPAIR_AGENT_KEY } from '@/lib/repair-agent-events';
-import type { RepairAgentId, RepairAgentInfo } from '../../../../preload/index.d';
 import {
   useCallback,
   useEffect,
@@ -84,7 +80,6 @@ import {
 import { LanguagePicker, MultiLanguagePicker } from '@/features/clone/language-picker';
 import { useTranslationEngines } from '@/features/settings/translation-settings';
 import { agentFitSkillsReady, useLlmSkills } from '@/features/settings/llm-skills';
-import { useModelCatalogue } from '@/features/settings/model-catalogue-query';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useTtsReadiness } from '@/hooks/use-tts-readiness';
 import { useReviewMode } from '@/hooks/use-review-mode';
@@ -99,8 +94,6 @@ import {
   uploadDub,
   translateDub,
   translateDubBatch,
-  translateDubWithAgent,
-  translateDubBatchWithAgent,
   generateDub,
   generateDubBatch,
   cancelDub,
@@ -135,7 +128,7 @@ import {
   planDubIncremental,
 } from './dub-session';
 
-const DEFAULT_TRANSLATION_AGENT_KEY = 'voicestudio.defaultTranslationAgent';
+
 const LIVE_PREVIEW_KEY = 'voicestudio.dubLivePreview';
 const targetOptions = LANG_CODES.map((item) => item.label);
 const sentenceEnd = /[.!?\u3002\uff01\uff1f]/;
@@ -232,11 +225,10 @@ export function DubPage() {
   const [pasteTranslationOpen, setPasteTranslationOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [glossaryCount, setGlossaryCount] = useState(0);
-  const [recoveringAsr, setRecoveringAsr] = useState(false);
   const [installingArgosPacks, setInstallingArgosPacks] = useState(false);
-  const [translationAgents, setTranslationAgents] = useState<RepairAgentInfo[]>([]);
-  const [translationAgent, setTranslationAgent] = useState<RepairAgentId>('codex');
-  const [translationAgentsLoading, setTranslationAgentsLoading] = useState(true);
+
+
+
   const [livePreviewEnabled, setLivePreviewEnabled] = useState(() => {
     try {
       return localStorage.getItem(LIVE_PREVIEW_KEY) === '1';
@@ -270,18 +262,16 @@ export function DubPage() {
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const engines = useTranslationEngines();
   const llmSkills = useLlmSkills();
-  const modelCatalogue = useModelCatalogue();
   const profiles = useProfiles();
   // The current remote Dubbing producer still prepares a local fallback
   // before dispatch, so do not promise remote-only readiness yet.
   const ttsBlocker = useTtsReadiness('dub');
   const llmAgentReady = agentFitSkillsReady(llmSkills.data);
-  const availableTranslationAgents = translationAgents.filter((agent) => agent.available);
-  const selectedTranslationAgent = availableTranslationAgents.find(
-    (agent) => agent.id === translationAgent,
-  );
+
+
   const busy = !['idle', 'editing', 'done'].includes(session.phase);
   const livePreview = useDubLivePreview({
+    jobId: session.jobId,
     enabled: livePreviewEnabled && !busy && !session.recovery,
     language: target,
   });
@@ -312,34 +302,9 @@ export function DubPage() {
   const code = LANG_CODES.find((item) => item.label === target)?.code;
   const batchTargets = multiLangTargets(target, code || '', session.multiTargets || []);
   const agentBatchReady = Boolean(
-    session.agentCli &&
     batchTargets.length > 1 &&
     batchTargets.every((item) => hasCompleteTranslation(session.segments, item.code)),
   );
-  useEffect(() => {
-    const repair = getBridge()?.repair;
-    if (!repair) {
-      setTranslationAgentsLoading(false);
-      return;
-    }
-    void repair
-      .list()
-      .then((agents) => {
-        setTranslationAgents(agents);
-        const available = agents.filter((agent) => agent.available);
-        let remembered: RepairAgentId | null = null;
-        try {
-          remembered = (localStorage.getItem(DEFAULT_TRANSLATION_AGENT_KEY) ||
-            localStorage.getItem(DEFAULT_REPAIR_AGENT_KEY)) as RepairAgentId | null;
-        } catch {
-          // Storage can be unavailable in hardened renderer contexts.
-        }
-        const next = available.find((agent) => agent.id === remembered) || available[0];
-        if (next) setTranslationAgent(next.id);
-      })
-      .catch(() => setTranslationAgents([]))
-      .finally(() => setTranslationAgentsLoading(false));
-  }, []);
   const switchEditingLanguage = useCallback(
     (next: { lang: string; code: string }) => {
       if (!code || next.code === code) return;
@@ -424,20 +389,6 @@ export function DubPage() {
     checkpointStage &&
     session.segments.length &&
     !dismissedCheckpoints.has(checkpointId),
-  );
-  const installedAsrModel = modelCatalogue.data?.models.find(
-    (model) =>
-      model.installed &&
-      (model.repo_id.startsWith('Systran/faster-') ||
-        model.repo_id === 'deepdml/faster-whisper-large-v3-turbo-ct2'),
-  );
-  const diarisationModel = modelCatalogue.data?.models.find((model) =>
-    ['diarisation', 'diarization'].includes(model.role.toLowerCase()),
-  );
-  const diarisationReady = Boolean(
-    diarisationModel?.installed &&
-    diarisationModel.supported !== false &&
-    !diarisationModel.incomplete,
   );
   const job = encodeURIComponent(session.jobId || '');
   const previewRevision = useMemo(
@@ -717,20 +668,7 @@ export function DubPage() {
   };
   const translateTargets = async (forceAgent = false) => {
     const agentMode = forceAgent || session.quality === 'agent';
-    if (agentMode && selectedTranslationAgent && code) {
-      const skipped =
-        batchTargets.length <= 1
-          ? (await translateDubWithAgent(code, selectedTranslationAgent.id, target))
-            ? []
-            : [target]
-          : await translateDubBatchWithAgent(batchTargets, selectedTranslationAgent.id);
-      if (skipped.length) toast.error(t('dub.multi_lang_skipped', { langs: skipped.join(', ') }));
-      else
-        toast.success(
-          t('dub.agent_translation_complete', { agent: selectedTranslationAgent.label }),
-        );
-      return;
-    }
+
     if (!provider || !translationReady || !code) return;
     if (agentMode && !llmAgentReady) return;
     if (forceAgent) setDubQuality('agent');
@@ -785,25 +723,6 @@ export function DubPage() {
       : session.error === DUB_STOP_FAILED || session.error === 'Cancellation could not be confirmed'
         ? t('dub_workflow.stop_failed')
         : session.error;
-  const recoverWithInstalledAsr = async () => {
-    if (!installedAsrModel || recoveringAsr) return;
-    setRecoveringAsr(true);
-    try {
-      await apiJson('/engines/select', {
-        method: 'POST',
-        body: JSON.stringify({
-          family: 'asr',
-          backend_id: 'faster-whisper',
-          model_id: installedAsrModel.repo_id,
-        }),
-      });
-      await resumeDub();
-    } catch (error) {
-      toast.error(describeError(error));
-    } finally {
-      setRecoveringAsr(false);
-    }
-  };
   return (
     <div className="flex h-full min-h-0 flex-col">
       <WorkspaceHeader>
@@ -998,60 +917,7 @@ export function DubPage() {
                   })
                 }
               />
-              <label className="block space-y-2 text-xs">
-                <span>{t('dub.num_speakers_label')}</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  step={1}
-                  placeholder={t('dub.num_speakers_auto')}
-                  value={session.numSpeakers ?? ''}
-                  disabled={busy || Boolean(session.recovery)}
-                  onChange={(event) => {
-                    const value = Number(event.target.value);
-                    setDubProduction({
-                      numSpeakers:
-                        Number.isInteger(value) && value >= 1 && value <= 20 ? value : undefined,
-                    });
-                  }}
-                />
-              </label>
-              <p className="text-xs leading-5 text-muted-foreground">
-                {t('dub.num_speakers_help')}
-              </p>
-              {modelCatalogue.isSuccess && (
-                <div
-                  role="status"
-                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/35 px-2.5 py-2 text-xs"
-                >
-                  <UsersRoundIcon
-                    className={cn(
-                      'size-3.5 shrink-0',
-                      diarisationReady ? 'text-emerald-500' : 'text-muted-foreground',
-                    )}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                    {t('engineSidebar.diarisation')} ·{' '}
-                    {t(
-                      diarisationReady ? 'modelMaintenance.installed' : 'modelSettings.unavailable',
-                    )}
-                  </span>
-                  {!diarisationReady && (
-                    <Link
-                      to="/settings/models/$family"
-                      params={{ family: 'diarisation' }}
-                      className={buttonVariants({
-                        variant: 'outline',
-                        size: 'xs',
-                      })}
-                    >
-                      <Settings2Icon />
-                      {t('modelMaintenance.install')}
-                    </Link>
-                  )}
-                </div>
-              )}
+              <p className="text-xs text-muted-foreground">{t('segment.speaker_title_custom')}</p>
             </details>
             <input
               ref={subtitles}
@@ -1257,13 +1123,11 @@ export function DubPage() {
                   disabled={
                     busy ||
                     Boolean(session.recovery) ||
-                    (!selectedTranslationAgent && !llmAgentReady)
+                    !llmAgentReady
                   }
                   className="h-auto min-w-0 justify-start px-2.5 py-2"
                   title={
-                    selectedTranslationAgent
-                      ? t('dub.agent_cli_desc', { agent: selectedTranslationAgent.label })
-                      : t('dub.agent_quality_desc')
+                    t('dub.agent_quality_desc')
                   }
                   onClick={() => setDubQuality('agent')}
                 >
@@ -1287,9 +1151,7 @@ export function DubPage() {
               </div>
               {session.quality === 'agent' && (
                 <p className="px-1 text-xs leading-5 text-muted-foreground">
-                  {selectedTranslationAgent?.label
-                    ? t('dub.agent_cli_desc', { agent: selectedTranslationAgent.label })
-                    : t('dub.agent_quality_desc')}
+                  {t('dub.agent_quality_desc')}
                 </p>
               )}
             </div>
@@ -1318,7 +1180,7 @@ export function DubPage() {
                   ))}
                 </div>
                 <div className="space-y-2 border-t border-border/50 pt-2">
-                  {provider?.id === 'openai' && (
+                  {provider?.id === 'nimi' && (
                     <>
                       <label className="flex items-start justify-between gap-3 text-xs">
                         <span>
@@ -1495,22 +1357,6 @@ export function DubPage() {
               {(
                 [
                   {
-                    key: 'steps',
-                    label: 'steps',
-                    min: 8,
-                    max: 64,
-                    step: 1,
-                    defaultValue: 16,
-                  },
-                  {
-                    key: 'guidance',
-                    label: 'cfg',
-                    min: 0,
-                    max: 4,
-                    step: 0.1,
-                    defaultValue: 2,
-                  },
-                  {
                     key: 'speed',
                     label: 'speed',
                     min: 0.5,
@@ -1542,15 +1388,7 @@ export function DubPage() {
                   />
                 </label>
               ))}
-              <label className="block space-y-2 text-xs">
-                <span>{t('dub.style')}</span>
-                <Input
-                  value={session.instruct || ''}
-                  placeholder={t('dub.style_placeholder')}
-                  disabled={busy || Boolean(session.recovery)}
-                  onChange={(event) => setDubProduction({ instruct: event.target.value })}
-                />
-              </label>
+              <p className="text-xs text-muted-foreground">{t('nimi.referenceControls')}</p>
               <Button
                 size="xs"
                 variant="ghost"
@@ -1589,50 +1427,14 @@ export function DubPage() {
                     {session.asrModelMissing ? t('asr_missing.message') : t('dub.pipeline')}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {session.asrModelMissing && installedAsrModel
-                      ? `${installedAsrModel.label} · ${t('asr_missing.installed')}`
-                      : t(
-                          session.recovery === 'transcribing'
-                            ? 'dub.retry_transcription'
-                            : session.recovery === 'generating'
-                              ? 'dub_workflow.generating_dub'
-                              : 'dub.prep_preparing',
-                        )}
+                    {t(session.recovery === 'transcribing' ? 'dub.retry_transcription'
+                      : session.recovery === 'generating' ? 'dub_workflow.generating_dub' : 'dub.prep_preparing')}
                   </p>
                 </div>
-                {session.asrModelMissing ? (
-                  installedAsrModel ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={recoveringAsr}
-                      onClick={() => void recoverWithInstalledAsr()}
-                    >
-                      {recoveringAsr && (
-                        <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" />
-                      )}
-                      {t('asr_missing.use', { label: installedAsrModel.label })}
-                    </Button>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        to="/settings/models/$family"
-                        params={{ family: 'asr' }}
-                        className={buttonVariants({
-                          variant: 'outline',
-                          size: 'sm',
-                        })}
-                      >
-                        {t('asr_missing.choose')}
-                      </Link>
-                      <AgentFixButton request="Restore local ASR readiness for this Dubbing job. Install and activate the best supported Faster-Whisper model through VoiceStudio's setup interfaces, preserve the prepared media, and leave transcription ready to retry." />
-                    </div>
-                  )
-                ) : (
-                  <Button size="sm" variant="outline" onClick={() => void resumeDub()}>
-                    {t(session.recovery === 'transcribing' ? 'common.retry' : 'common.resume')}
-                  </Button>
-                )}
+                {session.asrModelMissing && <Link to="/settings/models">{t('nimi.configuration')}</Link>}
+                <Button size="sm" variant="outline" onClick={() => void resumeDub()}>
+                  {t(session.recovery === 'transcribing' ? 'common.retry' : 'common.resume')}
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => void cancelDub()}>
                   {t('common.cancel')}
                 </Button>
@@ -2550,18 +2352,7 @@ export function DubPage() {
                                         }}
                                       />
                                     </label>
-                                    <label className="col-span-2 space-y-1">
-                                      <span>{t('tools.direction')}</span>
-                                      <Input
-                                        value={segment.direction || ''}
-                                        disabled={busy || Boolean(session.recovery)}
-                                        onChange={(event) =>
-                                          editDubSegment(segment.id, {
-                                            direction: event.target.value,
-                                          })
-                                        }
-                                      />
-                                    </label>
+
                                   </div>
                                   <div className="mt-3 flex gap-2">
                                     <Input
@@ -2695,78 +2486,7 @@ export function DubPage() {
                       {t('dub.translate_all')}
                     </Button>
                   )}
-                  {selectedTranslationAgent ? (
-                    <div className="flex items-center">
-                      <Button
-                        data-slot="translate-with-agent"
-                        variant={
-                          session.agentCli === selectedTranslationAgent.id ? 'default' : 'outline'
-                        }
-                        className="rounded-r-none border-primary/25 bg-primary/[0.06] text-foreground hover:bg-primary/10"
-                        disabled={
-                          Boolean(session.recovery) || !session.segments.length || !code || busy
-                        }
-                        title={t('dub.agent_cli_desc', {
-                          agent: selectedTranslationAgent.label,
-                        })}
-                        onClick={() => void translateTargets(true)}
-                      >
-                        <WandSparklesIcon />
-                        {t('dub.translate_with_agent')}
-                      </Button>
-                      <Menu.Root>
-                        <Menu.Trigger
-                          aria-label={t('dub.choose_translation_agent')}
-                          title={selectedTranslationAgent.label}
-                          className={cn(
-                            buttonVariants({
-                              variant:
-                                session.agentCli === selectedTranslationAgent.id
-                                  ? 'default'
-                                  : 'outline',
-                              size: 'icon',
-                            }),
-                            'rounded-l-none border-l-0 border-primary/25 bg-primary/[0.06] hover:bg-primary/10',
-                          )}
-                        >
-                          <ChevronDownIcon />
-                        </Menu.Trigger>
-                        <Menu.Portal>
-                          <Menu.Positioner side="top" sideOffset={6} align="end" className="z-50">
-                            <Menu.Popup className="cn-menu-target cn-menu-translucent min-w-44 rounded-lg p-1 surface-glass text-popover-foreground shadow-lg ring-1 ring-border outline-none">
-                              {availableTranslationAgents.map((agent) => (
-                                <Menu.Item
-                                  key={agent.id}
-                                  onClick={() => {
-                                    setTranslationAgent(agent.id);
-                                    try {
-                                      localStorage.setItem(DEFAULT_TRANSLATION_AGENT_KEY, agent.id);
-                                    } catch {
-                                      // The selection remains active for this session.
-                                    }
-                                  }}
-                                  className="flex cursor-default items-center gap-2 rounded-md px-3 py-2 text-sm outline-none data-highlighted:bg-accent"
-                                >
-                                  <span
-                                    className={cn(
-                                      'size-1.5 rounded-full',
-                                      agent.id === translationAgent
-                                        ? 'bg-primary'
-                                        : 'bg-muted-foreground/40',
-                                    )}
-                                  />
-                                  <span>{agent.label}</span>
-                                  <span className="ml-auto max-w-32 truncate text-xs text-muted-foreground">
-                                    {agent.version}
-                                  </span>
-                                </Menu.Item>
-                              ))}
-                            </Menu.Popup>
-                          </Menu.Positioner>
-                        </Menu.Portal>
-                      </Menu.Root>
-                    </div>
-                  ) : translationAgentsLoading || llmSkills.isPending ? (
+                  {llmSkills.isPending ? (
                     <Button data-slot="translate-with-agent" variant="outline" disabled>
                       <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" />
                       {t('dub.translate_with_agent')}

@@ -509,11 +509,19 @@ def _run_alembic_upgrade() -> None:
         # project root.
         here = os.path.dirname(os.path.abspath(__file__))
         root = os.path.dirname(os.path.dirname(here))
+        import sys
+        if getattr(sys, 'frozen', False):
+            root = sys._MEIPASS
         ini = os.path.join(root, "alembic.ini")
         if not os.path.isfile(ini):
             logger.debug("alembic.ini not found at %s; skipping migrations", ini)
             return
-        cfg = Config(ini)
+        # Read explicitly: a frozen Windows interpreter can retain the ANSI
+        # locale even when its parent sets PYTHONUTF8.
+        cfg = Config()
+        cfg.file_config.set('DEFAULT', 'here', root.replace(os.sep, '/'))
+        cfg.file_config.read(ini, encoding='utf-8')
+        cfg.config_file_name = ini
         cfg.set_main_option("sqlalchemy.url", f"sqlite:///{DB_PATH}")
         # In-app run: alembic.ini's logging section must not touch the live
         # app's logging. env.py's fileConfig() — even with

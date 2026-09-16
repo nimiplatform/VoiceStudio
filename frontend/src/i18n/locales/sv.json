@@ -2024,7 +2024,7 @@
     "asr_hint": "Åtgärda eventuella ASR-fel nu – tight diction sparar TTS-försök senare.",
     "translate_title": "Översättningarna är klara",
     "translate_cta": "Generera dub",
-    "translate_hint": "Skumma måltexten. Överlånga linjer får fart; du kan också redigera direkt.",
+    "translate_hint": "Granska och redigera översättningen innan du genererar ljudet.",
     "done_title": "Dubbningen är klar",
     "done_hint": "Granska timing och synkroniseringsförhållanden. Justera vilken linje som helst och tryck på \"Regen ändrad\" för en snabb delvis redo.",
     "segment_one": "{{count}} segment",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· modell avlastad",
     "toast_flush_failed": "Spolning misslyckades: {{message}}",
     "toast_project_saved": "Projektet sparat",
-    "toast_project_created": "Projekt skapat"
+    "toast_project_created": "Projekt skapat",
+    "tagline": "Skapa röster, dubbning och transkription med Nimi."
   },
   "update": {
     "available": "Uppdatering {{version}} tillgänglig",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Pausa",
     "play": "Spela upp"
+  },
+  "nimi": {
+    "configuration": "Nimi AI-konfiguration",
+    "configuration_description": "Välj AI-resurser för röster, transkribering och översättning.",
+    "provenance": "Exporterade filers metadata markerar syntetiskt ljud. Ingen neural vattenstämpel används.",
+    "referenceControls": "Referensröster stöder inte uttryckstaggar eller stilinstruktioner. Ta bort taggarna före generering; texten finns kvar för redigering."
   }
 }

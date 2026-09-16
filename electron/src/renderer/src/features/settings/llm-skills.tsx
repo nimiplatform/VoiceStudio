@@ -1,4 +1,5 @@
 import { SparklesIcon } from 'lucide-react';
+import { getNimiClient } from '@/lib/nimi-client';
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -20,8 +21,12 @@ export interface LlmSkill {
 export function useLlmSkills() {
   return useQuery({
     queryKey: ['llm-skills'],
-    queryFn: ({ signal }) =>
-      apiJson<{ skills: LlmSkill[] }>('/api/settings/llm-skills', { signal }),
+    queryFn: async () => {
+      const snapshot = await getNimiClient().aiConfig.get();
+      const ready = snapshot.effectiveSelections.some((item) => item.capabilityContract === 'text.generate' && item.state === 'ready');
+      return { skills: agentFitSkillIds.map((id) => ({ id, name_key: id, description_key: id,
+        enabled: true, provider_override: null, provider_display_name: 'Nimi', ready })) };
+    },
     staleTime: 30_000,
   });
 }

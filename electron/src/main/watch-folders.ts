@@ -61,7 +61,7 @@ export function installWatchFolders(
       client = new DictationOutputClient(
         app.isPackaged
           ? join(process.resourcesPath, 'native', name)
-          : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'debug', name),
+          : join(backendRoot(), 'native', 'desktop-bridge', 'target', 'release', name),
       );
       const selected = (await client.request({
         method: 'watch_register',
@@ -114,7 +114,7 @@ export function installWatchFolders(
       !['', '/'].includes(backend.pathname)
     )
       throw new Error('Backend unavailable');
-    const authorization = requestHeaders().Authorization || null;
+    const authorization = requestHeaders()['X-VoiceStudio-Worker'] || null;
     const reply = (await client.request({
       method: 'watch_enqueue',
       backend_url: backend.origin,

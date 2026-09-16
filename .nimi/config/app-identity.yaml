@@ -1,0 +1,8 @@
+app_id: nimiplatform.voicestudio
+display_name: VoiceStudio
+version: 0.5.4
+npm_package_name: omnivoice-studio-monorepo
+cargo_package_name: omnivoice-studio-monorepo-shell
+tauri_identifier: ai.nimi.apps.nimiplatform.voicestudio
+package_author: VoiceStudio contributors
+identity_role: scaffold-generated-authoring-input

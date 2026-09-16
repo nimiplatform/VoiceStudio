@@ -2,7 +2,7 @@
 import { mkdtemp, mkdir, readFile, rm, writeFile, statfs } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   installRuntime,
   promoteLegacyRuntimeCaches,
@@ -20,6 +20,8 @@ vi.mock('node:fs/promises', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:fs/promises')>()),
   statfs: vi.fn(async () => ({ bavail: 100 * 1024 ** 3, bsize: 1 })),
 }));
+// Filesystem/setup unit tests must not race live GitHub mirror probes.
+beforeEach(() => vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('Unit test network disabled'); })));
 const roots: string[] = [];
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'vs-runtime-test-'));
@@ -326,7 +328,7 @@ describe('packaged runtime setup', () => {
   });
   it('pins the release workflow installer version', async () => {
     const release = await readFile(
-      new URL('../../../.github/workflows/release.yml', import.meta.url),
+      new URL('../../../.github/upstream-workflows/release.yml', import.meta.url),
       'utf8',
     );
     expect(release).toContain(`UV_VERSION: "${UV_VERSION}"`);

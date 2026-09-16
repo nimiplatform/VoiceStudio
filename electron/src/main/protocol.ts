@@ -1,3 +1,4 @@
+import { NIMI_ELECTRON_APP_ASSET_PROTOCOL_REGISTRATION } from '@nimiplatform/kit/shell/electron/main';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -75,7 +76,7 @@ function isDroppedRequestHeader(name: string): boolean {
   );
 }
 
-/** Must run before `app.whenReady()` — Chromium freezes the scheme registry at startup. */
+/** Register App and Kit privileges together before ready; a second call overwrites them. */
 export function registerAppScheme(): void {
   protocol.registerSchemesAsPrivileged([
     {
@@ -89,6 +90,7 @@ export function registerAppScheme(): void {
         bypassCSP: false,
       },
     },
+    NIMI_ELECTRON_APP_ASSET_PROTOCOL_REGISTRATION,
   ]);
 }
 

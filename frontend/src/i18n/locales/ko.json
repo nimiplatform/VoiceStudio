@@ -2340,7 +2340,7 @@
     "asr_hint": "지금 ASR 오류를 수정하세요 — 표현을 정확히 다듬으면 나중에 TTS 재시도 횟수를 줄일 수 있습니다.",
     "translate_title": "번역 준비 완료",
     "translate_cta": "더빙 생성",
-    "translate_hint": "대상 텍스트를 훑어보세요. 길이가 긴 라인은 속도가 향상됩니다. 직접 편집할 수도 있습니다.",
+    "translate_hint": "오디오를 생성하기 전에 번역을 확인하고 편집하세요.",
     "done_title": "더빙 완료",
     "done_hint": "타이밍과 동기화 비율을 검토하세요. 빠른 부분 재실행을 위해 라인을 조정하고 \"변경됨 재생성\"을 눌러보세요.",
     "segment_one": "{{count}} 세그먼트",
@@ -2676,7 +2676,8 @@
     "toast_model_unloaded": "· 모델 언로드됨",
     "toast_flush_failed": "플러시 실패: {{message}}",
     "toast_project_saved": "프로젝트가 저장되었습니다",
-    "toast_project_created": "프로젝트가 생성되었습니다."
+    "toast_project_created": "프로젝트가 생성되었습니다.",
+    "tagline": "Nimi로 음성 제작, 더빙 및 전사를 수행하세요."
   },
   "update": {
     "available": "업데이트 {{version}} 사용 가능",
@@ -3312,5 +3313,11 @@
     "stop": "재생 중지",
     "streaming_preview": "스트리밍 미리듣기…",
     "untitled": "오디오"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 설정",
+    "configuration_description": "음성, 전사 및 번역에 사용할 AI 리소스를 선택하세요.",
+    "provenance": "내보낸 파일의 메타데이터에 합성 음성임을 표시합니다. 신경망 워터마크는 적용되지 않습니다.",
+    "referenceControls": "참조 음성은 표현 태그나 말투 지시를 지원하지 않습니다. 생성 전에 표현 태그를 제거하세요. 원문은 편집할 수 있도록 유지됩니다."
   }
 }

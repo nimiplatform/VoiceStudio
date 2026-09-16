@@ -52,6 +52,9 @@ class TaskManager:
     def cancel_task(self, task_id):
         if task_id in self.active_tasks:
             self.active_tasks[task_id]["cancelled"] = True
+            runner = self.active_tasks[task_id].get("runner")
+            if runner is not None:
+                runner.cancel()
             return True
         return False
 
@@ -115,22 +118,34 @@ class TaskManager:
             run_sentinel.touch_activity("task", t.get("type"))
             try:
                 import inspect
-                res = func(*args, **kwargs)
-                if inspect.isasyncgen(res):
-                    async for update in res:
-                        if t.get("cancelled"):
-                            await self._push_event(task_id, f"data: {json.dumps({'type': 'cancelled'})}\n\n")
-                            t["status"] = "cancelled"
-                            try: job_store.mark_cancelled(task_id)
-                            except Exception: logger.exception("job_store.mark_cancelled failed")
-                            break
-                        await self._push_event(task_id, update)
-                elif inspect.iscoroutine(res):
-                    await res
+                async def consume():
+                    if t.get("cancelled"):
+                        raise asyncio.CancelledError()
+                    res = func(*args, **kwargs)
+                    if inspect.isasyncgen(res):
+                        async for update in res:
+                            if t.get("cancelled"):
+                                raise asyncio.CancelledError()
+                            if isinstance(update, str) and update.startswith('data: '):
+                                event = json.loads(update[6:])
+                                if event.get('type') == 'error':
+                                    raise RuntimeError(event.get('reason') or event.get('error') or event.get('detail') or 'Task failed')
+                            await self._push_event(task_id, update)
+                    elif inspect.iscoroutine(res):
+                        await res
+                runner = asyncio.create_task(consume())
+                t["runner"] = runner
+                await runner
                 if t["status"] != "cancelled":
                     t["status"] = "done"
                     try: job_store.mark_done(task_id)
                     except Exception: logger.exception("job_store.mark_done failed")
+            except asyncio.CancelledError:
+                t["status"] = "cancelled"
+                job_store.mark_cancelled(task_id)
+                await self._push_event(task_id, 'data: {"type":"cancelled"}\n\n')
+                if not t.get("cancelled"):
+                    raise
             except Exception as e:
                 logger.exception("Task %s failed", task_id)
                 t["status"] = "failed"
@@ -147,6 +162,7 @@ class TaskManager:
                 except Exception as push_err:
                     logger.warning("Failed to push error event for %s: %s", task_id, push_err)
             finally:
+                t.pop("runner", None)
                 await self._push_event(task_id, None)  # EOF
                 self.queue.task_done()
 

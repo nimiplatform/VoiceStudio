@@ -52,7 +52,6 @@ def list_profiles():
         rows = conn.execute("SELECT * FROM voice_profiles ORDER BY created_at DESC").fetchall()
     return [_profile_record(r) for r in rows]
 
-_DESIGN_SEED = 42  # deterministic sample render, same as archetype previews
 
 
 @router.post("/profiles")
@@ -148,53 +147,30 @@ async def create_profile(
         # only already-installed ASR/dictation models.
         if not ref_text.strip():
             try:
-                from services.asr_backend import transcribe_reference
+                from business.audio import transcribe_file
 
-                ref_text = (
-                    await asyncio.to_thread(transcribe_reference, audio_path) or ""
-                ).strip()
+                ref_text = (await transcribe_file(audio_path))["text"].strip()
             except Exception as exc:  # noqa: BLE001 — profile save remains usable
                 logger.warning(
                     "reference transcription during profile save failed: %s", exc
                 )
         used_seed = seed
     else:
-        # Saving a design profile is a pure persistence operation — it must not
-        # depend on a loaded TTS model (issue #476: on a fresh model-less Docker
-        # image the render forced a full model load + inference that 503'd, so
-        # the save failed). We try the deterministic identity sample opportunist-
-        # ically through the one shared TTS path (archetypes' renderer, never a
-        # second inference code path); if the engine isn't ready it's rendered
-        # lazily on first preview/use. The row carries vd_states + instruct, so
-        # the voice is fully usable without the sample (synthesis falls back to
-        # instruct-only conditioning — see generation.py's design path).
-        from pathlib import Path
-        from api.routers.archetypes import _render_archetype_wav
-        audio_filename = f"{profile_id}.wav"
-        audio_path = os.path.join(VOICES_DIR, audio_filename)
-        try:
-            await _render_archetype_wav(
-                {
-                    "language": language,
-                    "sample_script": ref_text,  # optional custom sample line
-                    "instruct": instruct,
-                },
-                Path(audio_path),
-            )
-        except Exception:
-            # Engine unavailable / OOM / inference failure — defer the sample.
-            # Store the row with no ref_audio_path; the identity sample is
-            # rendered on first preview or use. Never let this block the save.
-            import logging
-            logging.getLogger("omnivoice.profiles").info(
-                "Design profile %s saved with sample pending — "
-                "voice engine not ready; will render on first use", profile_id,
-            )
-            if os.path.exists(audio_path):  # partial/blank render: don't keep it
-                with __import__("contextlib").suppress(OSError):
-                    os.remove(audio_path)
-            audio_filename = None
-        used_seed = seed if seed is not None else _DESIGN_SEED
+        # Saving a design keeps the auditioned bytes; it never silently designs another voice.
+        audio_filename = f"{profile_id}.wav" if ref_audio is not None else None
+        audio_path = os.path.join(VOICES_DIR, f"{profile_id}.wav")
+        if ref_audio is not None:
+            import io
+            import soundfile as sf
+            from business.audio import mark_synthetic
+            payload = await ref_audio.read()
+            data, rate = sf.read(io.BytesIO(payload), always_2d=True)
+            if not len(data):
+                raise HTTPException(422, detail="Design reference is empty")
+            os.makedirs(VOICES_DIR, exist_ok=True)
+            with open(audio_path, "wb") as handle:
+                handle.write(mark_synthetic(payload, context="profile.design"))
+        used_seed = None
 
     try:
         if portrait:
@@ -422,7 +398,7 @@ async def _materialize_design_sample(profile_id: str, row) -> Optional[str]:
         return None
 
     from pathlib import Path
-    from api.routers.archetypes import _render_archetype_wav
+    from business.audio import render_sample as _render_archetype_wav
 
     audio_filename = f"{profile_id}.wav"
     # CWE-22: resolve under VOICES_DIR via the shared basename + containment

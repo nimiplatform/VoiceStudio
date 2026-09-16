@@ -66,7 +66,7 @@ it('preserves translation quality and rejects unknown stored modes', () => {
   ).toBe('fast');
 });
 
-it('restores a local agent and timing-fit provenance for every translated language', () => {
+it('restores timing-fit provenance without restoring retired CLI routing', () => {
   const restored = restoreDubDraft(
     JSON.stringify({
       ...defaults,
@@ -87,7 +87,8 @@ it('restores a local agent and timing-fit provenance for every translated langua
     }),
     defaults,
   );
-  expect(restored).toMatchObject({ quality: 'agent', agentCli: 'codex' });
+  expect(restored).toMatchObject({ quality: 'agent' });
+  expect(restored).not.toHaveProperty('agentCli');
   expect(restored.segments[0]).toMatchObject({
     agent_generated_lang: 'es',
     agent_generated_langs: ['es', 'fr'],

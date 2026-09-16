@@ -281,7 +281,7 @@ export function LongformPage({ mode }: { mode: Mode }) {
             onBusy={setImporting}
           />
           {(query.data?.jobs || [])
-            .filter((job) => job.type === (mode === 'stories' ? 'longform' : 'audiobook'))
+            .filter((job) => job.type === (mode === 'stories' ? 'story' : 'audiobook'))
             .map((job) => (
               <div key={job.job_id} className="space-y-2 border-t border-border/50 pt-4 text-xs">
                 <h2 className="font-medium">{t('audiobook.recovery_title')}</h2>
@@ -304,7 +304,7 @@ export function LongformPage({ mode }: { mode: Mode }) {
             ))}
         </SecondarySidebar>
         <section className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col gap-4 px-6 py-5">
+          <div className="mx-auto flex min-h-full w-full max-w-6xl shrink-0 flex-col gap-4 px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-sm font-medium">

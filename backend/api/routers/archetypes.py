@@ -307,106 +307,15 @@ def _is_unusable_audio(audio_tensor) -> bool:
 
 
 async def _render_archetype_wav(a: dict, out_path: Path) -> None:
-    """Render an archetype's sample script to ``out_path`` using the live engine.
-
-    Reuses generation.py's inference primitives so there is exactly one TTS code
-    path. Heavy deps are imported here, never at module load. If the engine
-    returns a blank/silent clip we retry once with a different seed, then fail
-    loudly — a blank preview or voice profile must never be cached or saved.
-    """
-    from api.routers.generation import (  # noqa: WPS433 — intentional lazy import
-        get_model,
-        _run_inference,
-        run_on_gpu_pool_guarded,
-        _safe_torchaudio_save,
-    )
-
-    model = await get_model()
-    language = a["language"]
-    if language in (None, "", "Auto"):
-        language = None
-    text = (a.get("sample_script") or "").strip() or _FALLBACK_SCRIPT
-
-    def _infer(seed: int):
-        return _run_inference(
-            model,          # _model
-            text,           # text
-            language,       # language
-            None,           # ref_audio_path (design mode — no reference)
-            None,           # ref_text
-            a["instruct"],  # instruct
-            None,           # duration
-            _PREVIEW_NUM_STEP,  # num_step
-            2.0,            # guidance_scale
-            1.0,            # speed
-            None,           # t_shift
-            True,           # denoise
-            True,           # postprocess_output
-            None,           # layer_penalty_factor
-            None,           # position_temperature
-            None,           # class_temperature
-            seed,           # seed
-            "broadcast",    # effect_preset
-        )
-
-    # Bounded + pool-reset on hang so a wedged preview render can't starve the
-    # GPU pool and brick the backend (#730 class). Budget comes from the shared
-    # length-scaled helper (#1190) instead of the flat 300s default.
-    from services.model_manager import generate_timeout_s
-    _budget = generate_timeout_s(text, engine=model)
-    audio_tensor = await run_on_gpu_pool_guarded(
-        lambda: _infer(_PREVIEW_SEED), what="Archetype preview generate",
-        timeout=_budget)
-    if _is_unusable_audio(audio_tensor):
-        # Blank OR a degenerate tonal buzz — retry once on a different seed to
-        # step off the bad diffusion trajectory. Static message only: the
-        # archetype id is request-derived (CodeQL log-injection); the seed is a
-        # module constant, safe to log.
-        logger.warning("Archetype rendered unusable at seed %d — retrying once", _PREVIEW_SEED)
-        audio_tensor = await run_on_gpu_pool_guarded(
-            lambda: _infer(_PREVIEW_SEED + 1), what="Archetype preview generate",
-            timeout=_budget)
-    if _is_unusable_audio(audio_tensor):
-        raise RuntimeError("the voice engine returned no audible audio for this archetype")
-
-    # Invisible provenance mark (#1169), tensor stage, before the WAV is
-    # persisted: this one site covers BOTH archetype outputs — the served
-    # preview clip (GET /archetypes/{id}/preview) and the synthetic reference
-    # WAV a materialized profile keeps in VOICES_DIR (played back via the
-    # profile preview route). Runs in the GPU pool like generate's finalize;
-    # never raises (degrades to unmarked on failure). User-uploaded/recorded
-    # reference audio is human speech and is never marked — this only touches
-    # audio the engine synthesized.
-    # Runs on the dedicated watermark pool (#1190): AudioSeal embedding is CPU
-    # work that holds no VRAM, so it must not occupy a GPU worker ahead of the
-    # next generate on 1-worker hosts.
-    from services.watermark import mark_synthetic_async
-    audio_tensor = await mark_synthetic_async(
-        audio_tensor, model.sampling_rate,
-        context="archetypes.render",
-        timeout=generate_timeout_s(""),
-    )
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    _safe_torchaudio_save(str(out_path), audio_tensor, model.sampling_rate)
+    from business.audio import render_sample
+    await render_sample(a, out_path)
 
 
 def _no_voice_model_downloaded() -> bool:
-    """True only on a *positive* "no TTS weights on this machine" answer.
-
-    Fails open on purpose: the cache probes are best-effort (a user-managed
-    clone outside the HF layout is invisible to them), and telling someone with
-    a working engine to go download a model is worse than saying nothing. Only
-    a catalog we could read, with not one TTS repo cached, earns the offline
-    message.
-    """
-    try:
-        from api.routers.setup.models import get_model_catalog, is_cached
-
-        tts = [m for m in get_model_catalog().all if m.get("role") == "TTS"]
-        return bool(tts) and not any(is_cached(m["repo_id"]) for m in tts)
-    except Exception:
-        return False
+    from business.carrier import call_sync
+    status = call_sync("status", {})
+    ready = {item["capabilityContract"] for item in status["effectiveSelections"] if item["state"] == "ready"}
+    return not {"audio.synthesize", "voice.create"}.issubset(ready)
 
 
 def _preview_source(a: dict) -> tuple[str, str]:
@@ -428,10 +337,10 @@ def _preview_source(a: dict) -> tuple[str, str]:
         return "cached", ""
     if _no_voice_model_downloaded():
         return "no_model", (
-            "You're offline and no voice model is downloaded yet — download "
-            "one from the engine's Weights list in Model Catalogue."
+            "Configure voice creation and synthesis through Nimi AI settings. "
+            ""
         )
-    return "rendering", "Rendering this preview on your machine — it may take a moment."
+    return "rendering", "Rendering this preview with your selected Nimi configuration."
 
 
 # ── Read endpoints (no model) ─────────────────────────────────────────────────
@@ -567,7 +476,7 @@ async def preview_archetype(
             if _no_voice_model_downloaded():
                 detail = (
                     "You're offline and no voice model is downloaded yet — "
-                    "download one from the engine's Weights list in Model Catalogue. (Or turn "
+                    "download  (Or turn "
                     "on pre-rendered voice previews in Settings → Storage.)"
                 )
             else:
@@ -632,7 +541,7 @@ async def use_archetype(archetype_id: str, name: Optional[str] = Query(None)):
             if _no_voice_model_downloaded():
                 detail = (
                     "Creating a voice needs the voice model — no voice model is "
-                    "downloaded yet. Download one from the engine's Weights list in Model Catalogue."
+                    "downloaded yet. Download "
                 )
             else:
                 detail = (

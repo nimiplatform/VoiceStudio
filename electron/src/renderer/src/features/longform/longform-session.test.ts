@@ -145,9 +145,9 @@ it('sends identical explicit production overrides to preview and full render', (
     chapterPreviewBody(draft, 0),
     renderBody('stories', draft),
   ]) {
+    expect(body).not.toHaveProperty('num_step');
+    expect(body).not.toHaveProperty('seed');
     expect(body).toMatchObject({
-      num_step: 24,
-      seed: 0,
       postprocess_output: false,
       vary_repeats: true,
     });

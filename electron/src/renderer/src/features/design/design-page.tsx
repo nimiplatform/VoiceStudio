@@ -9,6 +9,7 @@ import { EditProfile } from '@/features/clone/edit-profile';
 import { WorkspacePane } from '@/components/workspace-pane';
 import { TakeDetails } from '@/features/clone/take-details';
 import { openTake, useSelectedTake } from '@/lib/store/takes';
+import { useLatestOutput } from '@/lib/store/output';
 import {
   DESIGN_DRAFT_EVENT,
   STORAGE,
@@ -33,7 +34,6 @@ import {
   PlayIcon,
   SaveIcon,
   Settings2Icon,
-  ShuffleIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
   RotateCcwIcon,
@@ -56,10 +56,10 @@ import {
   buildDesignInstruct,
   mergeDescribedAttrs,
 } from '../../../../../../frontend/src/utils/voiceInstruct';
-import { pickDesignSeed } from '../../../../../../frontend/src/utils/seed';
 export function DesignPage() {
   const { t } = useTranslation();
   const selectedTake = useSelectedTake();
+  const latestOutput = useLatestOutput();
   const [draft, setDraft] = useState(readDraft);
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -124,10 +124,15 @@ export function DesignPage() {
       const body = new FormData();
       body.set('name', name.trim());
       body.set('kind', 'design');
-      body.set('seed', String(draft.seed));
       body.set('vd_states', JSON.stringify(draft.attrs));
       body.set('instruct', buildDesignInstruct(draft.attrs, '').instruct);
       body.set('language', cloneSettingsStore.state.language);
+      if (latestOutput.result && latestOutput.details?.mode === 'design'
+        && latestOutput.details.instruct === buildDesignInstruct(draft.attrs, '').instruct
+        && latestOutput.details.language === cloneSettingsStore.state.language) {
+        body.set('ref_audio', latestOutput.result.blob, 'design-reference.wav');
+        body.set('ref_text', latestOutput.text);
+      }
       const created = await apiJson<Profile>('/profiles', {
         method: 'POST',
         body,
@@ -369,37 +374,6 @@ export function DesignPage() {
                   </div>
                 </fieldset>
               ))}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{t('clone.seed_label')}</span>
-                <Input
-                  className="min-w-0"
-                  type="number"
-                  min={0}
-                  max={2147483647}
-                  aria-label={t('clone.seed_label')}
-                  disabled={generation.isGenerating}
-                  value={draft.seed}
-                  onChange={(event) => {
-                    const seed = Number(event.target.value);
-                    if (Number.isInteger(seed) && seed >= 0 && seed <= 2147483647)
-                      setDraft((current) => ({ ...current, seed }));
-                  }}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={generation.isGenerating}
-                  aria-label={t('clone.seed_reroll')}
-                  onClick={() =>
-                    setDraft((current) => ({
-                      ...current,
-                      seed: pickDesignSeed(false, null),
-                    }))
-                  }
-                >
-                  <ShuffleIcon />
-                </Button>
-              </div>
             </div>
           </details>
           <form

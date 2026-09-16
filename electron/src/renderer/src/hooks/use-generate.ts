@@ -17,7 +17,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { throttle } from '@tanstack/react-pacer';
 import { toast } from 'sonner';
-import { ApiError, apiJson, describeError, isAbortError } from '@/lib/api/client';
+import { ApiError, describeError, isAbortError } from '@/lib/api/client';
 import { generateClone, sanitizeInstruct } from '@/lib/api/generate';
 import type { GenerateResult } from '@/lib/api/types';
 import { tr } from '@/lib/i18n-text';
@@ -156,58 +156,6 @@ function useGenerateController(): UseGenerateClone {
     [],
   );
 
-  useEffect(() => {
-    if (!isGenerating) return;
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
-      try {
-        const model = await apiJson<{
-          status: string;
-          loading?: boolean;
-          sub_stage?: string;
-          progress?: number;
-          checkpoint?: string | null;
-          detail?: string | null;
-          error?: string | null;
-        }>('/model/status', { signal: controller.signal });
-        if (!controller.signal.aborted) {
-          // The composer and Engine Ready panel describe the same runtime.
-          // Publish this faster generation-time sample instead of making the
-          // sidebar wait for its slower idle poll.
-          queryClient.setQueryData(['sidebar-model-status'], model);
-          const nextModelStage = [
-            'importing',
-            'loading_weights',
-            'loading_asr',
-            'compiling',
-          ].includes(model.sub_stage ?? '')
-            ? (model.sub_stage as UseGenerateClone['modelStage'])
-            : null;
-          setModelStage(nextModelStage);
-          setModelProgress(
-            typeof model.progress === 'number' ? Math.max(0, Math.min(100, model.progress)) : null,
-          );
-          setStage((current) =>
-            current === 'receiving'
-              ? current
-              : model.loading || model.status === 'loading'
-                ? 'loading'
-                : 'generating',
-          );
-        }
-      } catch {
-        /* Status is optional; never interrupt the generation request. */
-      }
-      if (!controller.signal.aborted) timer = setTimeout(poll, 750);
-    };
-    void poll();
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [isGenerating, queryClient]);
-
   useEffect(
     () => () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -277,12 +225,13 @@ function useGenerateController(): UseGenerateClone {
           postprocess: settings.postprocess,
           duration: settings.duration,
         };
+        setStage('generating');
         const result = await generateClone(input, {
           signal: controller.signal,
           onProgress,
         });
         announceResultNotices(result);
-        setLatestOutput(result, design?.text ?? settings.text);
+        setLatestOutput(result, input.text, { mode: reportMode, instruct, language: input.language });
         recordActionBreadcrumb(`generate:${reportMode}:complete`);
         toast.success(tr('tts.generationComplete'));
         if (!design) rememberTake(result.id, settings);

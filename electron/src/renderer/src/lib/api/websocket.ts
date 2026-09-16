@@ -10,7 +10,7 @@ export async function backendWebSocketUrl(
 ): Promise<string> {
   const backend = status || getBackendStatusSnapshot();
   const bridge = getBridge();
-  const mainOwned = window.location.protocol === 'app:' || backend.remote;
+  const mainOwned = Boolean(bridge);
   const raw =
     bridge && mainOwned
       ? await bridge.backend.websocketUrl(path)

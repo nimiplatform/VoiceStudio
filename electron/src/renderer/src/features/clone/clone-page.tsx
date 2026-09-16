@@ -29,6 +29,7 @@ import { EngineNotice } from '@/components/engine-notice';
 import { useGenerateClone } from '@/hooks/use-generate';
 import { ActionBar, ProductionSettings } from './action-bar';
 import { OutputPanel } from './output-panel';
+import { useLatestOutput } from '@/lib/store/output';
 import { ReferencePanel, SaveProfileForm } from './reference-panel';
 import { ScriptPanel } from './script-panel';
 import { useCloneDemo } from '@/hooks/use-clone-demo';
@@ -41,7 +42,10 @@ export function ClonePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const selectedTake = useSelectedTake();
-  const { generate, isGenerating } = useGenerateClone();
+  const { generate, isGenerating, error } = useGenerateClone();
+  const latestOutput = useLatestOutput();
+  const outputAtStart = useRef(latestOutput.result);
+  useEffect(() => { if (isGenerating) outputAtStart.current = latestOutput.result; }, [isGenerating]);
   const demo = useCloneDemo();
   const { panel, editingProfileId, libraryOpen } = useWorkspace();
   const setPanel = (panel: 'voice' | 'settings' | null) => setWorkspace({ panel });
@@ -318,7 +322,7 @@ export function ClonePage() {
       <div className="sr-only" role="status" aria-live="polite">
         {isGenerating
           ? t('clone.generating_status')
-          : wasGenerating.current
+          : wasGenerating.current && !error && latestOutput.result && latestOutput.result !== outputAtStart.current
             ? t('clone.generating_done_status')
             : null}
       </div>

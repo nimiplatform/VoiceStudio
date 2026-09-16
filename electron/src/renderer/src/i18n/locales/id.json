@@ -1423,7 +1423,7 @@
     "toast_flush_failed": "Gagal menyiram: {{message}}",
     "name": "VoiceStudio",
     "version": "v{{version}}",
-    "tagline": "Kloning suara lokal. Tidak ada yang meninggalkan mesin Anda.",
+    "tagline": "Buat suara, sulih suara, dan transkripsi dengan Nimi.",
     "coming_soon": "Segera hadir",
     "switch_to_light": "Beralih ke tema terang",
     "switch_to_dark": "Beralih ke tema gelap"
@@ -2421,7 +2421,7 @@
     "asr_hint": "Perbaiki kesalahan ASR sekarang — diksi yang ketat akan menghemat upaya TTS nanti.",
     "translate_title": "Terjemahan sudah siap",
     "translate_cta": "Hasilkan sulih suara",
-    "translate_hint": "Telusuri teks target. Jalur yang terlalu panjang akan ditingkatkan kecepatannya; Anda juga dapat mengedit secara langsung.",
+    "translate_hint": "Tinjau dan edit terjemahan sebelum membuat audio.",
     "done_title": "Sulih suara selesai",
     "done_hint": "Tinjau waktu dan rasio sinkronisasi. Sesuaikan baris mana pun dan tekan \"Regen berubah\" untuk pengulangan sebagian yang cepat.",
     "segment_one": "segmen {{count}}",
@@ -2569,5 +2569,25 @@
     "captured": "{{count}} baris log bermasalah ditangkap",
     "contextNotice": "Agen yang dipilih menerima laporan ini, layar saat ini, log aplikasi dan backend terbaru, serta diagnostik sistem.",
     "complete": "Selesai"
+  },
+  "nimi": {
+    "configuration": "Konfigurasi AI Nimi",
+    "configuration_description": "Pilih sumber daya AI untuk suara, transkripsi, dan terjemahan.",
+    "provenance": "Metadata berkas ekspor menandai audio sintetis. Tanda air neural tidak diterapkan.",
+    "referenceControls": "Suara referensi tidak mendukung tag ekspresi atau petunjuk gaya. Hapus tag ekspresi sebelum membuat audio; teks tetap tersedia untuk diedit."
+  },
+  "voiceSelector": {
+    "engineDefault": "Default mesin",
+    "clone": "Suara kloning",
+    "designed": "Suara yang dirancang",
+    "presets": "Preset",
+    "fromVideo": "Dari video",
+    "missingVoice": "Suara tidak ditemukan (pilih ulang)",
+    "preview": "Pratinjau suara",
+    "openGallery": "Buka di Galeri Suara",
+    "createVoice": "Ciptakan suara baru",
+    "gallery": "Galeri",
+    "addingVoice": "Menambahkan suara…",
+    "addVoiceFailed": "Tidak dapat menambahkan suara itu"
   }
 }

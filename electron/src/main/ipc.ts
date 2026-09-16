@@ -20,7 +20,7 @@ import {
   systemPreferences,
   type IpcMainInvokeEvent,
 } from 'electron';
-import type { BackendSupervisor } from './backend';
+import type { BackendSupervisor } from './business-backend';
 import { extractWordScript } from './script-import';
 import type {
   BackendStatus,
@@ -187,21 +187,6 @@ function assertTrustedTopLevelFrame(event: IpcMainInvokeEvent): void {
   }
 }
 
-function remoteInput(raw: unknown): { url: string; apiKey: string } {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw))
-    throw new Error('Invalid remote backend request');
-  const input = raw as { url?: unknown; apiKey?: unknown };
-  if (
-    typeof input.url !== 'string' ||
-    input.url.length > 2048 ||
-    typeof input.apiKey !== 'string' ||
-    input.apiKey.length > 8192
-  ) {
-    throw new Error('Invalid remote backend request');
-  }
-  return { url: input.url, apiKey: input.apiKey };
-}
-
 async function backendDataDirectory(supervisor: BackendSupervisor): Promise<string> {
   const response = await fetch(`${supervisor.baseUrl}/system/info`, {
     headers: supervisor.requestHeaders(),
@@ -337,23 +322,6 @@ export function registerIpc(
     return supervisor.acknowledgeLastCrash();
   });
   ipcMain.handle(CHANNELS.backendGetConnection, () => supervisor.connection);
-  ipcMain.handle(CHANNELS.backendTestRemote, async (event, raw: unknown) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    const input = remoteInput(raw);
-    return supervisor.testRemote(input.url, input.apiKey);
-  });
-  ipcMain.handle(CHANNELS.backendUseRemote, async (event, raw: unknown) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    const input = remoteInput(raw);
-    return supervisor.useRemote(input.url, input.apiKey);
-  });
-  ipcMain.handle(CHANNELS.backendUseLocal, async (event) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    return supervisor.useLocal();
-  });
   ipcMain.handle(CHANNELS.backendWebsocketUrl, async (event, raw: unknown) => {
     assertTrustedTopLevelFrame(event);
     if (raw !== '/ws/transcribe' && raw !== '/ws/events' && raw !== '/ws/tts')
@@ -477,43 +445,6 @@ export function registerIpc(
       maintenanceBusy = false;
       throw error;
     }
-  });
-  ipcMain.handle(CHANNELS.backendSetupRuntime, (event) => {
-    const owner = getMainWindow();
-    if (
-      !owner ||
-      event.sender !== owner.webContents ||
-      event.senderFrame !== owner.webContents.mainFrame ||
-      !isTrustedRenderer(event.senderFrame.url, process.env.ELECTRON_RENDERER_URL)
-    )
-      throw new Error('Untrusted runtime setup request');
-    return supervisor.setupRuntime();
-  });
-  ipcMain.handle(CHANNELS.backendCleanSetupRuntime, (event) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    return supervisor.cleanSetupRuntime();
-  });
-  ipcMain.handle(CHANNELS.backendSetRuntimeRegion, (event, raw: unknown) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    return supervisor.setRuntimeRegion(raw);
-  });
-  ipcMain.handle(CHANNELS.backendChooseRuntimeLocation, async (event, rawTitle: unknown) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    const title = typeof rawTitle === 'string' && rawTitle.length <= 200 ? rawTitle : undefined;
-    const picked = await dialog.showOpenDialog(owner, {
-      ...(title ? { title } : {}),
-      properties: ['openDirectory', 'createDirectory'],
-    });
-    if (picked.canceled || !picked.filePaths[0]) return null;
-    return supervisor.setRuntimeLocation(picked.filePaths[0]);
-  });
-  ipcMain.handle(CHANNELS.backendUseDefaultRuntimeLocation, (event) => {
-    const owner = getMainWindow();
-    assertTrustedMainFrame(event, owner);
-    return supervisor.setRuntimeLocation(null);
   });
   ipcMain.handle(CHANNELS.backendRestart, () => supervisor.restart());
   ipcMain.handle(CHANNELS.filesExtractScript, (_event, input: unknown) => extractWordScript(input));

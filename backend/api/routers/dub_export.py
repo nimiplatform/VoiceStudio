@@ -599,6 +599,7 @@ def _build_audio_export_cmd(
                 bed_mix_filter("1:a", "0:a"),
                 "-map", "[aout]"]
     cmd += codec
+    cmd += ['-metadata', 'comment=VoiceStudio synthetic audio; neural watermark not applied']
     cmd.append(out_path)
     return cmd
 
@@ -984,7 +985,7 @@ async def dub_download(
     # doesn't extend the mux past the video.
     if not stretch_entry and retime_decision is None:
         cmd += ["-shortest"]
-    cmd += [output_path, "-y"]
+    cmd += ['-metadata', 'comment=VoiceStudio synthetic audio; neural watermark not applied', output_path, "-y"]
 
     try:
         rc, _, stderr = await run_ffmpeg(cmd, timeout=1800.0, job_id=job_id)
@@ -1546,49 +1547,9 @@ async def dub_qc_pass(job_id: str, lang: str = Query(None), drift_threshold: flo
     if not segments:
         raise HTTPException(status_code=400, detail="Job has no segments")
 
-    # TTS-only install: no ASR model on disk → typed 409 with a download CTA,
-    # BEFORE any backend load could silently auto-download whisper weights.
-    from services.asr_backend import asr_model_missing_detail, asr_model_missing_error
-    missing = await asyncio.to_thread(asr_model_missing_error)
-    if missing is not None:
-        raise HTTPException(
-            status_code=409,
-            detail={**missing, "message": asr_model_missing_detail(missing)},
-        )
-
-    def _recognize():
-        # `load_*`, not `get_*`: the plain selector returns engines whose
-        # shallow probe passed but whose deep import chain is broken, which
-        # then 500s at `.transcribe()`. The loader degrades (#1185).
-        from services.asr_backend import load_active_asr_backend
-        backend = load_active_asr_backend()
-        result = backend.transcribe(wav_path, word_timestamps=False)
-        return result.get("segments", []), backend.id
-
-    try:
-        from services.asr_backend import (
-            ASRModelMissingError,
-            ASRTimeoutError,
-            run_transcribe_guarded,
-        )
-        from services.model_manager import _get_gpu_pool
-        recognized, engine_id = await run_transcribe_guarded(
-            _get_gpu_pool(), _recognize, what="QC",
-        )
-    except ASRTimeoutError as e:
-        # Backend is alive; ASR just couldn't finish in time. 504, not 500/connection.
-        logger.warning("dub QC ASR pass timed out")
-        raise HTTPException(status_code=504, detail=str(e))
-    except ASRModelMissingError as e:
-        # Degraded onto an engine with no weights on disk — typed 409 with the
-        # download CTA, matching the preflight above.
-        raise HTTPException(
-            status_code=409,
-            detail={**e.payload, "message": asr_model_missing_detail(e.payload)},
-        )
-    except Exception as e:
-        logger.exception("dub QC ASR pass failed")
-        raise HTTPException(status_code=500, detail=f"QC transcription failed: {e}")
+    from business.dubbing import aligned_segments
+    recognized = await aligned_segments(wav_path, lang or '')
+    engine_id = 'Nimi'
 
     seg_ids = job.get("seg_order") or [s.get("id", i) for i, s in enumerate(segments)]
     scored = dub_qc.score_dub(segments, recognized, drift_threshold=drift_threshold, seg_ids=seg_ids)

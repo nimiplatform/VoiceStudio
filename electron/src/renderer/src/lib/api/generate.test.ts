@@ -81,24 +81,24 @@ describe('sanitizeInstruct', () => {
 });
 
 describe('toGenerateForm', () => {
-  it('maps the tuning fields to the multipart names and omits Auto language', () => {
+  it('sends supported business controls and omits old engine sampling controls', () => {
     const form = toGenerateForm({ ...BASE_INPUT, profileId: 'p1' });
     expect(form.get('text')).toBe('Hello there');
     expect(form.has('language')).toBe(false);
-    expect(form.get('num_step')).toBe('16');
-    expect(form.get('guidance_scale')).toBe('2');
+    expect(form.get('num_step')).toBeNull();
+    expect(form.get('guidance_scale')).toBeNull();
     expect(form.get('speed')).toBe('1');
     expect(form.get('denoise')).toBe('true');
-    expect(form.get('t_shift')).toBe('0.1');
-    expect(form.get('position_temperature')).toBe('5');
-    expect(form.get('class_temperature')).toBe('0');
-    expect(form.get('layer_penalty_factor')).toBe('5');
+    expect(form.get('t_shift')).toBeNull();
+    expect(form.get('position_temperature')).toBeNull();
+    expect(form.get('class_temperature')).toBeNull();
+    expect(form.get('layer_penalty_factor')).toBeNull();
     expect(form.get('postprocess_output')).toBe('true');
     expect(form.has('duration')).toBe(false);
     expect(form.has('instruct')).toBe(false);
   });
 
-  it('sends the language when it is not Auto and a truthy duration', () => {
+  it('sends explicit language and omits unsupported requested duration', () => {
     const form = toGenerateForm({
       ...BASE_INPUT,
       language: 'French',
@@ -106,7 +106,7 @@ describe('toGenerateForm', () => {
       profileId: 'p1',
     });
     expect(form.get('language')).toBe('French');
-    expect(form.get('duration')).toBe('3.5');
+    expect(form.get('duration')).toBeNull();
   });
 
   it('sends profile_id XOR ref_audio (profile wins)', () => {

@@ -79,7 +79,7 @@ it('never registers a picker result after its renderer has closed', async () => 
 });
 it('supplies the trusted backend URL and scoped auth while rejecting malformed uploads', async () => {
   const f = fixture('https://gpu-box.example:3900', {
-    Authorization: 'Bearer scoped-session',
+    'X-VoiceStudio-Worker': 'worker-session',
   });
   await f.call('pick');
   const request = {
@@ -95,7 +95,7 @@ it('supplies the trusted backend URL and scoped auth while rejecting malformed u
   expect(mocks.request).toHaveBeenLastCalledWith({
     method: 'watch_enqueue',
     backend_url: 'https://gpu-box.example:3900',
-    authorization: 'Bearer scoped-session',
+    authorization: 'worker-session',
     token: 'capability',
     name: 'video.mp4',
     expected_size: 20,

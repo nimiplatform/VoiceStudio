@@ -31,9 +31,14 @@ pub enum CaptureOrigin {
     Tray,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct DictationOutput {
     inner: Arc<Inner>,
+    owner_pid: u32,
+}
+
+impl Default for DictationOutput {
+    fn default() -> Self { Self::for_owner(std::process::id()) }
 }
 
 #[derive(Default)]
@@ -81,6 +86,10 @@ enum ClipboardSnapshot {
 }
 
 impl DictationOutput {
+    /// A helper must exclude its owning App, not its own invisible process.
+    pub fn for_owner(owner_pid: u32) -> Self {
+        Self { inner: Arc::new(Inner::default()), owner_pid }
+    }
     /// Remember focus on tray mouse-down, before the menu itself can become
     /// foreground. Tauri does not emit tray pointer events on Linux; X11 can
     /// still capture `_NET_ACTIVE_WINDOW` at the menu action, while Wayland
@@ -97,7 +106,7 @@ impl DictationOutput {
         // can hold the operation lock while another application becomes
         // foreground, so acquiring it first would capture the wrong target.
         let captured_at = Instant::now();
-        let target = capture().filter(|target| !target.belongs_to_current_process());
+        let target = capture().filter(|target| !target.belongs_to_process(self.owner_pid));
         if let Ok(mut state) = self.inner.state.lock() {
             state.tray_target = target.map(|target| (target, captured_at));
         }
@@ -124,7 +133,7 @@ impl DictationOutput {
             .then(capture)
             .flatten()
             .filter(|target| {
-                origin == CaptureOrigin::Shortcut || !target.belongs_to_current_process()
+                origin == CaptureOrigin::Shortcut || !target.belongs_to_process(self.owner_pid)
             });
         let mut state = self
             .inner
@@ -777,8 +786,8 @@ struct PlatformTarget {
 
 #[cfg(target_os = "macos")]
 impl PlatformTarget {
-    fn belongs_to_current_process(&self) -> bool {
-        self.pid == std::process::id() as i32
+    fn belongs_to_process(&self, owner_pid: u32) -> bool {
+        self.pid == owner_pid as i32
     }
 }
 
@@ -818,8 +827,8 @@ struct PlatformTarget {
 
 #[cfg(target_os = "windows")]
 impl PlatformTarget {
-    fn belongs_to_current_process(&self) -> bool {
-        self.pid == std::process::id()
+    fn belongs_to_process(&self, owner_pid: u32) -> bool {
+        self.pid == owner_pid
     }
 }
 
@@ -906,8 +915,8 @@ struct PlatformTarget {
 
 #[cfg(target_os = "linux")]
 impl PlatformTarget {
-    fn belongs_to_current_process(&self) -> bool {
-        self.pid == Some(std::process::id())
+    fn belongs_to_process(&self, owner_pid: u32) -> bool {
+        self.pid == Some(owner_pid)
     }
 }
 
@@ -1049,7 +1058,7 @@ struct PlatformTarget;
 
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 impl PlatformTarget {
-    fn belongs_to_current_process(&self) -> bool {
+    fn belongs_to_process(&self, owner_pid: u32) -> bool {
         false
     }
 }
@@ -1356,6 +1365,16 @@ mod tests {
     use std::sync::mpsc;
     use std::thread;
     use std::time::{Duration, Instant};
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn helper_tray_capture_excludes_its_owning_app() {
+        let output = DictationOutput::for_owner(424242);
+        output.prime_tray_target_with(|| Some(super::PlatformTarget { hwnd: 0, pid: 424242 }));
+        assert!(output.inner.state.lock().unwrap().tray_target.is_none());
+        output.prime_tray_target_with(|| Some(super::PlatformTarget { hwnd: 0, pid: 424243 }));
+        assert!(output.inner.state.lock().unwrap().tray_target.is_some());
+    }
 
     #[test]
     fn clipboard_restore_never_overwrites_a_new_user_copy() {

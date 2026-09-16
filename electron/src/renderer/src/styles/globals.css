@@ -3,6 +3,19 @@
 @import 'shadcn/tailwind.css';
 @import './t3-theme.css';
 
+/* Shared VoiceSelector/SearchableSelect use these semantic color tokens. */
+:root {
+  --color-bg: var(--popover);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --chrome-fg: var(--foreground);
+  --chrome-fg-muted: var(--muted-foreground);
+  --chrome-border: var(--border);
+  --chrome-hover-bg: var(--accent);
+  --chrome-accent: var(--primary);
+  --chrome-accent-bg: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
 @custom-variant dark (&:is(.dark, .dark *));
 
 @theme inline {

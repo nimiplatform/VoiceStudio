@@ -61,6 +61,8 @@ function PrivacyToggle({ kind }: { kind: 'watermark' | 'analytics' }) {
     queryFn: ({ signal }) => apiJson<PrivacyState>(path, { signal }),
   });
   const state = query.data;
+  if (watermark && state && !state.audioseal_available)
+    return <SettingsRow id="privacy-watermark" title={t('privacy.watermark_title')} description={t('nimi.provenance')}>{null}</SettingsRow>;
   if (state && !(watermark ? state.audioseal_available : state.available)) return null;
   return (
     <div>

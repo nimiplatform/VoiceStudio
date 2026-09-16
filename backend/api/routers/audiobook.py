@@ -37,7 +37,6 @@ from pydantic import BaseModel, Field
 from services.audiobook import (
     ExpressiveOptions,
     parse_audiobook_script,
-    synthesize_chapter,
 )
 from services.longform_render import (
     LOUDNESS_PRESETS,
@@ -361,434 +360,27 @@ LONGFORM_NUM_STEP = 32
 LONGFORM_GUIDANCE_SCALE = 2.0
 
 
-def _seed_segment_rng(base_seed, text: str, nonce: int = 0) -> int | None:
-    """Apply a profile's pinned seed to this synth call (#1139).
-
-    ``_resolve_voice`` has always fetched the profile ``seed`` — but only the
-    cache signature ever used it; generation itself ran unseeded, so a locked
-    take's pinned seed silently did nothing here while /generate honored it.
-    No pinned seed → no-op (fresh-render variety unchanged).
-
-    Concurrency contract: this seeds the process-global torch RNG, exactly
-    like /generate's #526 seeding (generation.py's ``torch.manual_seed`` in
-    ``_run_inference``/``_run_backend_inference``, same GPU pool). Both are
-    strictly deterministic wherever the pool has one worker — the default on
-    MPS/CPU and small-VRAM CUDA (model_manager._pick_gpu_workers) — and
-    best-effort when a >1-worker CUDA pool runs another seeded job in the
-    same window. Making that window race-free requires threading a per-call
-    torch.Generator through the model's samplers app-wide; if that lands, it
-    must cover /generate and here together, not one path.
-    """
-    if base_seed is None:
-        return None
-    import torch
-
-    from services.audiobook import segment_seed
-    seed = segment_seed(base_seed, text, nonce)
-    torch.manual_seed(seed)
-    return seed
 
 
-def _base_seed(opts: ExpressiveOptions, voice: dict):
-    """The seed that drives this render's determinism: an explicit book-level
-    ``seed`` override wins, else the selected profile's pinned seed, else None
-    (fresh-render variety, unchanged)."""
-    return opts.seed if opts.seed is not None else voice.get("seed")
 
 
-def _make_occ_counter(opts: ExpressiveOptions):
-    """Per-closure occurrence counter for the cache opt-out (#1208).
-
-    When ``vary_repeats`` is on, every synth call gets a monotonically rising
-    nonce so a pinned-seed line that repeats is seeded distinctly per take (the
-    segment cache is defeated per-occurrence in parallel). Off → always 0, so
-    the seed derivation is byte-identical to pre-#1208."""
-    state = {"n": 0}
-
-    def next_nonce() -> int:
-        if not opts.vary_repeats:
-            return 0
-        n = state["n"]
-        state["n"] = n + 1
-        return n
-
-    return next_nonce
 
 
-def _omnivoice_sampling_kwargs(opts: ExpressiveOptions) -> dict:
-    """VoiceStudio-model generate kwargs for the sampling knobs. UNSET reproduces
-    today exactly: num_step 32, guidance 2.0, and NO temperature/postprocess
-    kwargs (the model keeps its own defaults). Emotion is never forwarded —
-    the VoiceStudio config rejects unknown kwargs."""
-    from services.performance_profiles import tts_defaults
-
-    defaults = tts_defaults()
-    kw = {
-        "num_step": opts.num_step if opts.num_step is not None else defaults.get("num_step", LONGFORM_NUM_STEP),
-        "guidance_scale": (
-            opts.guidance_scale if opts.guidance_scale is not None else LONGFORM_GUIDANCE_SCALE
-        ),
-    }
-    if opts.position_temperature is not None:
-        kw["position_temperature"] = opts.position_temperature
-    if opts.class_temperature is not None:
-        kw["class_temperature"] = opts.class_temperature
-    if opts.postprocess_output is not None:
-        kw["postprocess_output"] = opts.postprocess_output
-    elif "postprocess_output" in defaults:
-        kw["postprocess_output"] = defaults["postprocess_output"]
-    return kw
 
 
-def _generic_extra_kwargs(opts: ExpressiveOptions) -> dict:
-    """Extra generate kwargs for a non-VoiceStudio engine. UNSET → empty dict →
-    byte-identical to the pre-#1208 generic call. Only present knobs are added,
-    and every shipped backend's ``generate(self, text, **kw)`` ignores the ones
-    it doesn't understand (never TypeError) — the engine-options contract. The
-    emotion trio reaches IndexTTS2's arbitration; other engines drop it."""
-    kw: dict = {}
-    if opts.num_step is not None:
-        kw["num_step"] = opts.num_step
-    if opts.guidance_scale is not None:
-        kw["guidance_scale"] = opts.guidance_scale
-    if opts.position_temperature is not None:
-        kw["position_temperature"] = opts.position_temperature
-    if opts.class_temperature is not None:
-        kw["class_temperature"] = opts.class_temperature
-    if opts.postprocess_output is not None:
-        kw["postprocess_output"] = opts.postprocess_output
-    if opts.emo_vector:
-        kw["emo_vector"] = list(opts.emo_vector)
-    if opts.emo_text:
-        kw["emo_text"] = opts.emo_text
-        kw["use_emo_text"] = True
-    if opts.emo_alpha is not None:
-        kw["emo_alpha"] = opts.emo_alpha
-    return kw
 
 
-def _build_synth(
-    default_voice: str | None,
-    language: str | None = None,
-    opts: ExpressiveOptions | None = None,
-    voice_map: dict | None = None,
-) -> dict:
-    """Describe how to synthesize for the active TTS engine.
-
-    Returns a dict with ``mode``, ``resolve`` (voice-id → resolved refs, cached
-    per id) and ``engine_id``. For VoiceStudio it also carries the async
-    ``get_model``; other engines carry a ready ``synth`` + ``sample_rate``.
-    :func:`_prepare_synth` turns this into a uniform ``(synth, sr, resolve,
-    engine_id)`` once the (async) model is in hand.
-
-    ``language`` (already resolved by :func:`_resolve_default_language`) is
-    threaded into every chunk's ``generate`` so a non-English clone stays in its
-    language instead of re-autodetecting per chunk (#505 B2). ``None`` keeps the
-    engine's autodetect behavior unchanged.
-
-    ``opts`` (#1208) carries the expressive/quality knobs + cache opt-out. A
-    default instance reproduces today's exact synth call and caching.
-    """
-    from services.tts_backend import OmniVoiceBackend, active_backend_id, get_backend_class
-
-    opts = opts or ExpressiveOptions()
-    cache: dict = {}
-    token_cache: dict = {}
-
-    def resolve(voice_id):
-        # Translate the span token ([voice:NAME] / exact id / None) to a profile
-        # id first (#1217) — the cast fix lives here, not in the parser, so the
-        # parser stays a pure text→plan and exact ids keep working. Cache the
-        # translation so a book of hundreds of same-name spans does one DB check.
-        if voice_id not in token_cache:
-            token_cache[voice_id] = _map_span_voice(voice_id, default_voice, voice_map)
-        key = token_cache[voice_id]
-        if key not in cache:
-            cache[key] = _resolve_voice(key)
-        return cache[key]
-
-    engine_id = active_backend_id()
-    cls = get_backend_class(engine_id)
-    if cls is OmniVoiceBackend:
-        from services.model_manager import get_model
-        return {"mode": "omnivoice", "resolve": resolve, "engine_id": engine_id,
-                "get_model": get_model, "language": language, "opts": opts}
-
-    backend = cls()
-    native_proxy = bool(getattr(cls, "supports_native_omnivoice_controls", False))
-    extra = (_omnivoice_sampling_kwargs(opts) if native_proxy
-             else _generic_extra_kwargs(opts))
-    next_nonce = _make_occ_counter(opts)
-
-    def synth(text, voice_id, speed=None):
-        v = resolve(voice_id)
-        seed = _seed_segment_rng(_base_seed(opts, v), text, next_nonce())
-        call_extra = dict(extra)
-        if native_proxy and seed is not None:
-            call_extra["seed"] = seed
-        return backend.generate(
-            text, language=language, ref_audio=v["ref_audio"],
-            ref_text=v["ref_text"], instruct=v["instruct"], duration=None,
-            speed=float(speed) if speed else 1.0, **call_extra,
-        )
-    return {"mode": "generic", "resolve": resolve, "engine_id": engine_id,
-            "synth": synth, "sample_rate": backend.sample_rate}
 
 
-async def _prepare_synth(
-    default_voice: str | None,
-    language: str | None = None,
-    opts: ExpressiveOptions | None = None,
-    voice_map: dict | None = None,
-):
-    """Resolve :func:`_build_synth` into ``(synth, sample_rate, resolve,
-    engine_id)`` — awaiting the VoiceStudio model load when needed. Shared by the
-    full job and the per-chapter preview. ``language`` is threaded into every
-    chunk so a non-English clone holds its language (#505 B2). ``opts`` (#1208)
-    carries the expressive knobs; a default instance reproduces today exactly."""
-    opts = opts or ExpressiveOptions()
-    info = _build_synth(default_voice, language=language, opts=opts, voice_map=voice_map)
-    resolve, engine_id = info["resolve"], info["engine_id"]
-    if info["mode"] == "omnivoice":
-        lang = info["language"]
-        model = await info["get_model"]()
-        sr = getattr(model, "sampling_rate", 24000)
-
-        from services.tts_backend import generate_with_cached_ref
-
-        sampling = _omnivoice_sampling_kwargs(opts)
-        next_nonce = _make_occ_counter(opts)
-
-        def synth(text, voice_id, speed=None):
-            v = resolve(voice_id)
-            _seed_segment_rng(_base_seed(opts, v), text, next_nonce())
-            # A book is the worst case for the re-encode this avoids: hundreds of
-            # segments, one voice. The reference is encoded on the first segment
-            # and reused for every one after it.
-            return generate_with_cached_ref(
-                model, ref_audio=v["ref_audio"], ref_text=v["ref_text"],
-                text=text, language=lang, instruct=v["instruct"], duration=None,
-                speed=float(speed) if speed else 1.0, **sampling,
-            )[0]
-        return synth, sr, resolve, engine_id
-    return info["synth"], info["sample_rate"], resolve, engine_id
 
 
-def _render_chapter_cached(chapter, synth, sr, engine_id, resolve, cache_dir, lexicon=None,
-                           language=None, opts=None, voice_map=None):
-    """Render one chapter, content-addressed so a re-run reuses it (resume).
-
-    Returns ``(wav_path, duration_s, was_cached, seg_stats)``. Two cache
-    layers:
-
-    * Outer — the WAV at ``cache_dir/<key>.wav`` where ``key`` is
-      :func:`chapter_cache_key` over the chapter's spans + sample rate +
-      engine + each voice's resolved signature (+ the lexicon, so a lexicon
-      edit re-renders). A fully-unchanged chapter hits here and never touches
-      segment files. With invisible watermarking active the key also carries a
-      watermark tag (#1169) — pre-#1169 chapter caches (unmarked audio)
-      deliberately miss once and re-render marked; with watermarking off the
-      derivation is unchanged and released-version caches keep hitting.
-      ``seg_stats`` is ``None``.
-    * Inner — on a chapter miss, each spoken span goes through the
-      :class:`services.longform_render.SegmentCache` under
-      ``cache_dir/segments``: cached segments load from disk, only the
-      edited/missing ones synthesize, and each fresh segment persists the
-      moment it renders (an interrupted chapter resumes from them).
-      ``seg_stats`` is ``{"total": spoken_spans, "cached": reused}``.
-
-    Span text is normalized (``services.text_normalization``) up front — BEFORE
-    either cache key and BEFORE ``synthesize_chapter``'s lexicon pass, so the
-    per-project dictionary operates on normalized text and toggling / changing
-    normalization output naturally invalidates cached chapters and segments.
-
-    Runs in the GPU-pool executor.
-    """
-    import json
-    import wave
-
-    from services.audio_io import atomic_save_wav
-    from services.audiobook import ExpressiveOptions, Span, voice_map_signature
-    from services.longform_render import SegmentCache, chapter_cache_key
-    from services.pronunciation import normalize_lexicon
-    from services.text_normalization import normalize_for_tts
-    from services.watermark import mark_synthetic, will_mark
-
-    opts = opts or ExpressiveOptions()
-
-    spans = [Span(voice_id=s.voice_id, text=normalize_for_tts(s.text, language),
-                  pause_ms_after=s.pause_ms_after, speed=getattr(s, "speed", None))
-             for s in chapter.spans]
-    spans_tuples = [(s.voice_id, s.text, s.pause_ms_after, getattr(s, "speed", None))
-                    for s in spans]
-    voice_sigs: dict = {}
-    for s in spans:
-        k = s.voice_id or ""
-        if k not in voice_sigs:
-            v = resolve(s.voice_id)
-            voice_sigs[k] = f"{v.get('ref_audio')}|{v.get('ref_text')}|{v.get('instruct')}|{v.get('seed')}"
-    sig: dict = dict(voice_sigs)
-    lex_sig = ""
-    if lexicon:
-        # Fold the lexicon into the cache key so editing pronunciations
-        # invalidates cached chapters (reserved key can't collide with a voice id).
-        lex_sig = json.dumps(normalize_lexicon(lexicon), sort_keys=True)
-        sig["\x00lexicon"] = lex_sig
-    # Fold the #1208 expressive signature into BOTH cache layers so changing any
-    # new knob (sampling, emotion, seed, cache opt-out) re-renders instead of
-    # replaying stale audio (the CRITICAL TRAP). Empty for a default render, so
-    # the derivation stays byte-identical to pre-#1208 and released caches hit.
-    expr_sig = opts.cache_signature()
-    if expr_sig:
-        sig["\x00expressive"] = expr_sig
-    # Fold the #1217 voice map into BOTH cache layers, exactly like the
-    # expressive signature: remapping a [voice:NAME] must re-render, while an
-    # empty/absent map keeps the key byte-identical to pre-#1217 (existing books
-    # never re-render). The resolved voice_sigs above already reflect a mapping
-    # when synthesis actually resolves it, but folding the raw map in makes the
-    # invalidation robust even where resolution is short-circuited/stubbed.
-    vmap_sig = voice_map_signature(voice_map)
-    if vmap_sig:
-        sig["\x00voicemap"] = vmap_sig
-    seg_extra_sig = f"{lex_sig}\x00{expr_sig}" if expr_sig else lex_sig
-    if vmap_sig:
-        seg_extra_sig = f"{seg_extra_sig}\x00{vmap_sig}"
-    if will_mark():
-        # Provenance-marked chapters cache under their own key (#1169): a
-        # chapter WAV rendered while watermarking was off/unavailable —
-        # including every cache entry written before marking existed — must
-        # never satisfy a request made while it's on. Deliberately one-time
-        # invalidates pre-#1169 chapter caches (the SEGMENT cache underneath
-        # is untouched, so re-rendering is assembly + one embed, not re-TTS);
-        # with marking off the key is byte-identical to the released
-        # derivation, so those caches keep hitting.
-        sig["\x00watermark"] = "1"
-    key = chapter_cache_key(spans_tuples, sample_rate=sr, engine_id=engine_id, voice_sig=sig)
-    wav_path = os.path.join(cache_dir, f"{key}.wav")
-
-    if os.path.exists(wav_path):
-        try:
-            with wave.open(wav_path, "rb") as w:
-                dur = w.getnframes() / float(w.getframerate() or sr)
-            return wav_path, dur, True, None
-        except Exception:
-            pass  # corrupt cache entry — fall through and re-render
-
-    seg_cache = SegmentCache(cache_dir, sample_rate=sr, engine_id=engine_id,
-                             voice_sig=voice_sigs, extra_sig=seg_extra_sig,
-                             vary_repeats=opts.vary_repeats)
-    audio, dur = synthesize_chapter(spans, synth, sr, lexicon=lexicon,
-                                    segment_cache=seg_cache)
-    # Invisible provenance mark on the assembled chapter (#1169), tensor stage,
-    # before the WAV lands in the cache — this single site covers every
-    # longform front door (/audiobook, /longform/render [Stories],
-    # /audiobook/preview, /audiobook/resume/{id}): the m4b/mp3 mux only
-    # concatenates these WAVs, and AudioSeal survives the lossy encode.
-    # Segments in the segment cache stay unmarked by design — they're
-    # intermediate assembly inputs, re-marked here on every chapter render.
-    # Already runs in the GPU-pool executor; never raises (degrades to
-    # unmarked on failure).
-    audio = mark_synthetic(audio, sr, context="longform.chapter")
-    atomic_save_wav(wav_path, audio, sr)
-    return wav_path, dur, False, {"total": seg_cache.hits + seg_cache.misses,
-                                  "cached": seg_cache.hits}
 
 
-def _remote_chapter_call(chapter, *, engine_id, default_voice, voice_map,
-                         language, lexicon, opts, cache_dir):
-    """Build one opaque remote chapter task without loading a local TTS model."""
-    import hashlib
-
-    from services import gpu_gateway
-    from services.text_normalization import normalize_for_tts
-    from services.watermark import is_enabled as watermark_enabled
-
-    rows, voices, refs = [], [], []
-    for span in chapter.spans:
-        profile_id = _map_span_voice(span.voice_id, default_voice, voice_map)
-        voice = _resolve_voice(profile_id)
-        rows.append({
-            "text": normalize_for_tts(span.text, language),
-            "pause_ms_after": span.pause_ms_after,
-            "speed": getattr(span, "speed", None),
-        })
-        refs.append(voice.get("ref_audio"))
-        voices.append({
-            "ref_text": voice.get("ref_text"), "instruct": voice.get("instruct"),
-            "seed": voice.get("seed"),
-        })
-    params = {
-        "spans": rows, "voices": voices, "ref_audio": refs,
-        "language": language, "lexicon": lexicon,
-        "expressive": opts.to_manifest(), "watermark": bool(watermark_enabled()),
-    }
-    signature = hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
-    # The worker synthesizes from ``spans``, but the gateway and scheduler read
-    # top-level ``text`` to scale the remote execution deadline. Add this after
-    # the signature so existing content-addressed remote cache keys still hit.
-    params["text"] = "\n".join(row["text"] for row in rows)
-    wav_path = os.path.join(cache_dir, f"remote-{signature}.wav")
-
-    def decode(result):
-        import soundfile as sf
-        if not os.path.exists(wav_path):
-            partial = f"{wav_path}.part"
-            shutil.copyfile(result.path, partial)
-            os.replace(partial, wav_path)
-        info = sf.info(wav_path)
-        return wav_path, float(info.duration), False, None
-
-    return gpu_gateway.RemoteCall(
-        engine=engine_id, operation="audiobook", params=params,
-        idempotency_key=f"audiobook:{signature}", decode=decode,
-    ), wav_path
 
 
-async def _run_chapter(chapter, *, operation="audiobook", decision, job, default_voice, language, opts,
-                       voice_map, lexicon, cache_dir):
-    """Run one chapter through the gateway; local preparation stays lazy."""
-    from services import gpu_gateway
-    from services.tts_backend import active_backend_id, get_backend_class
-
-    engine_id = active_backend_id()
-    remote, remote_cache = _remote_chapter_call(
-        chapter, engine_id=engine_id, default_voice=default_voice,
-        voice_map=voice_map, language=language, lexicon=lexicon,
-        opts=opts, cache_dir=cache_dir,
-    )
-    if decision.remote and os.path.exists(remote_cache):
-        import soundfile as sf
-        info = sf.info(remote_cache)
-        return remote_cache, float(info.duration), True, None
-
-    async def prepare_local():
-        from services.model_manager import generate_timeout_s
-
-        synth, sr, resolve, local_engine = await _prepare_synth(
-            default_voice, language=language, opts=opts, voice_map=voice_map
-        )
-        try:
-            timeout_engine = get_backend_class(local_engine)
-        except ValueError:
-            # Tests and third-party integrations may inject a synth under a
-            # non-catalogue id. Keep the canonical host/text policy available;
-            # registered production engines still add their routing metadata.
-            timeout_engine = None
-        return gpu_gateway.LocalCall(
-            fn=lambda: _render_chapter_cached(
-                chapter, synth, sr, local_engine, resolve, cache_dir, lexicon,
-                language, opts, voice_map,
-            ),
-            what="Audiobook chapter",
-            timeout=generate_timeout_s(
-                remote.params["text"], engine=timeout_engine
-            ),
-        )
-
-    return await gpu_gateway.run(
-        operation, local=gpu_gateway.LocalCall(prepare=prepare_local),
-        remote=remote, decision=decision, job=job,
-    )
+async def _run_chapter(chapter, *, default_voice, language, opts, voice_map, lexicon, cache_dir):
+    from business.longform import render_chapter
+    return await render_chapter(chapter, default_voice=default_voice, language=language, opts=opts, voice_map=voice_map, lexicon=lexicon, cache_dir=cache_dir)
 
 
 class AudiobookPreviewRequest(ExpressiveMixin):
@@ -810,7 +402,6 @@ async def audiobook_preview(req: AudiobookPreviewRequest) -> dict:
     cache (the later full render reuses it) and a re-preview is instant.
     """
     from core.config import OUTPUTS_DIR
-    from services import gpu_gateway
 
     plan = parse_audiobook_script(req.text, default_voice=req.default_voice)
     if not plan.chapters:
@@ -824,9 +415,8 @@ async def audiobook_preview(req: AudiobookPreviewRequest) -> dict:
     os.makedirs(cache_dir, exist_ok=True)
     resolved_lang = _resolve_default_language(req.language, req.default_voice)
     opts = _expressive_opts(req)
-    decision = gpu_gateway.decide("audiobook")
     wav_path, dur, was_cached, _seg_stats = await _run_chapter(
-        chapter, decision=decision, job=None, default_voice=req.default_voice,
+        chapter, default_voice=req.default_voice,
         language=resolved_lang, opts=opts, voice_map=req.voice_map,
         lexicon=req.lexicon, cache_dir=cache_dir,
     )
@@ -867,7 +457,6 @@ async def _render_longform_sse(
     from core.config import OUTPUTS_DIR
     from core.failure import build_failure, build_failure_event
     from services.ffmpeg_utils import find_ffmpeg, run_ffmpeg
-    from services import gpu_gateway
 
     opts = opts or ExpressiveOptions()
 
@@ -944,9 +533,6 @@ async def _render_longform_sse(
     prune_cache_dir(cache_dir)  # bound disk before this job adds its chapters
     try:
         resolved_lang = _resolve_default_language(language, default_voice)
-        operation = "audiobook" if job_type == "audiobook" else "longform"
-        decision = gpu_gateway.decide(operation)
-        chapter_run = gpu_gateway.JobRun(operation)
 
         total = len(plan.chapters)
         chapter_files: list[str] = []
@@ -981,7 +567,7 @@ async def _render_longform_sse(
                     break
             try:
                 wav_path, dur, was_cached, seg_stats = await _run_chapter(
-                    chapter, operation=operation, decision=decision, job=chapter_run,
+                    chapter,
                     default_voice=default_voice, language=resolved_lang,
                     opts=opts, voice_map=voice_map, lexicon=lexicon,
                     cache_dir=cache_dir,
@@ -1021,11 +607,6 @@ async def _render_longform_sse(
                 ev["segments"] = seg_stats["total"]
                 ev["cached_segments"] = seg_stats["cached"]
             yield _emit(ev)
-
-        route_notice = chapter_run.notice()
-        if route_notice is not None:
-            yield _emit({"type": "routing_notice", "status": route_notice[0],
-                         "reason": route_notice[1]})
 
         if interrupted:
             logger.info("[%s] client disconnected — stopped after %d/%d chapters",
@@ -1100,7 +681,7 @@ async def _render_longform_sse(
             from services.loudness import measure_loudness
             measured = await measure_loudness(ffmpeg, concat_path, norm, job_id=job_id)
 
-        await run_ffmpeg(
+        returncode, _, encode_error = await run_ffmpeg(
             build_render_cmd(
                 ffmpeg, concat_path, meta_path, out_path,
                 fmt=ext, bitrate=bitrate, cover_path=_safe_cover_path(cover_path),
@@ -1108,6 +689,8 @@ async def _render_longform_sse(
             ),
             job_id=job_id,
         )
+        if returncode != 0 or not os.path.isfile(out_path):
+            raise RuntimeError('Audiobook encoding failed: ' + encode_error.decode('utf-8', 'replace')[-2000:])
 
         if job_store is not None:
             try:

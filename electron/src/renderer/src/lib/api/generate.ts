@@ -126,20 +126,10 @@ export function sanitizeInstruct(free: string): SanitizedInstruct {
 export function toGenerateForm(input: CloneGenerateInput): FormData {
   const form = new FormData();
   form.append('text', input.text);
-  if (input.seed !== undefined && Number.isInteger(input.seed))
-    form.append('seed', String(input.seed));
   if (input.language && input.language !== 'Auto') form.append('language', input.language);
-  form.append('num_step', String(input.steps));
-  form.append('guidance_scale', String(input.cfg));
   form.append('speed', String(input.speed));
   form.append('denoise', String(input.denoise));
-  form.append('t_shift', String(input.tShift));
-  form.append('position_temperature', String(input.posTemp));
-  form.append('class_temperature', String(input.classTemp));
-  form.append('layer_penalty_factor', String(input.layerPenalty));
   form.append('postprocess_output', String(input.postprocess));
-  const duration = Number.parseFloat(input.duration);
-  if (input.duration && Number.isFinite(duration)) form.append('duration', String(duration));
 
   if (input.profileId) {
     form.append('profile_id', input.profileId);

@@ -180,9 +180,6 @@ export function restoreDubDraft(raw: string | null, defaults: DubSession): DubSe
       quality: ['fast', 'autofit', 'cinematic', 'agent'].includes(value.quality)
         ? value.quality
         : defaults.quality,
-      agentCli: ['codex', 'claude', 'opencode', 'pi'].includes(value.agentCli)
-        ? value.agentCli
-        : undefined,
       autoGlossary:
         typeof value.autoGlossary === 'boolean' ? value.autoGlossary : defaults.autoGlossary,
       reflectPass:

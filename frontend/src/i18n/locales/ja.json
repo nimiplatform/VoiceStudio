@@ -2024,7 +2024,7 @@
     "asr_hint": "ASR エラーを今すぐ修正します。厳密なディクショニングにより、後で TTS の試行を節約できます。",
     "translate_title": "翻訳準備完了",
     "translate_cta": "ダブの生成",
-    "translate_hint": "対象のテキストをざっと読んでください。長すぎる回線の速度が向上します。直接編集することもできます。",
+    "translate_hint": "音声を生成する前に翻訳を確認し、編集してください。",
     "done_title": "ダビング完了",
     "done_hint": "タイミングと同期率を確認します。任意の行を微調整し、「Regen Changed」を押すと、部分的に素早くやり直すことができます。",
     "segment_one": "{{count}} セグメント",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· モデルがアンロードされました",
     "toast_flush_failed": "フラッシュに失敗しました: {{message}}",
     "toast_project_saved": "プロジェクトが保存されました",
-    "toast_project_created": "プロジェクトが作成されました"
+    "toast_project_created": "プロジェクトが作成されました",
+    "tagline": "Nimi で音声作成、吹き替え、文字起こし。"
   },
   "update": {
     "available": "アップデート {{version}} が利用可能です",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "一時停止",
     "play": "再生"
+  },
+  "nimi": {
+    "configuration": "Nimi AI 設定",
+    "configuration_description": "音声、文字起こし、翻訳に使用する AI リソースを選択します。",
+    "provenance": "書き出したファイルのメタデータに合成音声と記録します。ニューラル透かしは適用されません。",
+    "referenceControls": "参照音声は表情タグや話し方の指示に対応していません。生成前に表情タグを削除してください。元のテキストは編集用に保持されます。"
   }
 }

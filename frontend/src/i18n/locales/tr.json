@@ -2024,7 +2024,7 @@
     "asr_hint": "Tüm ASR hatalarını şimdi düzeltin; sıkı diksiyon, daha sonra TTS denemelerini önler.",
     "translate_title": "Çeviriler hazır",
     "translate_cta": "Dublaj oluştur",
-    "translate_hint": "Hedef metni gözden geçirin. Aşırı uzunluktaki hatların hızı artırılıyor; doğrudan da düzenleyebilirsiniz.",
+    "translate_hint": "Sesi üretmeden önce çeviriyi gözden geçirin ve düzenleyin.",
     "done_title": "Dublaj tamamlandı",
     "done_hint": "Zamanlamayı ve senkronizasyon oranlarını inceleyin. Herhangi bir satırda ince ayar yapın ve hızlı bir kısmi yineleme için \"Yenileme değişti\" tuşuna basın.",
     "segment_one": "{{count}} segmenti",
@@ -2292,7 +2292,8 @@
     "toast_model_unloaded": "· model boşaltıldı",
     "toast_flush_failed": "Temizleme başarısız oldu: {{message}}",
     "toast_project_saved": "Proje kaydedildi",
-    "toast_project_created": "Proje oluşturuldu"
+    "toast_project_created": "Proje oluşturuldu",
+    "tagline": "Nimi ile ses oluşturun, dublaj ve deşifre yapın."
   },
   "update": {
     "available": "{{version}} güncellemesi mevcut",
@@ -2831,5 +2832,11 @@
   "player": {
     "pause": "Duraklat",
     "play": "Oynat"
+  },
+  "nimi": {
+    "configuration": "Nimi AI yapılandırması",
+    "configuration_description": "Sesler, deşifre ve çeviri için AI kaynaklarını seçin.",
+    "provenance": "Dışa aktarılan dosyaların meta verileri sentetik sesi belirtir. Sinir ağı filigranı uygulanmaz.",
+    "referenceControls": "Referans sesler ifade etiketlerini veya stil yönergelerini desteklemez. Üretmeden önce etiketleri kaldırın; metin düzenleme için korunur."
   }
 }
