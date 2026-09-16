@@ -1,6 +1,7 @@
 import { SecondarySidebar } from '@/components/workspace-sidebar';
 import SearchableSelect from '../../../../../../frontend/src/components/SearchableSelect';
 import { LANGUAGES } from '@/lib/languages';
+import { useDictationInputLanguage, setDictationInputLanguage } from '@/lib/store/dictation-settings';
 import { WorkspaceHeader } from '@/components/app-shell/workspace-header';
 import { LiveDictation } from './live-dictation';
 import { DictationSetup } from './dictation-setup';
@@ -70,7 +71,7 @@ export function TranscriptionsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [inputLanguage, setInputLanguage] = useState('Auto');
+  const inputLanguage = useDictationInputLanguage();
   const [failed, setFailed] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -340,9 +341,12 @@ export function TranscriptionsPage() {
               <Link to="/settings/models" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
                 {t('nimi.configuration')}
               </Link>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{t('transcriptions.input_language')}</span>
-                <SearchableSelect value={inputLanguage} onChange={setInputLanguage}
+              <Link to="/settings/general" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+                {t('settings.llmskills_dictation_refinement_name')}
+              </Link>
+              <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                <span className="whitespace-nowrap">{t('transcriptions.input_language')}</span>
+                <SearchableSelect value={inputLanguage} onChange={setDictationInputLanguage}
                   options={LANGUAGES.map(language => ({ value: language, label: language === 'Auto' ? t('clone.auto') : language }))}
                   disabled={busy || capturing} ariaLabel={t('transcriptions.input_language')} menuPortal />
               </div>
@@ -447,6 +451,7 @@ export function TranscriptionsPage() {
               )}
             </div>
           </div>
+          <p className="mx-auto w-full max-w-4xl px-6 py-2 text-xs text-muted-foreground">{t('transcriptions.input_language_scope')}</p>
           {!dictationReadiness.data?.ready && !dictationReadiness.isPending && (
             <DictationSetup onReady={() => void dictationReadiness.refetch()} />
           )}

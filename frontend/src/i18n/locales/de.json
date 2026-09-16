@@ -1552,7 +1552,9 @@
     "just_now": "Gerade eben",
     "m_ago": "Vor {{count}}m",
     "h_ago": "Vor {{count}}h",
-    "input_language": "Sprache der Datei / Aufnahme"
+    "input_language": "Eingabesprache",
+    "input_language_scope": "Gilt für Dateien, Aufnahmen und neue Diktate, auch per globalem Tastenkürzel. Laufende Sitzungen behalten ihre Startsprache.",
+    "refinement_data_flow": "Wenn aktiviert, wird erkannter Text an das in Nimi gewählte Textmodell über dessen lokalen oder Cloud-Pfad gesendet. Ausgeschaltet bleiben neue Transkripte unbearbeitet."
   },
   "setup": {
     "welcome": "Willkommen",

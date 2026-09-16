@@ -212,7 +212,9 @@
     "failed": "轉錄失敗：",
     "missing_model": "尚未安裝語音轉文字模型 — 此功能需要一個模型來轉錄音訊。",
     "original_transcript": "原始轉錄",
-    "input_language": "檔案／錄音語言"
+    "input_language": "輸入語言",
+    "input_language_scope": "檔案、錄音和新聽寫工作階段（含全域快捷鍵）共用此設定。進行中的工作階段保留開始時的語言。",
+    "refinement_data_flow": "啟用後，識別文字會傳送給 Nimi 中選定的文字模型，依其本機或雲端路由處理。關閉後，新轉錄不再潤飾。"
   },
   "engineRuntime": {
     "ready": "準備好",

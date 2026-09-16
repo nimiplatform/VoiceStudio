@@ -212,7 +212,9 @@
     "failed": "Transkripsi gagal",
     "missing_model": "Tidak ada model ucapan-ke-teks yang terpasang — fitur ini membutuhkannya untuk mentranskripsi audio.",
     "original_transcript": "Transkrip asli",
-    "input_language": "Bahasa file / rekaman"
+    "input_language": "Bahasa masukan",
+    "input_language_scope": "Digunakan bersama oleh file, rekaman, dan sesi dikte baru, termasuk pintasan global. Sesi aktif tetap memakai bahasa awalnya.",
+    "refinement_data_flow": "Saat aktif, teks yang dikenali dikirim ke model teks pilihan di Nimi melalui rute lokal atau cloud. Saat nonaktif, transkrip baru tidak diperhalus."
   },
   "engineRuntime": {
     "ready": "Siap",

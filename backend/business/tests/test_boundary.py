@@ -155,6 +155,51 @@ def test_file_transcription_passes_explicit_language_without_inventing_detection
     assert calls == ['', 'en']
 
 
+def test_live_language_reaches_partial_utterance_and_eof_asr(monkeypatch):
+    from fastapi.testclient import TestClient
+    import nimi_main
+    from business import transcription
+    calls = []
+    async def recognize(operation, payload):
+        assert operation == 'transcribe'
+        calls.append(payload)
+        return {'text': f'Contract fixture {len(calls)}.', 'language': ''}
+    async def no_refinement(text):
+        return {}
+    monkeypatch.setattr(transcription, 'call', recognize)
+    monkeypatch.setattr(transcription, 'refine_text', no_refinement)
+    monkeypatch.setenv('VOICESTUDIO_WORKER_SECRET', 'live-language-test')
+    monkeypatch.setattr(nimi_main, '_secret', 'live-language-test')
+    with TestClient(nimi_main.app) as client:
+        for requested, expected in [('English', 'en'), ('Auto', '')]:
+            calls.clear()
+            with client.websocket_connect('/ws/transcribe?worker_token=live-language-test&language=' + requested) as ws:
+                ws.send_bytes(np.full(16000, 4000, dtype='<i2').tobytes())
+                assert ws.receive_json()['type'] == 'partial'
+                ws.send_bytes(np.zeros(9600, dtype='<i2').tobytes())
+                utterance = ws.receive_json()
+                assert utterance['final_kind'] == 'utterance'
+                ws.send_bytes(np.full(3200, 4000, dtype='<i2').tobytes())
+                ws.send_text('EOF')
+                tail = ws.receive_json()
+                assert tail['final_kind'] == 'utterance'
+                summary = ws.receive_json()
+                assert summary['final_kind'] == 'summary'
+                assert [item['language'] for item in calls] == [expected] * 3
+                assert utterance['input_language'] == tail['input_language'] == summary['input_language'] == expected
+                assert utterance['language'] == ''
+
+
+def test_cleanup_disabled_does_not_send_recognized_text_to_any_model(monkeypatch):
+    from business import transcription
+    from services import refinement
+    monkeypatch.setattr(refinement, 'get_refinement_config', lambda: {'auto': False})
+    async def forbidden(*args, **kwargs):
+        raise AssertionError('Cleanup is off; no status or text model request is needed')
+    monkeypatch.setattr(transcription, 'call', forbidden)
+    assert asyncio.run(transcription.refine_text('Raw recognition must remain unchanged.')) == {}
+
+
 def test_provenance_preserves_stereo_samples_and_real_timing():
     samples = np.column_stack([np.linspace(-0.6, 0.6, 1001), np.linspace(0.4, -0.4, 1001)])
     output = io.BytesIO()

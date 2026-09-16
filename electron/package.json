@@ -1,6 +1,6 @@
 {
   "name": "voicestudio-electron",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "private": true,
   "description": "VoiceStudio voice creation and editing through Nimi Desktop.",
   "homepage": "https://github.com/debpalash/VoiceStudio",

@@ -14,7 +14,7 @@ import type { TranscriptEntry } from '../../../../../../frontend/src/utils/trans
 import { apiJson } from '@/lib/api/client';
 import { backendWebSocketUrl } from '@/lib/api/websocket';
 import { beginAppActivity } from '@/lib/app-activity';
-import { getAecEnabled } from '@/lib/store/dictation-settings';
+import { getAecEnabled, getDictationInputLanguage } from '@/lib/store/dictation-settings';
 
 export interface DictationState {
   stage: 'idle' | 'starting' | 'recording' | 'transcribing' | 'done' | 'error';
@@ -22,6 +22,7 @@ export interface DictationState {
   modelStage?: string;
   issue?: 'model' | 'microphone' | 'connection' | 'transcription' | 'storage';
   paused: boolean;
+  inputLanguage?: string;
 }
 interface Frame extends Partial<TranscriptEntry> {
   type: string;
@@ -64,6 +65,9 @@ export class LiveDictation {
     deviceId?: string,
   ): Promise<void> {
     if (['starting', 'recording', 'transcribing'].includes(this.state.stage)) return;
+    // The page and global widget use one persisted choice. Freeze it for this
+    // session, including time spent waiting for microphone permission.
+    const inputLanguage = getDictationInputLanguage();
     this.release();
     this.finishActivity = beginAppActivity('dictation');
     const generation = ++this.generation;
@@ -75,6 +79,7 @@ export class LiveDictation {
     this.rawCommitted = [];
     this.publish({
       stage: 'starting',
+      inputLanguage,
       text: '',
       issue: undefined,
       modelStage: undefined,
@@ -101,6 +106,7 @@ export class LiveDictation {
       const url = new URL(await backendWebSocketUrl('/ws/transcribe'));
       url.searchParams.set('pcm', '1');
       url.searchParams.set('sr', '16000');
+      url.searchParams.set('language', inputLanguage === 'Auto' ? '' : inputLanguage);
       const aecEnabled = getAecEnabled();
       if (aecEnabled) url.searchParams.set('aec', '1');
       const socket = new WebSocket(url);

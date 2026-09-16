@@ -520,7 +520,9 @@
     "failed": "Transcription failed",
     "missing_model": "No speech-to-text model is installed — this feature needs one to transcribe audio.",
     "original_transcript": "Original transcript",
-    "input_language": "File / recording language"
+    "input_language": "Input language",
+    "input_language_scope": "Shared by files, recordings and new dictation sessions, including the global shortcut. Active sessions keep their starting language.",
+    "refinement_data_flow": "When enabled, recognized text is sent to the text model selected in Nimi, using its Local or Cloud route. Turning this off leaves new transcripts unrefined."
   },
   "engineRuntime": {
     "ready": "Ready",

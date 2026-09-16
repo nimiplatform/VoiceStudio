@@ -1552,7 +1552,9 @@
     "just_now": "Proprio adesso",
     "m_ago": "{{count}}m fa",
     "h_ago": "{{count}}h fa",
-    "input_language": "Lingua del file / registrazione"
+    "input_language": "Lingua in ingresso",
+    "input_language_scope": "Condivisa da file, registrazioni e nuove dettature, anche tramite scorciatoia globale. Le sessioni attive mantengono la lingua iniziale.",
+    "refinement_data_flow": "Se attivo, il testo riconosciuto viene inviato al modello di testo scelto in Nimi tramite il percorso locale o cloud. Se disattivo, le nuove trascrizioni non vengono rifinite."
   },
   "setup": {
     "welcome": "Benvenuto",

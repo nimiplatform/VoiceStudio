@@ -41,6 +41,7 @@ let stopGraph: ReturnType<typeof vi.fn>;
 let microphone: ReturnType<typeof vi.fn>;
 let emit: (samples: Float32Array) => void;
 beforeEach(() => {
+  localStorage.clear();
   mocks.bridge = null;
   Socket.instances = [];
   vi.stubGlobal('WebSocket', Socket);
@@ -56,6 +57,28 @@ beforeEach(() => {
     return stopGraph;
   });
   live = new LiveDictation();
+});
+it('uses the shared language for page and widget sessions, captured before microphone permission', async () => {
+  localStorage.setItem('voicestudio.dictation-settings.v1', JSON.stringify({ inputLanguage: 'English' }));
+  let allow!: (stream: { getTracks: () => { stop: typeof stopTrack }[] }) => void;
+  microphone.mockImplementationOnce(() => new Promise(resolve => { allow = resolve; }));
+  const starting = live.start(vi.fn());
+  await vi.waitFor(() => expect(microphone).toHaveBeenCalled());
+  localStorage.setItem('voicestudio.dictation-settings.v1', JSON.stringify({ inputLanguage: 'Chinese' }));
+  allow({ getTracks: () => [{ stop: stopTrack }] });
+  await starting;
+  expect(Socket.instances[0].url.searchParams.get('language')).toBe('English');
+  live.cancel();
+  const widget = new LiveDictation();
+  try {
+    await widget.start(vi.fn());
+    expect(Socket.instances[1].url.searchParams.get('language')).toBe('Chinese');
+  } finally { widget.cancel(); }
+});
+
+it('keeps automatic language empty on the protected WebSocket', async () => {
+  await live.start(vi.fn());
+  expect(Socket.instances[0].url.searchParams.get('language')).toBe('');
 });
 afterEach(() => {
   live.cancel();

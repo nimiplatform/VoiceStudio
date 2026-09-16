@@ -1552,7 +1552,9 @@
     "just_now": "Vừa rồi",
     "m_ago": "{{count}}phút trước",
     "h_ago": "{{count}}giờ trước",
-    "input_language": "Ngôn ngữ tệp / bản ghi"
+    "input_language": "Ngôn ngữ đầu vào",
+    "input_language_scope": "Dùng chung cho tệp, bản ghi và phiên nhập giọng nói mới, kể cả phím tắt toàn cục. Phiên đang chạy giữ ngôn ngữ lúc bắt đầu.",
+    "refinement_data_flow": "Khi bật, văn bản được nhận dạng sẽ được gửi tới mô hình văn bản đã chọn trong Nimi qua tuyến cục bộ hoặc đám mây. Khi tắt, bản chép lời mới không được trau chuốt."
   },
   "setup": {
     "welcome": "Chào mừng",

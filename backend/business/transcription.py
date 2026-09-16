@@ -17,12 +17,18 @@ from services.aec import NlmsEchoCanceller
 router = APIRouter()
 
 
-async def transcribe_pcm(pcm: bytes, rate: int = 16000):
+def normalize_input_language(value):
+    from omnivoice.utils.lang_map import LANG_NAME_TO_ID
+    language = str(value or '').strip()
+    return '' if language in {'', 'Auto'} else LANG_NAME_TO_ID.get(language.lower(), language)
+
+
+async def transcribe_pcm(pcm: bytes, rate: int = 16000, *, language=''):
     buffer = io.BytesIO()
     samples = np.frombuffer(pcm, dtype="<i2")
     sf.write(buffer, samples, rate, format="WAV", subtype="PCM_16")
     return await call("transcribe", {"base64": base64.b64encode(buffer.getvalue()).decode("ascii"),
-        "mimeType": "audio/wav", "language": "", "timestamps": False})
+        "mimeType": "audio/wav", "language": language, "timestamps": False})
 
 
 async def refine_text(text: str):
@@ -82,9 +88,7 @@ async def transcribe(request: Request):
     upload = form.get("audio")
     if not upload:
         raise ValueError("Audio is required")
-    from omnivoice.utils.lang_map import LANG_NAME_TO_ID
-    language = str(form.get('language', '')).strip()
-    language = '' if language in {'', 'Auto'} else LANG_NAME_TO_ID.get(language.lower(), language)
+    language = normalize_input_language(form.get('language'))
     started = time.monotonic()
     suffix = Path(upload.filename or "audio.wav").suffix
     with tempfile.TemporaryDirectory(prefix="voicestudio-transcribe-") as directory:
@@ -133,6 +137,7 @@ async def live(ws: WebSocket):
         await ws.close(code=1008)
         return
     await ws.accept()
+    language = normalize_input_language(ws.query_params.get('language'))
     buffer = bytearray()
     ended = asyncio.Event()
     changed = asyncio.Event()
@@ -189,25 +194,25 @@ async def live(ws: WebSocket):
                 epoch += 1
                 last_partial_size = 0
                 started = time.monotonic()
-                result = await transcribe_pcm(pcm)
+                result = await transcribe_pcm(pcm, language=language)
                 if result["text"]:
                     committed.append(result["text"])
                     refinement = await refine_text(result['text'])
                     await ws.send_json({"type": "final", "final_kind": "utterance", "text": result["text"],
                         **refinement,
-                        "segments": [], "language": result["language"], "engine": "Nimi",
+                        "segments": [], "language": result["language"], "input_language": language, "engine": "Nimi",
                         "duration_s": len(pcm) / 32000, "transcription_time_s": time.monotonic() - started})
             elif seconds >= 1 and len(buffer) != last_partial_size and time.monotonic() - last_partial >= 2:
                 snapshot = bytes(buffer)
                 last_partial_size = len(snapshot)
                 partial_epoch = epoch
-                result = await transcribe_pcm(snapshot)
+                result = await transcribe_pcm(snapshot, language=language)
                 last_partial = time.monotonic()
                 if epoch == partial_epoch:
-                    await ws.send_json({"type": "partial", "text": result["text"]})
+                    await ws.send_json({"type": "partial", "text": result["text"], "input_language": language})
             if ended.is_set() and not buffer:
                 await ws.send_json({"type": "final", "final_kind": "summary", "text": " ".join(committed),
-                                    "segments": [], "duration_s": total_samples / 16000, "engine": "Nimi"})
+                                    "segments": [], "duration_s": total_samples / 16000, "input_language": language, "engine": "Nimi"})
                 return
 
     receiver = asyncio.create_task(receive())

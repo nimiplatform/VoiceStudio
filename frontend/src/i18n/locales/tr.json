@@ -1552,7 +1552,9 @@
     "just_now": "Az önce",
     "m_ago": "{{count}}m önce",
     "h_ago": "{{count}}sa önce",
-    "input_language": "Dosya / kayıt dili"
+    "input_language": "Giriş dili",
+    "input_language_scope": "Dosyalar, kayıtlar ve genel kısayol dahil yeni dikte oturumlarında ortaktır. Etkin oturumlar başlangıç dilini korur.",
+    "refinement_data_flow": "Açıkken tanınan metin, Nimi’de seçilen metin modeline yerel veya bulut yolu üzerinden gönderilir. Kapatıldığında yeni transkriptler düzenlenmez."
   },
   "setup": {
     "welcome": "Hoş geldiniz",

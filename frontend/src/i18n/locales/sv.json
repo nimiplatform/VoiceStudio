@@ -1552,7 +1552,9 @@
     "just_now": "Just nu",
     "m_ago": "{{count}}m sedan",
     "h_ago": "{{count}}h sedan",
-    "input_language": "Filens / inspelningens språk"
+    "input_language": "Inmatningsspråk",
+    "input_language_scope": "Delas av filer, inspelningar och nya dikteringssessioner, även via globalt kortkommando. Pågående sessioner behåller sitt ursprungliga språk.",
+    "refinement_data_flow": "När detta är på skickas igenkänd text till textmodellen som valts i Nimi via dess lokala väg eller molnväg. När det är av bearbetas inte nya transkriptioner."
   },
   "setup": {
     "welcome": "Välkommen",

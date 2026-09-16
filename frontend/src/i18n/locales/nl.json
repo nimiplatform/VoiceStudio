@@ -1552,7 +1552,9 @@
     "just_now": "Zojuist",
     "m_ago": "{{count}}m geleden",
     "h_ago": "{{count}}u geleden",
-    "input_language": "Taal van bestand / opname"
+    "input_language": "Invoertaal",
+    "input_language_scope": "Gedeeld door bestanden, opnamen en nieuwe dicteersessies, ook via de globale sneltoets. Actieve sessies behouden hun oorspronkelijke taal.",
+    "refinement_data_flow": "Indien ingeschakeld wordt herkende tekst naar het gekozen tekstmodel in Nimi gestuurd via de lokale of cloudroute. Uitgeschakeld worden nieuwe transcripties niet bijgewerkt."
   },
   "setup": {
     "welcome": "Welkom",

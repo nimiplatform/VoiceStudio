@@ -1552,7 +1552,9 @@
     "just_now": "Agora mesmo",
     "m_ago": "{{count}}m atrás",
     "h_ago": "{{count}}h atrás",
-    "input_language": "Idioma do arquivo / gravação"
+    "input_language": "Idioma de entrada",
+    "input_language_scope": "Compartilhado por arquivos, gravações e novos ditados, inclusive pelo atalho global. Sessões ativas mantêm o idioma inicial.",
+    "refinement_data_flow": "Quando ativado, o texto reconhecido é enviado ao modelo de texto escolhido no Nimi pela rota local ou na nuvem. Quando desativado, novas transcrições não são refinadas."
   },
   "setup": {
     "welcome": "Bem vindo",

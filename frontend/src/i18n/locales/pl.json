@@ -1552,7 +1552,9 @@
     "just_now": "Właśnie teraz",
     "m_ago": "{{count}}m temu",
     "h_ago": "{{count}}h temu",
-    "input_language": "Język pliku / nagrania"
+    "input_language": "Język wejściowy",
+    "input_language_scope": "Wspólny dla plików, nagrań i nowych sesji dyktowania, także ze skrótu globalnego. Trwające sesje zachowują język początkowy.",
+    "refinement_data_flow": "Po włączeniu rozpoznany tekst jest wysyłany do modelu tekstowego wybranego w Nimi przez jego ścieżkę lokalną lub chmurową. Po wyłączeniu nowe transkrypcje nie są wygładzane."
   },
   "setup": {
     "welcome": "Witamy",

@@ -15,6 +15,7 @@ import { WorkersSettings } from './workers-settings';
 import { OpenApiSettings } from './openapi-settings';
 import { DiagnosticsSettings } from './diagnostics-settings';
 import { NimiSettings } from './nimi-settings';
+import { RefinementSettings } from './refinement-settings';
 import { modelFamilies } from './model-family';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { runRendererTask } from '@/lib/global-error-recovery';
@@ -685,6 +686,7 @@ export function SettingsPage() {
               )}
             </SettingsSection>
           )}
+          {!extra && !isMedia && !isLogs && !isModels && section === 'general' && <RefinementSettings />}
         </SettingsContent>
       </section>
     </div>

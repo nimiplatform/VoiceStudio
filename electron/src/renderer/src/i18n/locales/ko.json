@@ -212,7 +212,9 @@
     "failed": "받아쓰기 실패",
     "missing_model": "음성 인식 모델이 설치되어 있지 않습니다 — 이 기능으로 오디오를 전사하려면 모델이 필요합니다.",
     "original_transcript": "원본 대본",
-    "input_language": "파일 / 녹음 언어"
+    "input_language": "입력 언어",
+    "input_language_scope": "파일, 녹음 및 전역 단축키를 포함한 새 받아쓰기 세션에 공통으로 적용됩니다. 진행 중인 세션은 시작 시 언어를 유지합니다.",
+    "refinement_data_flow": "켜면 인식된 텍스트를 Nimi에서 선택한 텍스트 모델로 설정된 로컬 또는 클라우드 경로를 통해 보냅니다. 끄면 새 전사 내용을 다듬지 않습니다."
   },
   "engineRuntime": {
     "ready": "준비",

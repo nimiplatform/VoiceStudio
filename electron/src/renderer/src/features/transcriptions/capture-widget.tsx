@@ -171,6 +171,9 @@ export function CaptureWidget() {
           <XIcon />
         </Button>
       </div>
+      {state.inputLanguage && <p className="text-xs text-muted-foreground">
+        {t('transcriptions.input_language')}: {state.inputLanguage === 'Auto' ? t('clone.auto') : state.inputLanguage}
+      </p>}
       <p className="min-h-0 flex-1 overflow-auto text-sm leading-relaxed text-muted-foreground">
         {state.text}
       </p>

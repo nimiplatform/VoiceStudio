@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-_FALLBACK_VERSION = "0.5.6"
+_FALLBACK_VERSION = "0.5.7"
 
 def _fallback_version() -> str:
     for parent in Path(__file__).resolve().parents:

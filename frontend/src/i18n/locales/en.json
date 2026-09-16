@@ -1809,7 +1809,9 @@
     "just_now": "Just now",
     "m_ago": "{{count}}m ago",
     "h_ago": "{{count}}h ago",
-    "input_language": "File / recording language"
+    "input_language": "Input language",
+    "input_language_scope": "Shared by files, recordings and new dictation sessions, including the global shortcut. Active sessions keep their starting language.",
+    "refinement_data_flow": "When enabled, recognized text is sent to the text model selected in Nimi, using its Local or Cloud route. Turning this off leaves new transcripts unrefined."
   },
   "transcriptionPicker": {
     "title": "Import from a transcription",

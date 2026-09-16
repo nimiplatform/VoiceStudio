@@ -214,7 +214,9 @@
     "failed": "Error de transcripción",
     "missing_model": "No hay ningún modelo de voz a texto instalado — esta función necesita uno para transcribir audio.",
     "original_transcript": "Transcripción original",
-    "input_language": "Idioma del archivo / grabación"
+    "input_language": "Idioma de entrada",
+    "input_language_scope": "Se comparte entre archivos, grabaciones y nuevos dictados, incluido el atajo global. Las sesiones activas conservan el idioma inicial.",
+    "refinement_data_flow": "Al activarlo, el texto reconocido se envía al modelo de texto elegido en Nimi mediante su ruta local o en la nube. Al desactivarlo, las nuevas transcripciones no se pulen."
   },
   "engineRuntime": {
     "ready": "Listo",

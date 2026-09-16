@@ -1807,7 +1807,9 @@
     "just_now": "刚刚",
     "m_ago": "{{count}} 分钟前",
     "h_ago": "{{count}} 小时前",
-    "input_language": "文件／录音语种"
+    "input_language": "输入语种",
+    "input_language_scope": "文件、录音和新听写会话（含全局快捷键）共用此设置。进行中的会话保持开始时的语种。",
+    "refinement_data_flow": "开启后，识别文本会发送给 Nimi 中选定的文本模型，按其本地或云端路由处理。关闭后，新转录不再润色。"
   },
   "setup": {
     "welcome": "欢迎",

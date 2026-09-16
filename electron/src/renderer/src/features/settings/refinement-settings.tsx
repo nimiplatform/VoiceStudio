@@ -66,11 +66,10 @@ export function RefinementSettings() {
       )}
       <div className="px-4 py-2">
         <Link
-          to="/settings/models/$family"
-          params={{ family: 'llm' }}
+          to="/settings/models"
           className="text-sm text-primary hover:underline"
         >
-          {t('settings.llm_providers')}
+          {t('nimi.configuration')}
         </Link>
       </div>
       {query.data &&
@@ -84,7 +83,7 @@ export function RefinementSettings() {
                 : 'dictation.flag_' + key,
             )}
             description={
-              key === 'auto' ? t('settings.llmskills_dictation_refinement_desc') : undefined
+              key === 'auto' ? `${t('settings.llmskills_dictation_refinement_desc')} ${t('transcriptions.refinement_data_flow')}` : undefined
             }
           >
             <Switch
