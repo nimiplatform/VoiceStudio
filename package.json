@@ -1,6 +1,6 @@
 {
   "name": "omnivoice-studio-monorepo",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "license": "AGPL-3.0-only",
   "private": true,
   "packageManager": "pnpm@10.34.5",
@@ -37,7 +37,7 @@
     "esbuild": "^0.28.2",
     "yaml": "^2.9.0",
     "@types/node": "^24.13.3",
-    "@nimiplatform/app-tools": "^0.7.0",
+    "@nimiplatform/app-tools": "^0.7.5",
     "@nimiplatform/nimi-coding": "0.6.3"
   },
   "type": "module",
@@ -45,8 +45,8 @@
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
     "word-extractor": "1.0.4",
-    "@nimiplatform/sdk": "^0.14.0",
-    "@nimiplatform/kit": "^0.10.0"
+    "@nimiplatform/sdk": "^0.15.0",
+    "@nimiplatform/kit": "^0.11.0"
   },
   "author": "VoiceStudio contributors"
 }

@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Users/bạn/Phim/sample.mp4",
     "probe_failed": "Thăm dò không thành công: {{message}}",
     "parse_failed": "Phân tích cú pháp không thành công: {{message}}",
-    "fit_failed": "Lắp không thành công: {{message}}"
+    "fit_failed": "Lắp không thành công: {{message}}",
+    "duration_estimate": "Thời lượng ước tính (giây)",
+    "estimate_notice": "Ước tính theo độ dài văn bản. Tạo âm thanh để đo thời lượng thực tế."
   },
   "projects": {
     "title": "Dự án",
@@ -1549,7 +1551,8 @@
     "exported": "Bản chép lời đã xuất",
     "just_now": "Vừa rồi",
     "m_ago": "{{count}}phút trước",
-    "h_ago": "{{count}}giờ trước"
+    "h_ago": "{{count}}giờ trước",
+    "input_language": "Ngôn ngữ tệp / bản ghi"
   },
   "setup": {
     "welcome": "Chào mừng",
@@ -2837,6 +2840,9 @@
     "configuration": "Cấu hình AI Nimi",
     "configuration_description": "Chọn tài nguyên AI cho giọng nói, phiên âm và dịch thuật.",
     "provenance": "Siêu dữ liệu của tệp xuất đánh dấu âm thanh tổng hợp. Không áp dụng thủy vân mạng nơ-ron.",
-    "referenceControls": "Giọng tham chiếu không hỗ trợ thẻ biểu cảm hay chỉ dẫn phong cách. Xóa thẻ trước khi tạo; văn bản vẫn được giữ để chỉnh sửa."
+    "referenceControls": "Giọng tham chiếu không hỗ trợ thẻ biểu cảm hay chỉ dẫn phong cách. Xóa thẻ trước khi tạo; văn bản vẫn được giữ để chỉnh sửa.",
+    "referenceUrl": "URL âm thanh công khai",
+    "referenceUrlHint": "Nhập URL âm thanh công khai để nghe và nhân bản giọng nói. Thao tác nhập không chạy AI. Sau khi chỉnh sửa hoặc khử nhiễu, tệp đã sửa được dùng thay cho URL. Tệp cục bộ không bao giờ được công khai.",
+    "referencePreview": "Tải bản sao để nghe thử"
   }
 }

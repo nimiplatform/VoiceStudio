@@ -228,7 +228,8 @@
     "h_ago": "{{count}} 小时前",
     "failed": "转录失败：",
     "missing_model": "尚未安装语音转文字模型 — 此功能需要一个模型来转写音频。",
-    "original_transcript": "原始转录"
+    "original_transcript": "原始转录",
+    "input_language": "文件／录音语种"
   },
   "engineRuntime": {
     "ready": "准备好",
@@ -1376,7 +1377,9 @@
     "probe_placeholder": "/Users/you/Movies/sample.mp4",
     "probe_failed": "探测失败：{{message}}",
     "parse_failed": "解析失败：{{message}}",
-    "fit_failed": "匹配失败：{{message}}"
+    "fit_failed": "匹配失败：{{message}}",
+    "duration_estimate": "预计时长（秒）",
+    "estimate_notice": "此值按文本长度估计。生成音频后才能测量实际时长。"
   },
   "projects": {
     "title": "项目",
@@ -2578,7 +2581,10 @@
     "configuration": "Nimi AI 配置",
     "configuration_description": "选择声音、转写和翻译使用的 AI 资源。",
     "provenance": "导出文件会在元数据中标明合成音频，未嵌入神经水印。",
-    "referenceControls": "参考声音不支持表情标签或语气指令。生成前请移除表情标签；原文会保留供编辑。"
+    "referenceControls": "参考声音不支持表情标签或语气指令。生成前请移除表情标签；原文会保留供编辑。",
+    "referenceUrl": "公开音频地址",
+    "referenceUrlHint": "导入公开音频地址，用于试听和克隆。导入不会调用 AI。编辑或降噪后将使用修改后的文件，不再使用原地址。本地文件不会被公开上传。",
+    "referencePreview": "下载试听副本"
   },
   "voiceSelector": {
     "engineDefault": "引擎默认",

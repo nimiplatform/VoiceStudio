@@ -3093,7 +3093,7 @@ dependencies = [
 
 [[package]]
 name = "omnivoice-studio"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "arboard",
  "cap-std",

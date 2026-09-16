@@ -1,4 +1,6 @@
 import { SecondarySidebar } from '@/components/workspace-sidebar';
+import SearchableSelect from '../../../../../../frontend/src/components/SearchableSelect';
+import { LANGUAGES } from '@/lib/languages';
 import { WorkspaceHeader } from '@/components/app-shell/workspace-header';
 import { LiveDictation } from './live-dictation';
 import { DictationSetup } from './dictation-setup';
@@ -68,6 +70,7 @@ export function TranscriptionsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [inputLanguage, setInputLanguage] = useState('Auto');
   const [failed, setFailed] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -102,6 +105,7 @@ export function TranscriptionsPage() {
       const body = new FormData();
       body.set('audio', audio);
       body.set('mode', 'file');
+      body.set('language', inputLanguage);
       const refinement = await apiJson<{ auto: boolean }>('/api/settings/dictation-refinement', {
         signal: controller.signal,
       }).catch(() => ({ auto: false }));
@@ -336,6 +340,12 @@ export function TranscriptionsPage() {
               <Link to="/settings/models" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
                 {t('nimi.configuration')}
               </Link>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{t('transcriptions.input_language')}</span>
+                <SearchableSelect value={inputLanguage} onChange={setInputLanguage}
+                  options={LANGUAGES.map(language => ({ value: language, label: language === 'Auto' ? t('clone.auto') : language }))}
+                  disabled={busy || capturing} ariaLabel={t('transcriptions.input_language')} menuPortal />
+              </div>
               <input
                 ref={input}
                 type="file"
@@ -583,6 +593,7 @@ export function TranscriptionsPage() {
                         {selected.language}
                       </span>
                     ) : null}
+                    {selected.input_language && <span className="text-xs text-muted-foreground">{t('transcriptions.input_language')}: {selected.input_language}</span>}
                   </div>
                   <div className="flex gap-1">
                     <Button

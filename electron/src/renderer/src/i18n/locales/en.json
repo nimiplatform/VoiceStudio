@@ -519,7 +519,8 @@
     "h_ago": "{{count}}h ago",
     "failed": "Transcription failed",
     "missing_model": "No speech-to-text model is installed — this feature needs one to transcribe audio.",
-    "original_transcript": "Original transcript"
+    "original_transcript": "Original transcript",
+    "input_language": "File / recording language"
   },
   "engineRuntime": {
     "ready": "Ready",
@@ -1470,7 +1471,9 @@
     "probe_placeholder": "/Users/you/Movies/sample.mp4",
     "probe_failed": "Probe failed: {{message}}",
     "parse_failed": "Parse failed: {{message}}",
-    "fit_failed": "Fit failed: {{message}}"
+    "fit_failed": "Fit failed: {{message}}",
+    "duration_estimate": "Estimated duration (s)",
+    "estimate_notice": "Estimated from text length. Generate audio to measure its actual duration."
   },
   "projects": {
     "title": "Projects",
@@ -2574,7 +2577,10 @@
     "configuration": "Nimi AI configuration",
     "configuration_description": "Choose the AI resources used for voices, transcription and translation.",
     "provenance": "Exports identify synthetic audio in file metadata. Neural watermarking is not applied.",
-    "referenceControls": "Reference voices do not support expression tags or style hints. Remove expression tags before generating; your text is kept for editing."
+    "referenceControls": "Reference voices do not support expression tags or style hints. Remove expression tags before generating; your text is kept for editing.",
+    "referenceUrl": "Public audio URL",
+    "referenceUrlHint": "Import a public audio URL for playback and cloning. Import does not run AI. Editing or denoising uses the edited file instead of the URL. Local files are never published.",
+    "referencePreview": "Download preview copy"
   },
   "voiceSelector": {
     "engineDefault": "Engine default",

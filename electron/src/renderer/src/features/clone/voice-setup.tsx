@@ -25,7 +25,7 @@ export function VoiceSetup({ onChosen, onBack }: { onChosen: () => void; onBack:
   const scrollRef = useRef<HTMLDivElement>(null);
   const eligibleVoices = useMemo(
     () =>
-      (profiles.data ?? []).filter((profile) => profile.kind === 'clone' && profile.ref_audio_path),
+      (profiles.data ?? []).filter((profile) => profile.kind === 'clone' && (profile.ref_audio_path || profile.ref_audio_uri || profile.nimi_voice_asset_id)),
     [profiles.data],
   );
   const voices = useMemo(() => {
@@ -54,6 +54,7 @@ export function VoiceSetup({ onChosen, onBack }: { onChosen: () => void; onBack:
       refText: profile.ref_text ?? '',
       instruct: profile.instruct ?? '',
       language: profile.language || 'Auto',
+      ...(profile.ref_audio_uri || profile.nimi_voice_asset_id || profile.locked_nimi_voice_asset_id ? { denoise: false } : {}),
     });
     onChosen();
   };

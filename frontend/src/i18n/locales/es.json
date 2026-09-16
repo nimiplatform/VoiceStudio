@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Usuarios/usted/Películas/sample.mp4",
     "probe_failed": "Sonda fallida: {{message}}",
     "parse_failed": "Error de análisis: {{message}}",
-    "fit_failed": "Error de ajuste: {{message}}"
+    "fit_failed": "Error de ajuste: {{message}}",
+    "duration_estimate": "Duración estimada (s)",
+    "estimate_notice": "Estimación basada en la longitud del texto. Genera el audio para medir su duración real."
   },
   "projects": {
     "title": "Proyectos",
@@ -1549,7 +1551,8 @@
     "exported": "Transcripciones exportadas",
     "just_now": "Justo ahora",
     "m_ago": "Hace {{count}}m",
-    "h_ago": "Hace {{count}}h"
+    "h_ago": "Hace {{count}}h",
+    "input_language": "Idioma del archivo / grabación"
   },
   "setup": {
     "welcome": "Bienvenido",
@@ -2837,6 +2840,9 @@
     "configuration": "Configuración de IA de Nimi",
     "configuration_description": "Elige los recursos de IA para voces, transcripción y traducción.",
     "provenance": "Los metadatos de los archivos exportados identifican el audio sintético. No se aplica una marca de agua neuronal.",
-    "referenceControls": "Las voces de referencia no admiten etiquetas expresivas ni indicaciones de estilo. Quita las etiquetas antes de generar; el texto se conserva para editarlo."
+    "referenceControls": "Las voces de referencia no admiten etiquetas expresivas ni indicaciones de estilo. Quita las etiquetas antes de generar; el texto se conserva para editarlo.",
+    "referenceUrl": "URL de audio pública",
+    "referenceUrlHint": "Importa una URL pública para escuchar y clonar la voz. La importación no ejecuta IA. Al editar o reducir el ruido se usa el archivo modificado en lugar de la URL. Los archivos locales nunca se publican.",
+    "referencePreview": "Descargar copia para escuchar"
   }
 }

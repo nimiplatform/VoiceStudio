@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
+import SearchableSelect from '../../../../../../frontend/src/components/SearchableSelect';
 import { RecordingInputs } from '@/components/recording-inputs';
 import { AgentFixButton } from '@/components/agent-fix-button';
 import type { useReferenceTranscript } from '@/hooks/use-reference-transcript';
-import { profileAudioUrl } from '@/lib/api/client';
+import { profileAudioUrl, apiFetch } from '@/lib/api/client';
 import { PortraitSearch } from './portrait-search';
 import { ProfileImageEditor } from './profile-image-editor';
 import { ProfileAvatar } from '@/components/profile-avatar';
@@ -33,7 +34,7 @@ import { useProfiles, useCreateCloneProfile } from '@/hooks/use-profiles';
 import { useRecording } from '@/hooks/use-recording';
 import { CLONE_MAX_SECONDS, REF_HARD_MAX_SECONDS } from '@/lib/api/generate';
 import { patchCloneSettings, setCloneSetting, useCloneSetting } from '@/lib/store/clone-settings';
-import { clearReference, setReferenceFile, useReference } from '@/lib/store/reference';
+import { clearReference, setReferenceFile, setReferenceUri, useReference } from '@/lib/store/reference';
 import { cn } from '@/lib/utils';
 
 const ACCEPT = 'audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac,.webm';
@@ -111,6 +112,60 @@ function UploadZone() {
       </label>
     </div>
   );
+}
+
+function UrlZone() {
+  const { t } = useTranslation();
+  const [uri, setUri] = useState('');
+  const [mime, setMime] = useState('audio/wav');
+  return <div className="space-y-3 rounded-lg bg-muted/30 p-3">
+    <Label htmlFor="reference-url">{t('nimi.referenceUrl')}</Label>
+    <Input id="reference-url" type="url" value={uri} onChange={(event) => setUri(event.target.value)} />
+    <SearchableSelect value={mime} onChange={setMime} ariaLabel={t('audiobook.format')} menuPortal
+      options={[{ value: 'audio/wav', label: 'WAV' }, { value: 'audio/mpeg', label: 'MP3' }, { value: 'audio/mp4', label: 'M4A' }, { value: 'audio/flac', label: 'FLAC' }, { value: 'audio/ogg', label: 'OGG' }]} />
+    <p className="text-xs text-muted-foreground">{t('nimi.referenceUrlHint')}</p>
+    <Button disabled={!uri.trim()} onClick={() => {
+      try { setReferenceUri(uri, mime); }
+      catch (error) { toast.error(error instanceof Error ? error.message : String(error)); }
+    }}>{t('gallery.import')}</Button>
+  </div>;
+}
+
+function UrlReference({ uri }: { uri: string }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<string>();
+  const [error, setError] = useState('');
+  const controller = useRef<AbortController | null>(null);
+  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  const importUrl = async () => {
+    const request = new AbortController();
+    controller.current = request;
+    setBusy(true);
+    setError('');
+    try {
+      const source = uri.trim();
+      const response = await apiFetch('/reference/import-url', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: source }), signal: request.signal,
+      });
+      const blob = await response.blob();
+      if (request.signal.aborted) return;
+      setPreview(URL.createObjectURL(blob));
+    } catch (error) {
+      if (!request.signal.aborted) setError(error instanceof Error ? error.message : String(error));
+    } finally {
+      if (controller.current === request) { controller.current = null; setBusy(false); }
+    }
+  };
+  return <div className="space-y-3 rounded-lg bg-muted/30 p-3">
+    <p className="break-all text-xs">{t('nimi.referenceUrl')}: {uri}</p>
+    <p className="text-xs text-muted-foreground">{t('nimi.referenceUrlHint')}</p>
+    {preview ? <WaveformPlayer src={preview} source="public-reference" height={40} compact /> :
+      <Button disabled={busy} onClick={() => void importUrl()}>{busy ? t('preferences.loading') : t('nimi.referencePreview')}</Button>}
+    {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+  </div>;
 }
 
 function RecordZone() {
@@ -203,14 +258,20 @@ function RecordZone() {
 }
 
 interface SaveProfileFormProps {
+  sourceUri?: string;
+  sourceMime?: string;
+  historyId?: string;
   metadata?: { refText: string; instruct: string; language: string; seed: number | null };
   selectOnSave?: boolean;
   transcribing?: boolean;
-  file: File;
+  file: File | null;
   onDone: () => void;
 }
 
 export function SaveProfileForm({
+  sourceUri,
+  sourceMime,
+  historyId,
   file,
   onDone,
   transcribing = false,
@@ -245,7 +306,10 @@ export function SaveProfileForm({
           name: value.name.trim(),
           image,
           refAudio: file,
-          refAudioName: file.name,
+          refAudioName: file?.name,
+          refAudioUri: sourceUri,
+          refAudioMime: sourceMime,
+          historyId,
           refText: metadata?.refText ?? refText,
           instruct: metadata?.instruct ?? instruct,
           language: metadata?.language ?? language,
@@ -261,6 +325,7 @@ export function SaveProfileForm({
             refText: created.ref_text ?? '',
             instruct: created.instruct ?? '',
             language: created.language || 'Auto',
+            ...(created.nimi_voice_asset_id || created.ref_audio_uri ? { denoise: false } : {}),
           });
         }
         onDone();
@@ -472,7 +537,7 @@ export function ReferencePanel({
   const reference = useReference();
   const profiles = useProfiles();
   const selectedProfileId = useCloneSetting('selectedProfileId');
-  const [mode, setMode] = useState<'upload' | 'record'>('upload');
+  const [mode, setMode] = useState<'upload' | 'record' | 'url'>('upload');
   const [saving, setSaving] = useState(false);
 
   const profile =
@@ -480,7 +545,8 @@ export function ReferencePanel({
       ? (profiles.data?.find((p) => p.id === selectedProfileId) ?? null)
       : null;
   const file = profile || setup ? null : reference.file;
-  const hasReference = Boolean(profile || file);
+  const sourceUri = profile ? (profile.is_locked ? undefined : profile.ref_audio_uri) : setup ? undefined : reference.sourceUri;
+  const hasReference = Boolean(profile || file || sourceUri);
 
   return (
     <Card size="sm" className="rounded-none bg-transparent py-0 ring-0">
@@ -497,10 +563,11 @@ export function ReferencePanel({
             <Tabs
               value={mode}
               onValueChange={(value) => {
-                if (value === 'upload' || value === 'record') setMode(value);
+                if (value === 'upload' || value === 'record' || value === 'url') setMode(value);
               }}
             >
               <TabsList aria-label={t('clone.reference_audio')}>
+                <TabsTrigger value="url">{t('nimi.referenceUrl')}</TabsTrigger>
                 <TabsTrigger value="upload">
                   <UploadCloudIcon data-icon="inline-start" />
                   {t('clone.upload_audio')}
@@ -516,6 +583,11 @@ export function ReferencePanel({
 
         {!hasReference && mode === 'upload' ? <UploadZone /> : null}
         {!hasReference && mode === 'record' ? <RecordZone /> : null}
+        {!hasReference && mode === 'url' ? <UrlZone /> : null}
+        {sourceUri && <>
+          <UrlReference key={sourceUri} uri={sourceUri} />
+          {!profile && <Button variant="ghost" onClick={clearReference}>{t('clone.clear')}</Button>}
+        </>}
 
         {file ? (
           <div className="flex flex-col gap-2 rounded-lg bg-muted/30 p-3">
@@ -547,13 +619,14 @@ export function ReferencePanel({
                 compact
               />
             ) : null}
+            {reference.sourceUri && <p className="break-all text-xs text-muted-foreground">{t('nimi.referenceUrl')}: {reference.sourceUri}</p>}
           </div>
         ) : null}
 
         {profile ? (
           <>
             <ProfileImageEditor profile={profile} />
-            {profile.ref_audio_path && (
+            {(profile.ref_audio_path || profile.locked_audio_path) && (
               <WaveformPlayer
                 key={profile.id}
                 src={profileAudioUrl(profile.id)}
@@ -566,10 +639,12 @@ export function ReferencePanel({
 
         {hasReference ? <OptionalDetails transcription={transcription} /> : null}
 
-        {file && !hideSave ? (
+        {(file || sourceUri) && !profile && !hideSave ? (
           saving ? (
             <SaveProfileForm
               file={file}
+              sourceUri={reference.sourceUri}
+              sourceMime={reference.sourceMime}
               transcribing={transcription?.state === 'busy'}
               onDone={() => setSaving(false)}
             />

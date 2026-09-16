@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Kullanıcılar/siz/Filmler/sample.mp4",
     "probe_failed": "Prob başarısız oldu: {{message}}",
     "parse_failed": "Ayrıştırma başarısız oldu: {{message}}",
-    "fit_failed": "Sığdırma başarısız oldu: {{message}}"
+    "fit_failed": "Sığdırma başarısız oldu: {{message}}",
+    "duration_estimate": "Tahmini süre (sn)",
+    "estimate_notice": "Metin uzunluğuna göre tahmin edilir. Gerçek süreyi ölçmek için ses oluşturun."
   },
   "projects": {
     "title": "Projeler",
@@ -1549,7 +1551,8 @@
     "exported": "Dışa aktarılan transkripsiyonlar",
     "just_now": "Az önce",
     "m_ago": "{{count}}m önce",
-    "h_ago": "{{count}}sa önce"
+    "h_ago": "{{count}}sa önce",
+    "input_language": "Dosya / kayıt dili"
   },
   "setup": {
     "welcome": "Hoş geldiniz",
@@ -2837,6 +2840,9 @@
     "configuration": "Nimi AI yapılandırması",
     "configuration_description": "Sesler, deşifre ve çeviri için AI kaynaklarını seçin.",
     "provenance": "Dışa aktarılan dosyaların meta verileri sentetik sesi belirtir. Sinir ağı filigranı uygulanmaz.",
-    "referenceControls": "Referans sesler ifade etiketlerini veya stil yönergelerini desteklemez. Üretmeden önce etiketleri kaldırın; metin düzenleme için korunur."
+    "referenceControls": "Referans sesler ifade etiketlerini veya stil yönergelerini desteklemez. Üretmeden önce etiketleri kaldırın; metin düzenleme için korunur.",
+    "referenceUrl": "Herkese açık ses URL’si",
+    "referenceUrlHint": "Dinlemek ve sesi klonlamak için herkese açık bir ses URL’si içe aktarın. İçe aktarma yapay zekayı çalıştırmaz. Düzenleme veya gürültü azaltma sonrası URL yerine düzenlenen dosya kullanılır. Yerel dosyalar asla yayımlanmaz.",
+    "referencePreview": "Dinlemek için kopya indir"
   }
 }

@@ -72,6 +72,7 @@ function PreviewButton({
   const client = useQueryClient();
   const pendingIdentity =
     profile.kind === 'design' && !profile.ref_audio_path && !profile.locked_audio_path;
+  if (!pendingIdentity && !profile.ref_audio_path && !profile.locked_audio_path) return null;
   return (
     <AudioPreviewButton
       src={profileAudioUrl(profile.id)}

@@ -213,7 +213,8 @@
     "h_ago": "Il y a {{count}}h",
     "failed": "Échec de la transcription ",
     "missing_model": "Aucun modèle de reconnaissance vocale n'est installé — cette fonction en a besoin pour transcrire l'audio.",
-    "original_transcript": "Transcription originale"
+    "original_transcript": "Transcription originale",
+    "input_language": "Langue du fichier / de l’enregistrement"
   },
   "engineRuntime": {
     "ready": "Prêt",
@@ -1374,7 +1375,9 @@
     "probe_placeholder": "/Utilisateurs/vous/Films/sample.mp4",
     "probe_failed": "Échec de la sonde : {{message}}",
     "parse_failed": "Échec de l'analyse : {{message}}",
-    "fit_failed": "Échec de l'ajustement : {{message}}"
+    "fit_failed": "Échec de l'ajustement : {{message}}",
+    "duration_estimate": "Durée estimée (s)",
+    "estimate_notice": "Estimation selon la longueur du texte. Générez l’audio pour mesurer sa durée réelle."
   },
   "projects": {
     "title": "Projets",
@@ -2576,7 +2579,10 @@
     "configuration": "Configuration IA de Nimi",
     "configuration_description": "Choisissez les ressources IA pour les voix, la transcription et la traduction.",
     "provenance": "Les métadonnées des fichiers exportés identifient les voix synthétiques. Aucun filigrane neuronal n’est appliqué.",
-    "referenceControls": "Les voix de référence ne prennent pas en charge les balises expressives ni les consignes de style. Retirez ces balises avant la génération ; le texte reste modifiable."
+    "referenceControls": "Les voix de référence ne prennent pas en charge les balises expressives ni les consignes de style. Retirez ces balises avant la génération ; le texte reste modifiable.",
+    "referenceUrl": "URL audio publique",
+    "referenceUrlHint": "Importez une URL publique pour écouter et cloner la voix. L’importation ne lance pas l’IA. Après modification ou réduction du bruit, le fichier modifié remplace l’URL. Les fichiers locaux ne sont jamais publiés.",
+    "referencePreview": "Télécharger une copie à écouter"
   },
   "voiceSelector": {
     "engineDefault": "Moteur par défaut",

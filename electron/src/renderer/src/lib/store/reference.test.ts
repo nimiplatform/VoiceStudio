@@ -5,7 +5,7 @@ const { probeAudioDuration } = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/audio/probe', () => ({ probeAudioDuration }));
 
-import { clearReference, referenceStore, setReferenceFile } from './reference';
+import { clearReference, referenceStore, setReferenceFile, setReferenceUri } from './reference';
 import { cloneSettingsStore, setCloneSetting } from './clone-settings';
 
 const createObjectURL = vi.fn(() => `blob:mock-${createObjectURL.mock.calls.length}`);
@@ -28,6 +28,24 @@ afterEach(() => {
 });
 
 describe('setReferenceFile', () => {
+  it('accepts a public URI without manufacturing a downloaded file', () => {
+    setReferenceUri('https://example.com/voice.wav', 'audio/wav');
+    expect(referenceStore.state.file).toBeNull();
+    expect(referenceStore.state.sourceUri).toBe('https://example.com/voice.wav');
+    expect(probeAudioDuration).not.toHaveBeenCalled();
+    expect(() => setReferenceUri('file:///private.wav', 'audio/wav')).toThrow('public HTTP');
+    expect(referenceStore.state.sourceUri).toBe('https://example.com/voice.wav');
+  });
+  it('retains an imported URI only until the waveform is edited or replaced', async () => {
+    probeAudioDuration.mockResolvedValue(8);
+    const original = file();
+    await setReferenceFile(original, { uri: 'https://audio.example/voice.wav', mime: 'audio/wav' });
+    expect(referenceStore.state.sourceUri).toBe('https://audio.example/voice.wav');
+    expect(cloneSettingsStore.state.denoise).toBe(false);
+    await setReferenceFile(file('edited.wav'));
+    expect(referenceStore.state.sourceUri).toBeUndefined();
+    expect(referenceStore.state.sourceMime).toBeUndefined();
+  });
   it('accepts a short clip and deselects the saved voice', async () => {
     setCloneSetting('selectedProfileId', 'p1');
     probeAudioDuration.mockResolvedValue(9.5);

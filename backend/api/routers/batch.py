@@ -4,13 +4,12 @@ This is a lightweight batch orchestrator. Each job is a dub project that
 runs through the same ingest→transcribe→translate→generate pipeline as
 a manual dub, but driven by the queue instead of the UI.
 
-The queue is in-memory (lives for the process lifetime). Jobs persist to
-the SQLite `jobs` table for history, but the queue itself restarts empty
-on backend restart — intentional, since GPU jobs can't be safely resumed.
+The queue is in-memory (lives for the process lifetime). Dub projects and media persist through the existing `dub_history` storage.
+The queue itself restarts empty on backend restart; it does not silently
+resubmit inference.
 """
 import os
 import json
-import shutil
 import uuid
 import time
 import asyncio
@@ -79,9 +78,9 @@ def _ensure_queue():
 async def _worker():
     """Process jobs one at a time from the queue."""
     while True:
-        job_id = await _queue.get()
+        job_id, attempt = await _queue.get()
         job = _jobs.get(job_id)
-        if not job or job["status"] == "cancelled":
+        if not job or job["status"] != "queued" or job["attempts"] != attempt:
             _queue.task_done()
             continue
 
@@ -103,13 +102,8 @@ async def _worker():
                     job_id, job["finished_at"] - job["started_at"],
                 )
         except asyncio.CancelledError:
-            # Task cancellation always means SHUTDOWN: the job-level cancel
-            # endpoint only flips job["status"] — nothing ever cancels this
-            # task to abort a single job. Swallowing the CancelledError here
-            # made the worker unkillable (the while-loop re-entered
-            # _queue.get() and event-loop teardown hung forever in
-            # _cancel_all_tasks waiting on a task that never finishes). Mark
-            # the in-flight job, then let the cancellation propagate.
+            # A user cancel targets the current runner; shutdown targets this
+            # queue worker itself and must escape the consumer loop.
             user_cancelled = job['status'] == 'cancelled'
             job['status'] = 'cancelled'
             job['finished_at'] = time.time()
@@ -259,8 +253,11 @@ async def enqueue_batch_job(
     from business.carrier import call
     status = await call('status', {})
     ready = {item['capabilityContract'] for item in status['effectiveSelections'] if item['state'] == 'ready'}
-    if not {'audio.transcribe', 'audio.synthesize', 'voice.create', 'text.generate'}.issubset(ready):
-        raise HTTPException(409, 'Configure transcription, speech, voices and translation in Nimi AI settings')
+    required = {'audio.transcribe', 'audio.synthesize', 'voice.create', 'text.generate'}
+    if preserve_bg:
+        required.add('audio.separate')
+    if not required.issubset(ready):
+        raise HTTPException(409, 'Configure the required speech, voice, translation and background-preservation capabilities in Nimi AI settings')
     provider = 'nimi'
 
     # Save the uploaded video
@@ -288,13 +285,13 @@ async def enqueue_batch_job(
         "progress": None,
     }
     _jobs[job_id] = job
-    await _queue.put(job_id)
+    await _queue.put((job_id, job["attempts"]))
 
     logger.info(
         "Batch job %s enqueued (%d target languages)",
         log_safe(job_id), len(lang_list),
     )
-    return {"job_id": job_id, "status": "queued", "queue_position": _queue.qsize()}
+    return {"job_id": job_id, "status": "queued", "queue_position": sum(item["status"] == "queued" for item in _jobs.values())}
 
 
 @router.get("/batch/jobs")
@@ -322,7 +319,7 @@ def get_batch_job(job_id: str):
 
 
 @router.post("/batch/jobs/{job_id}/cancel")
-def cancel_batch_job(job_id: str):
+async def cancel_batch_job(job_id: str):
     """Cancel a queued or running batch job."""
     job = _jobs.get(job_id)
     if not job:
@@ -359,7 +356,10 @@ async def retry_batch_job(job_id: str):
     from business.carrier import call
     status = await call('status', {})
     ready = {item['capabilityContract'] for item in status['effectiveSelections'] if item['state'] == 'ready'}
-    if not {'audio.transcribe', 'audio.synthesize', 'voice.create', 'text.generate'}.issubset(ready):
+    required = {'audio.transcribe', 'audio.synthesize', 'voice.create', 'text.generate'}
+    if job.get('preserve_bg'):
+        required.add('audio.separate')
+    if not required.issubset(ready):
         raise HTTPException(409, 'Configure the required capabilities in Nimi AI settings')
 
     for key in (
@@ -381,8 +381,8 @@ async def retry_batch_job(job_id: str):
         "attempts": int(job.get("attempts", 1)) + 1,
     })
     _ensure_queue()
-    await _queue.put(job_id)
-    return {"job_id": job_id, "status": "queued", "queue_position": _queue.qsize()}
+    await _queue.put((job_id, job["attempts"]))
+    return {"job_id": job_id, "status": "queued", "queue_position": sum(item["status"] == "queued" for item in _jobs.values())}
 
 
 @router.delete("/batch/jobs/{job_id}")
@@ -391,6 +391,8 @@ def delete_batch_job(job_id: str):
     job = _jobs.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
+    if job["status"] in {"queued", "running"} or job_id in _processing_job_ids:
+        raise HTTPException(409, "Cancel the batch job and wait for it to stop before deleting it")
     if job.get("video_path"):
         try:
             unlink_if_present(job["video_path"])
@@ -399,20 +401,11 @@ def delete_batch_job(job_id: str):
                 status_code=500,
                 detail="Could not delete the batch video file. Close any app using it and retry.",
             ) from exc
-    batch_root = os.path.realpath(os.path.join(DATA_DIR, "batch"))
-    output_dir = os.path.realpath(os.path.join(batch_root, job_id))
-    if os.path.dirname(output_dir) != batch_root:
-        raise HTTPException(status_code=400, detail="Invalid batch job path")
-    try:
-        if os.path.isdir(output_dir):
-            shutil.rmtree(output_dir)
-    except OSError as exc:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not delete the batch output files. Close any app using them and retry.",
-        ) from exc
+    from api.routers.dub_core import delete_single_dub_history
+    # Batch outputs are normal App-owned dub projects; reuse their reference-safe cleanup.
+    cleanup = delete_single_dub_history(job_id)
     _jobs.pop(job_id, None)
-    return {"deleted": True}
+    return cleanup
 
 
 @router.get("/batch/download/{job_id}/{lang}")

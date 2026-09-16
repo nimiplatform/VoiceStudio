@@ -27,6 +27,7 @@ export function addTranscription(entry) {
     id: Date.now(),
     text: entry.text || '',
     language: entry.language || 'unknown',
+    ...(entry.input_language ? { input_language: entry.input_language } : {}),
     duration_s: entry.duration_s || 0,
     segments: entry.segments || [],
     timestamp: new Date().toISOString(),

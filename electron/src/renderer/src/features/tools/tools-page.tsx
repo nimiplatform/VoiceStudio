@@ -248,6 +248,7 @@ function ToolForm({ tool }: { tool: Tool }) {
             </pre>
           ) : (
             <>
+              {tool.id === 'rate-fit' && <p className="text-xs text-muted-foreground">{t('tools.estimate_notice')}</p>}
               <dl className="space-y-3 text-sm">
                 {(tool.id === 'direction'
                   ? [
@@ -258,8 +259,8 @@ function ToolForm({ tool }: { tool: Tool }) {
                     ]
                   : [
                       ['method', 'method'],
-                      ['ratio', 'ratio'],
-                      ['attempts', 'attempts'],
+                      ['rate_ratio', 'ratio'],
+                      ['estimated_duration_s', 'duration_estimate'],
                       ['text', 'result'],
                     ]
                 ).map(([key, label]) => (

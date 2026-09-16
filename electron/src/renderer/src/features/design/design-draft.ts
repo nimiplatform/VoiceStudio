@@ -14,6 +14,12 @@ export interface DesignDraft {
   profileId: string | null;
 }
 
+export function editDesignAttributes(draft: DesignDraft, attrs: Record<string, string>): DesignDraft {
+  const next = mergeDescribedAttrs(attrs);
+  const changed = Object.keys(next).some((key) => next[key] !== draft.attrs[key]);
+  return changed ? { ...draft, attrs: next, profileId: null } : draft;
+}
+
 export function readDraft() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE) || '{}');

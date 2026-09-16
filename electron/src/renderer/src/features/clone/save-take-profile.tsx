@@ -39,6 +39,7 @@ export function SaveTakeProfile({ item }: { item: HistoryItem }) {
         <>
           <SaveProfileForm
             file={file}
+            historyId={item.id}
             selectOnSave={false}
             metadata={{
               refText: item.text || '',

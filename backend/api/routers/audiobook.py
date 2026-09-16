@@ -253,7 +253,7 @@ def _resolve_voice(profile_id: str | None) -> dict:
         kind = "clone"
     if row["is_locked"] and row["locked_audio_path"]:
         out["ref_audio"] = os.path.join(VOICES_DIR, row["locked_audio_path"])
-        out["ref_text"] = row["ref_text"]
+        out["ref_text"] = row['locked_ref_text'] if row['locked_ref_text'] is not None else row["ref_text"]
         out["instruct"] = row["instruct"]
     elif kind == "design":
         out["ref_audio"] = os.path.join(VOICES_DIR, row["ref_audio_path"]) if row["ref_audio_path"] else None
@@ -263,6 +263,13 @@ def _resolve_voice(profile_id: str | None) -> dict:
         out["ref_audio"] = os.path.join(VOICES_DIR, row["ref_audio_path"]) if row["ref_audio_path"] else None
         out["ref_text"] = row["ref_text"]
         out["instruct"] = row["instruct"]
+    locked = bool(row['is_locked'] and row['locked_audio_path'])
+    if not locked and row['ref_audio_uri']:
+        out['reference_uri'] = row['ref_audio_uri']
+        out['reference_mime'] = row['ref_audio_mime'] or ''
+    asset_id = row['locked_nimi_voice_asset_id' if locked else 'nimi_voice_asset_id']
+    if asset_id:
+        out['voice_asset_id'] = asset_id
     try:
         if row["seed"] is not None:
             out["seed"] = row["seed"]
@@ -714,6 +721,14 @@ async def _render_longform_sse(
                 "measured_i": measured.input_i if measured else None,
             }
         yield _emit(done)
+    except asyncio.CancelledError:
+        if job_store is not None:
+            try:
+                job_store.mark_cancelled(job_id)
+            except Exception:
+                logger.debug('[%s] cancellation metadata write failed', job_id, exc_info=True)
+        # Keep the actual completed chapter cache and resume manifest.
+        raise
     except Exception as e:  # surface, don't 500 the stream
         logger.exception("[%s] longform render failed", job_id)
         if job_store is not None:

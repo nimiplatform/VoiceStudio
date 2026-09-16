@@ -213,7 +213,8 @@
     "h_ago": "{{count}}h atrás",
     "failed": "Falha na transcrição",
     "missing_model": "Nenhum modelo de fala para texto está instalado — este recurso precisa de um para transcrever áudio.",
-    "original_transcript": "Transcrição original"
+    "original_transcript": "Transcrição original",
+    "input_language": "Idioma do arquivo / gravação"
   },
   "engineRuntime": {
     "ready": "Pronto",
@@ -1374,7 +1375,9 @@
     "probe_placeholder": "/Usuários/você/Movies/sample.mp4",
     "probe_failed": "Falha na análise: {{message}}",
     "parse_failed": "Falha na análise: {{message}}",
-    "fit_failed": "Falha no ajuste: {{message}}"
+    "fit_failed": "Falha no ajuste: {{message}}",
+    "duration_estimate": "Duração estimada (s)",
+    "estimate_notice": "Estimativa baseada no tamanho do texto. Gere o áudio para medir a duração real."
   },
   "projects": {
     "title": "Projetos",
@@ -2576,7 +2579,10 @@
     "configuration": "Configuração de IA do Nimi",
     "configuration_description": "Escolha os recursos de IA para vozes, transcrição e tradução.",
     "provenance": "Os metadados dos arquivos exportados identificam o áudio sintético. Nenhuma marca d’água neural é aplicada.",
-    "referenceControls": "As vozes de referência não aceitam etiquetas expressivas nem instruções de estilo. Remova as etiquetas antes de gerar; o texto continua disponível para edição."
+    "referenceControls": "As vozes de referência não aceitam etiquetas expressivas nem instruções de estilo. Remova as etiquetas antes de gerar; o texto continua disponível para edição.",
+    "referenceUrl": "URL de áudio pública",
+    "referenceUrlHint": "Importe uma URL pública para ouvir e clonar a voz. A importação não executa IA. Após editar ou remover ruído, é usado o arquivo modificado em vez da URL. Arquivos locais nunca são publicados.",
+    "referencePreview": "Baixar cópia para ouvir"
   },
   "voiceSelector": {
     "engineDefault": "Padrão do mecanismo",

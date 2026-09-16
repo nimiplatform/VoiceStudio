@@ -1,18 +1,14 @@
 import type { RefObject } from 'react';
-import { Menu } from '@base-ui/react/menu';
 import {
   AudioLinesIcon,
   BoldIcon,
-  ChevronDownIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
   PauseIcon,
-  SmileIcon,
   SpellCheckIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { TAGS } from '../../../../../../frontend/src/utils/constants';
+import { Button } from '@/components/ui/button';
 
 export function AudiobookMarkupToolbar({
   textareaRef,
@@ -113,31 +109,7 @@ export function AudiobookMarkupToolbar({
         <SpellCheckIcon />
         {t('audiobook.insert_spell')}
       </Button>
-      <Menu.Root>
-        <Menu.Trigger
-          disabled={disabled}
-          className={buttonVariants({ variant: 'ghost', size: 'xs' })}
-        >
-          <SmileIcon />
-          {t('audiobook.insert_reactions')}
-          <ChevronDownIcon />
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner sideOffset={6} align="start" className="z-50">
-            <Menu.Popup className="flex max-h-72 max-w-sm flex-wrap gap-1 overflow-y-auto rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg outline-none">
-              {TAGS.map((tag) => (
-                <Menu.Item
-                  key={tag}
-                  onClick={() => insert(tag)}
-                  className="cursor-default rounded-md px-2.5 py-1.5 text-xs outline-none data-highlighted:bg-accent"
-                >
-                  {tag}
-                </Menu.Item>
-              ))}
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
+      <p className="w-full px-2 text-xs text-muted-foreground">{t('nimi.referenceControls')}</p>
     </div>
   );
 }

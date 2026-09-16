@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Profile } from '@/lib/api/types';
-import { readDraft, restoreDesignProfile, STORAGE } from './design-draft';
+import { readDraft, restoreDesignProfile, STORAGE, editDesignAttributes } from './design-draft';
 
 const profile = {
   id: 'designed-voice',
@@ -19,6 +19,14 @@ const profile = {
 
 describe('designed voice drafts', () => {
   beforeEach(() => localStorage.clear());
+  it('keeps an unchanged saved voice but detaches identity when its design changes', () => {
+    const draft = { ...readDraft(), ...restoreDesignProfile(profile, 9), text: 'Keep my script.' };
+    expect(editDesignAttributes(draft, { ...draft.attrs })).toBe(draft);
+    expect(editDesignAttributes(draft, { ...draft.attrs, Pitch: 'high pitch' })).toMatchObject({
+      profileId: null, text: 'Keep my script.', attrs: { Pitch: 'high pitch' },
+    });
+    expect(draft.profileId).toBe(profile.id);
+  });
 
   it('persists the selected profile identity with the draft', () => {
     localStorage.setItem(

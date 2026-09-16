@@ -6,6 +6,8 @@ import { createObjectUrl, revokeObjectUrl } from '@/lib/audio/object-url';
 import { patchCloneSettings } from './clone-settings';
 
 export interface ReferenceState {
+  sourceUri?: string;
+  sourceMime?: string;
   pending?: boolean;
   file: File | null;
   durationSeconds: number | null;
@@ -47,6 +49,16 @@ export function clearReference(): void {
   replaceState(EMPTY);
 }
 
+/** A URI is a usable source independently of an optional local preview copy. */
+export function setReferenceUri(uri: string, mime: string): void {
+  const url = new URL(uri.trim());
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.hash)
+    throw new Error('Use a public HTTP(S) audio URL without credentials or fragments');
+  latestPick += 1;
+  patchCloneSettings({ selectedProfileId: null, refText: '', instruct: '', language: 'Auto', denoise: false });
+  replaceState({ ...EMPTY, sourceUri: uri.trim(), sourceMime: mime });
+}
+
 /**
  * Set (or clear) the reference clip. Probes the duration first: clips over
  * REF_HARD_MAX_SECONDS are rejected outright (the engine cannot use them
@@ -54,7 +66,7 @@ export function clearReference(): void {
  * `tooLong` so the caller can nudge the user to trim. Picking a file
  * deselects any saved voice — exactly one of the two feeds `/generate`.
  */
-export async function setReferenceFile(file: File | null): Promise<SetReferenceResult> {
+export async function setReferenceFile(file: File | null, source?: { uri: string; mime: string }): Promise<SetReferenceResult> {
   const pick = ++latestPick;
   if (!file) {
     replaceState(EMPTY);
@@ -81,8 +93,10 @@ export async function setReferenceFile(file: File | null): Promise<SetReferenceR
       refText: '',
       instruct: '',
       language: 'Auto',
+      ...(source ? { denoise: false } : {}),
     });
-    replaceState({ file, durationSeconds, objectUrl: createObjectUrl(file) });
+    replaceState({ file, durationSeconds, objectUrl: createObjectUrl(file),
+      ...(source ? { sourceUri: source.uri, sourceMime: source.mime } : {}) });
   }
   return { ok: true, durationSeconds, tooLong };
 }

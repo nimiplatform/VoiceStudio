@@ -19,6 +19,10 @@ from business.carrier import call
 from omnivoice.utils.lang_map import LANG_NAME_TO_ID
 
 
+def voice_binding(voice):
+    return {key: voice.get(key) or '' for key in ('reference_uri', 'reference_mime', 'voice_asset_id')}
+
+
 def mark_synthetic(wav: bytes, *, context: str) -> bytes:
     """Non-neural, machine-readable WAV provenance. Does not claim AudioSeal."""
     if wav[:4] != b"RIFF" or wav[8:12] != b"WAVE":
@@ -46,12 +50,13 @@ async def transcribe_file(path, *, language="", timestamps=False):
 
 async def render_sample(settings, destination: Path):
     text = settings.get("sample_script") or "This is a preview of my voice."
-    audio, _ = await synthesize(text=text, language=settings.get("language", ""),
+    audio, info = await synthesize(text=text, language=settings.get("language", ""),
                                 instruction=settings.get("instruct", ""))
     destination.write_bytes(audio)
+    return info
 
 
-async def synthesize(*, text, language="", speed=1.0, instruction="", reference_path=None, reference_text="", postprocess=True, lexicon=None):
+async def synthesize(*, text, language="", speed=1.0, instruction="", reference_path=None, reference_text="", reference_uri='', reference_mime='', voice_asset_id='', postprocess=True, lexicon=None):
     if re.search(r"\[(?:laughter|sigh|confirmation-en|question-(?:en|ah|oh|ei|yi)|surprise-(?:ah|oh|wa|yo)|dissatisfaction-hnn)\]", text, re.I):
         raise ValueError('NIMI_EXPRESSION_TAGS')
     code = "" if language == "Auto" else LANG_NAME_TO_ID.get(language.lower(), language)
@@ -59,15 +64,15 @@ async def synthesize(*, text, language="", speed=1.0, instruction="", reference_
     pronunciations = {**load_dict_for_request(code), **(lexicon or {})}
     text = apply_lexicon(text, pronunciations)
     payload = {"text": text, "language": code, "instruction": instruction}
-    if reference_path:
+    if voice_asset_id:
+        payload['voiceAssetId'] = voice_asset_id
+    elif reference_uri:
+        from business.reference import public_audio_url
+        payload['reference'] = {'uri': public_audio_url(reference_uri), 'mimeType': reference_mime, 'text': reference_text}
+    elif reference_path:
         source, rate = sf.read(reference_path, dtype="float32", always_2d=True)
         buffer = io.BytesIO()
         sf.write(buffer, source, rate, format="WAV", subtype="PCM_16")
-        if not reference_text.strip():
-            result = await transcribe_file(reference_path, language=payload["language"])
-            reference_text = result["text"]
-            if not reference_text.strip():
-                raise ValueError("Reference recording contains no recognized speech")
         payload["reference"] = {"base64": base64.b64encode(buffer.getvalue()).decode("ascii"),
                                 "mimeType": "audio/wav", "text": reference_text}
     result = await call("synthesize", payload)
@@ -101,7 +106,29 @@ async def prepare_speech_output(result, *, speed=1.0, postprocess=True):
     output = io.BytesIO()
     sf.write(output, samples, rate, format="WAV", subtype="PCM_16")
     return mark_synthetic(output.getvalue(), context="synthesis"), {"sample_rate": rate,
-        "channels": samples.shape[1], "duration": len(samples) / rate, "samples": samples}
+        "channels": samples.shape[1], "duration": len(samples) / rate, "samples": samples,
+        "voice_asset_id": result.get('voiceAssetId') or ''}
+
+
+def persist_take(audio, info, *, text, mode, language, instruction, profile_id, started):
+    task = asyncio.current_task()
+    if task and task.cancelling():
+        raise asyncio.CancelledError()
+    identifier = uuid.uuid4().hex[:12]
+    filename = identifier + ".wav"
+    destination = Path(OUTPUTS_DIR) / filename
+    destination.write_bytes(audio)
+    elapsed = time.monotonic() - started
+    try:
+        with db_conn() as conn:
+            conn.execute("INSERT INTO generation_history (id,text,mode,language,instruct,profile_id,audio_path,duration_seconds,generation_time,seed,created_at,nimi_voice_asset_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (identifier, text, mode, language,
+                 instruction, profile_id, filename, info["duration"], elapsed, None, time.time(), info.get('voice_asset_id') or ''))
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+    event_bus.emit("generation_history", {"action": "created", "id": identifier})
+    return audio, {**info, "id": identifier, "audio_path": filename, "gen_time": elapsed}
 
 
 async def generate_take(form):
@@ -113,6 +140,9 @@ async def generate_take(form):
     instruction = str(form.get("instruct", ""))
     profile_id = form.get("profile_id")
     temporary = None
+    reference_uri = str(form.get('ref_audio_uri', ''))
+    reference_mime = str(form.get('ref_audio_mime', ''))
+    voice_asset_id = ''
     if profile_id:
         with db_conn() as conn:
             profile = conn.execute("SELECT * FROM voice_profiles WHERE id=?", (profile_id,)).fetchone()
@@ -123,6 +153,12 @@ async def generate_take(form):
             reference_path = str(Path(VOICES_DIR) / Path(filename).name)
         reference_text = profile["ref_text"] or reference_text
         instruction = profile["instruct"] or instruction
+        locked = bool(profile['locked_audio_path'])
+        reference_uri = '' if locked else profile['ref_audio_uri'] or ''
+        reference_mime = profile['ref_audio_mime'] or ''
+        voice_asset_id = profile['locked_nimi_voice_asset_id' if locked else 'nimi_voice_asset_id'] or ''
+        if locked and profile['locked_ref_text'] is not None:
+            reference_text = profile['locked_ref_text']
     elif upload := form.get("ref_audio"):
         temporary = Path(VOICES_DIR) / ("request-" + uuid.uuid4().hex + ".wav")
         temporary.write_bytes(await upload.read())
@@ -130,7 +166,12 @@ async def generate_take(form):
     started = time.monotonic()
     cleaned_reference = None
     try:
+        if reference_uri and not reference_path and str(form.get('denoise', 'false')).lower() == 'true':
+            raise ValueError('Denoising requires a local reference file. Turn it off to use the public URL unchanged.')
         if reference_path and str(form.get('denoise', 'false')).lower() == 'true':
+            # The edited waveform is a different reference, never the remote
+            # original or the previously enrolled voice.
+            reference_uri = voice_asset_id = ''
             from business.media import decode_to_wav
             cleaned_reference = Path(VOICES_DIR) / ('clean-' + uuid.uuid4().hex + '.wav')
             await decode_to_wav(reference_path, cleaned_reference, filters='highpass=f=60,afftdn=nf=-30')
@@ -138,25 +179,11 @@ async def generate_take(form):
         audio, info = await synthesize(text=text, language=str(form.get("language", "")),
             speed=float(form.get("speed", 1)), instruction=instruction,
             reference_path=reference_path, reference_text=reference_text,
+            reference_uri=reference_uri, reference_mime=reference_mime, voice_asset_id=voice_asset_id,
             postprocess=str(form.get('postprocess_output', 'true')).lower() == 'true')
-        task = asyncio.current_task()
-        if task and task.cancelling():
-            raise asyncio.CancelledError()
-        identifier = uuid.uuid4().hex[:12]
-        filename = identifier + ".wav"
-        destination = Path(OUTPUTS_DIR) / filename
-        destination.write_bytes(audio)
-        elapsed = time.monotonic() - started
-        try:
-            with db_conn() as conn:
-                conn.execute("INSERT INTO generation_history (id,text,mode,language,instruct,profile_id,audio_path,duration_seconds,generation_time,seed,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                    (identifier, text, "clone" if reference_path else "design", form.get("language", "Auto"),
-                     instruction, profile_id, filename, info["duration"], elapsed, None, time.time()))
-        except Exception:
-            destination.unlink(missing_ok=True)
-            raise
-        event_bus.emit("generation_history", {"action": "created", "id": identifier})
-        return audio, {**info, "id": identifier, "audio_path": filename, "gen_time": elapsed}
+        return persist_take(audio, info, text=text, mode="clone" if reference_path or reference_uri else "design",
+            language=form.get("language", "Auto"), instruction=instruction,
+            profile_id=profile_id, started=started)
     finally:
         if cleaned_reference:
             cleaned_reference.unlink(missing_ok=True)

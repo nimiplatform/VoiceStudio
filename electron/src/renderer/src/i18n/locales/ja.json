@@ -211,7 +211,8 @@
     "h_ago": "{{count}}時間前",
     "failed": "転写に失敗しました",
     "missing_model": "音声認識モデルがインストールされていません — この機能で文字起こしを行うにはモデルが必要です。",
-    "original_transcript": "元の文字起こし"
+    "original_transcript": "元の文字起こし",
+    "input_language": "ファイル・録音の言語"
   },
   "engineRuntime": {
     "ready": "準備完了",
@@ -1372,7 +1373,9 @@
     "probe_placeholder": "/ユーザー/あなた/映画/sample.mp4",
     "probe_failed": "プローブが失敗しました: {{message}}",
     "parse_failed": "解析に失敗しました: {{message}}",
-    "fit_failed": "フィットに失敗しました: {{message}}"
+    "fit_failed": "フィットに失敗しました: {{message}}",
+    "duration_estimate": "推定時間（秒）",
+    "estimate_notice": "テキストの長さによる推定です。実際の時間は音声を生成して測定してください。"
   },
   "projects": {
     "title": "プロジェクト",
@@ -2574,7 +2577,10 @@
     "configuration": "Nimi AI 設定",
     "configuration_description": "音声、文字起こし、翻訳に使用する AI リソースを選択します。",
     "provenance": "書き出したファイルのメタデータに合成音声と記録します。ニューラル透かしは適用されません。",
-    "referenceControls": "参照音声は表情タグや話し方の指示に対応していません。生成前に表情タグを削除してください。元のテキストは編集用に保持されます。"
+    "referenceControls": "参照音声は表情タグや話し方の指示に対応していません。生成前に表情タグを削除してください。元のテキストは編集用に保持されます。",
+    "referenceUrl": "公開音声URL",
+    "referenceUrlHint": "公開音声URLを読み込み、試聴や声のクローンに使用します。読み込みではAIを実行しません。編集やノイズ除去後はURLではなく編集済みファイルを使用します。ローカルファイルは公開しません。",
+    "referencePreview": "試聴用コピーをダウンロード"
   },
   "voiceSelector": {
     "engineDefault": "エンジンのデフォルト",

@@ -8,6 +8,7 @@ export interface TranscriptEntry {
   text: string;
   refined_text?: string;
   language: string;
+  input_language?: string;
   duration_s: number;
   segments: TranscriptSegment[];
   timestamp: string;

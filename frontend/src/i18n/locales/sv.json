@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Users/you/Movies/sample.mp4",
     "probe_failed": "Sond misslyckades: {{message}}",
     "parse_failed": "Analysen misslyckades: {{message}}",
-    "fit_failed": "Anpassningen misslyckades: {{message}}"
+    "fit_failed": "Anpassningen misslyckades: {{message}}",
+    "duration_estimate": "Uppskattad längd (s)",
+    "estimate_notice": "Uppskattat från textlängden. Generera ljud för att mäta den faktiska längden."
   },
   "projects": {
     "title": "Projekt",
@@ -1549,7 +1551,8 @@
     "exported": "Exporterade transkriptioner",
     "just_now": "Just nu",
     "m_ago": "{{count}}m sedan",
-    "h_ago": "{{count}}h sedan"
+    "h_ago": "{{count}}h sedan",
+    "input_language": "Filens / inspelningens språk"
   },
   "setup": {
     "welcome": "Välkommen",
@@ -2837,6 +2840,9 @@
     "configuration": "Nimi AI-konfiguration",
     "configuration_description": "Välj AI-resurser för röster, transkribering och översättning.",
     "provenance": "Exporterade filers metadata markerar syntetiskt ljud. Ingen neural vattenstämpel används.",
-    "referenceControls": "Referensröster stöder inte uttryckstaggar eller stilinstruktioner. Ta bort taggarna före generering; texten finns kvar för redigering."
+    "referenceControls": "Referensröster stöder inte uttryckstaggar eller stilinstruktioner. Ta bort taggarna före generering; texten finns kvar för redigering.",
+    "referenceUrl": "Offentlig ljud-URL",
+    "referenceUrlHint": "Importera en offentlig ljud-URL för uppspelning och röstkloning. Importen kör ingen AI. Efter redigering eller brusreducering används den ändrade filen i stället för URL:en. Lokala filer publiceras aldrig.",
+    "referencePreview": "Ladda ned förhandslyssning"
   }
 }

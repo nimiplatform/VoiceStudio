@@ -1,4 +1,3 @@
-import io
 from pathlib import Path
 import tempfile
 
@@ -36,35 +35,40 @@ async def clean_audio(request: Request):
 
 @router.post('/convert')
 async def convert_voice(request: Request):
-    from business.audio import transcribe_file, generate_take, mark_synthetic
-    from core.config import OUTPUTS_DIR
-    from core.db import db_conn
+    import time
+    from business.audio import transcribe_file, synthesize, persist_take, mark_synthetic, voice_binding
+    from api.routers.audiobook import _resolve_voice, _voice_profile_exists
+    from api.routers.voice_convert import _clamped_tempo_ratio, _copy_source_upload
     from services.ffmpeg_utils import _atempo_chain
     from business.carrier import until_disconnected
     form = await request.form()
-    uploaded = form.get('audio')
-    profile = form.get('profile_id')
-    if not uploaded or not profile:
-        raise ValueError('A source recording and saved voice are required')
-    with tempfile.TemporaryDirectory(prefix='voicestudio-convert-') as directory:
-        source, decoded = Path(directory) / 'input', Path(directory) / 'input.wav'
-        source.write_bytes(await uploaded.read())
-        await decode_to_wav(source, decoded)
-        transcript = await until_disconnected(request, transcribe_file(decoded))
-        if not transcript['text'].strip():
-            raise ValueError('Source contains no recognized speech')
-        wav, info = await until_disconnected(request, generate_take({'text': transcript['text'], 'profile_id': profile,
-            'language': transcript['language'], 'speed': 1}))
-        destination = Path(OUTPUTS_DIR) / info['audio_path']
-        if form.get('match_duration') == '1':
-            duration = sf.info(decoded).duration
-            adjusted = Path(directory) / 'matched.wav'
-            await decode_to_wav(destination, adjusted, filters=_atempo_chain(info['duration'] / duration))
-            pending = destination.with_suffix('.part')
-            pending.write_bytes(mark_synthetic(adjusted.read_bytes(), context='voice-conversion'))
-            pending.replace(destination)
-            info['duration'] = sf.info(destination).duration
-            with db_conn() as conn:
-                conn.execute('UPDATE generation_history SET duration_seconds=? WHERE id=?', (info['duration'], info['id']))
-        return {'id': info['id'], 'audio_url': '/audio/' + info['audio_path'], 'text': transcript['text'],
-                'duration_s': info['duration'], 'gen_time_s': info['gen_time']}
+    uploaded, profile = form.get('audio'), form.get('profile_id')
+    if not uploaded or not profile or not _voice_profile_exists(profile):
+        raise ValueError('A source recording and existing saved voice are required')
+    voice = _resolve_voice(profile)
+    match = str(form.get('match_duration', 'true')).lower() in {'1', 'true'}
+    async def render():
+        started = time.monotonic()
+        with tempfile.TemporaryDirectory(prefix='voicestudio-convert-') as directory:
+            source, decoded = Path(directory) / 'input', Path(directory) / 'input.wav'
+            with source.open('wb') as output:
+                await _copy_source_upload(uploaded, output)
+            await decode_to_wav(source, decoded)
+            transcript = await transcribe_file(decoded)
+            if not transcript['text'].strip():
+                raise ValueError('Source contains no recognized speech')
+            wav, info = await synthesize(text=transcript['text'], language=transcript['language'],
+                reference_path=voice['ref_audio'], reference_text=voice['ref_text'] or '', instruction=voice['instruct'] or '', **voice_binding(voice))
+            ratio = _clamped_tempo_ratio(info['duration'], sf.info(decoded).duration) if match else None
+            if ratio is not None:
+                generated, adjusted = Path(directory) / 'generated.wav', Path(directory) / 'matched.wav'
+                generated.write_bytes(wav)
+                await decode_to_wav(generated, adjusted, filters=_atempo_chain(ratio))
+                samples, rate = sf.read(adjusted, dtype='float32', always_2d=True)
+                wav = mark_synthetic(adjusted.read_bytes(), context='voice-conversion')
+                info = {**info, 'duration': len(samples)/rate, 'samples': samples, 'sample_rate': rate, 'channels': samples.shape[1]}
+            _, saved = persist_take(wav, info, text=transcript['text'], mode='clone' if voice['ref_audio'] else 'design',
+                language=transcript['language'], instruction=voice['instruct'] or '', profile_id=profile, started=started)
+            return {'id': saved['id'], 'audio_url': '/audio/' + saved['audio_path'], 'text': transcript['text'],
+                    'duration_s': saved['duration'], 'gen_time_s': saved['gen_time']}
+    return await until_disconnected(request, render())

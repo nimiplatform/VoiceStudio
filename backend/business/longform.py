@@ -10,7 +10,7 @@ import numpy as np
 import soundfile as sf
 import soxr
 
-from business.audio import synthesize, mark_synthetic
+from business.audio import synthesize, mark_synthetic, voice_binding
 from business.carrier import call
 from services.text_normalization import normalize_for_tts
 from services.chunked_tts import split_text_into_chunks
@@ -46,6 +46,7 @@ async def render_chapter(chapter, *, default_voice, language, opts, voice_map, l
             for chunk in split_text_into_chunks(text):
                 wav, info = await synthesize(text=chunk, language=language or "", speed=span.speed or 1.0,
                     reference_path=voice["ref_audio"], reference_text=voice["ref_text"] or "",
+                    **voice_binding(voice),
                     instruction=voice["instruct"] or "", lexicon=lexicon,
                     postprocess=opts.postprocess_output is not False)
                 sample_rate = sample_rate or info["sample_rate"]

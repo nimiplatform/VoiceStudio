@@ -211,7 +211,8 @@
     "h_ago": "{{count}}jam yang lalu",
     "failed": "Transkripsi gagal",
     "missing_model": "Tidak ada model ucapan-ke-teks yang terpasang — fitur ini membutuhkannya untuk mentranskripsi audio.",
-    "original_transcript": "Transkrip asli"
+    "original_transcript": "Transkrip asli",
+    "input_language": "Bahasa file / rekaman"
   },
   "engineRuntime": {
     "ready": "Siap",
@@ -1372,7 +1373,9 @@
     "probe_placeholder": "/Pengguna/Anda/Film/sample.mp4",
     "probe_failed": "Pemeriksaan gagal: {{message}}",
     "parse_failed": "Gagal menguraikan: {{message}}",
-    "fit_failed": "Gagal memasang: {{message}}"
+    "fit_failed": "Gagal memasang: {{message}}",
+    "duration_estimate": "Perkiraan durasi (d)",
+    "estimate_notice": "Diperkirakan dari panjang teks. Buat audio untuk mengukur durasi sebenarnya."
   },
   "projects": {
     "title": "Proyek",
@@ -2574,7 +2577,10 @@
     "configuration": "Konfigurasi AI Nimi",
     "configuration_description": "Pilih sumber daya AI untuk suara, transkripsi, dan terjemahan.",
     "provenance": "Metadata berkas ekspor menandai audio sintetis. Tanda air neural tidak diterapkan.",
-    "referenceControls": "Suara referensi tidak mendukung tag ekspresi atau petunjuk gaya. Hapus tag ekspresi sebelum membuat audio; teks tetap tersedia untuk diedit."
+    "referenceControls": "Suara referensi tidak mendukung tag ekspresi atau petunjuk gaya. Hapus tag ekspresi sebelum membuat audio; teks tetap tersedia untuk diedit.",
+    "referenceUrl": "URL audio publik",
+    "referenceUrlHint": "Impor URL audio publik untuk diputar dan dikloning. Impor tidak menjalankan AI. Setelah penyuntingan atau pengurangan derau, file yang diubah digunakan menggantikan URL. File lokal tidak pernah dipublikasikan.",
+    "referencePreview": "Unduh salinan pratinjau"
   },
   "voiceSelector": {
     "engineDefault": "Default mesin",

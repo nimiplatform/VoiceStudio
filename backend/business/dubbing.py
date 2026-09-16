@@ -16,7 +16,7 @@ from fastapi.responses import StreamingResponse, Response
 
 from business.carrier import call, until_disconnected
 from business.audio import transcribe_file
-from business.audio import synthesize, mark_synthetic
+from business.audio import synthesize, mark_synthetic, voice_binding
 from services.dub_pipeline import get_job, save_job
 from core.config import DUB_DIR, dub_seg_path
 from core.tasks import task_manager
@@ -131,6 +131,26 @@ async def aligned_segments(path, language=''):
     return segments
 
 
+async def preset_conditioning(job_id, job, profile_id, text, language):
+    from api.routers.batch import _batch_voice
+    description = _batch_voice(profile_id)
+    saved = job.get('preset_voices', {}).get(profile_id)
+    if saved:
+        if not Path(saved['ref_audio']).is_file():
+            raise ValueError('The saved preset audition is missing; restore the project audio before rendering')
+        return saved
+    wav, info = await synthesize(text=text, language=language or '', instruction=description['instruct'])
+    destination = Path(DUB_DIR) / job_id / (profile_id.replace(':', '-') + '.wav')
+    pending = destination.with_suffix('.part')
+    pending.write_bytes(wav)
+    pending.replace(destination)
+    voice = {'ref_audio': str(destination), 'ref_text': text, 'instruct': description['instruct'], 'seed': None}
+    voice['voice_asset_id'] = info.get('voice_asset_id') or ''
+    job.setdefault('preset_voices', {})[profile_id] = voice
+    save_job(job_id, job)
+    return voice
+
+
 @router.post('/dub/preview-segment/{job_id}')
 async def preview_segment(job_id: str, request: Request):
     from api.routers.audiobook import _resolve_voice, _voice_profile_exists
@@ -140,7 +160,9 @@ async def preview_segment(job_id: str, request: Request):
     body = await request.json()
     profile_id = body.get('profile_id')
     with tempfile.TemporaryDirectory(prefix='voicestudio-dub-preview-') as directory:
-        if profile_id and not profile_id.startswith('auto'):
+        if profile_id and profile_id.startswith('preset:'):
+            voice = await until_disconnected(request, preset_conditioning(job_id, job, profile_id, body['text'], body.get('language')))
+        elif profile_id and not profile_id.startswith('auto'):
             if not _voice_profile_exists(profile_id):
                 raise ValueError('Selected voice no longer exists')
             voice = _resolve_voice(profile_id)
@@ -154,8 +176,7 @@ async def preview_segment(job_id: str, request: Request):
             voice = {'ref_audio': str(path), 'ref_text': segment.get('text_original') or segment['text'], 'instruct': ''}
         async def render():
             return await synthesize(text=body['text'], language=body.get('language') or '', speed=float(body.get('speed', 1)),
-                reference_path=voice['ref_audio'], reference_text=voice['ref_text'] or '', instruction=body.get('instruct') or voice['instruct'] or '')
-        from business.carrier import until_disconnected
+                reference_path=voice['ref_audio'], reference_text=voice['ref_text'] or '', instruction=body.get('instruct') or voice['instruct'] or '', **voice_binding(voice))
         wav, info = await until_disconnected(request, render())
         duration = body.get('duration')
         if duration and duration > 0 and info['duration'] > duration:
@@ -282,9 +303,11 @@ async def render_dub(job_id, req):
         data['id'] = segment_id
         original = originals.get(segment_id, {})
         data['text_original'] = original.get('text_original') or original.get('text') or ''
-        if segment.profile_id and not segment.profile_id.startswith('auto') and not _voice_profile_exists(segment.profile_id):
+        is_preset = bool(segment.profile_id and segment.profile_id.startswith('preset:'))
+        if segment.profile_id and not is_preset and not segment.profile_id.startswith('auto') and not _voice_profile_exists(segment.profile_id):
             raise ValueError('Selected voice no longer exists')
-        profile = _resolve_voice(segment.profile_id) if segment.profile_id and not segment.profile_id.startswith('auto') else None
+        profile = (await preset_conditioning(job_id, job, segment.profile_id, segment.text, segment.target_lang or language)
+            if is_preset else (_resolve_voice(segment.profile_id) if segment.profile_id and not segment.profile_id.startswith('auto') else None))
         anchor = reference_segment(originals, segment_id, segment.profile_id or '', req.voice_match) if profile is None else None
         profile_hash = hashlib.sha256(Path(profile['ref_audio']).read_bytes()).hexdigest() if profile and profile['ref_audio'] else None
         signature = json.dumps({'reference_segment': anchor, 'reference_sha256': profile_hash, 'segment': data, 'configuration': config['fingerprint'], 'profile': profile,
@@ -306,7 +329,7 @@ async def render_dub(job_id, req):
                     ref_path, ref_text, instruct = str(reference), anchor.get('text_original') or anchor['text'], segment.instruct
                 wav, info = await synthesize(text=segment.text, language=segment.target_lang or language,
                     speed=segment.speed or req.speed or 1, reference_path=ref_path,
-                    reference_text=ref_text or '', instruction=instruct or req.instruct or '')
+                    reference_text=ref_text or '', instruction=instruct or req.instruct or '', **voice_binding(profile or {}))
                 path.write_bytes(wav)
             finally:
                 if reference:

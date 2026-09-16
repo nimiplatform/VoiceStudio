@@ -63,7 +63,7 @@ export function ConvertVoice() {
     };
   }, [file]);
   useEffect(() => () => request.current?.abort(), []);
-  const voices = (profiles.data ?? []).filter((p) => p.kind === 'clone' && p.ref_audio_path);
+  const voices = (profiles.data ?? []).filter((p) => p.ref_audio_path || p.locked_audio_path || p.ref_audio_uri || p.nimi_voice_asset_id || p.locked_nimi_voice_asset_id);
   const valid = file && voices.some((p) => p.id === voice) && !recordingBusy;
   const run = async () => {
     if (!valid || request.current) return;

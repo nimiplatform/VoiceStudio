@@ -15,6 +15,10 @@ export interface Profile {
   name: string;
   kind: ProfileKind;
   ref_audio_path: string | null;
+  ref_audio_uri?: string;
+  ref_audio_mime?: string;
+  nimi_voice_asset_id?: string;
+  locked_nimi_voice_asset_id?: string;
   locked_audio_path?: string | null;
   ref_text: string | null;
   instruct: string | null;
@@ -123,6 +127,8 @@ export interface CloneGenerateInput {
   profileId?: string | null;
   refAudio?: File | Blob | null;
   refAudioName?: string;
+  refAudioUri?: string;
+  refAudioMime?: string;
   refText?: string;
   /** Free-text style; sanitised through the instruct whitelist before sending. */
   instruct?: string;

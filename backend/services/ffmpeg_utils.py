@@ -712,7 +712,10 @@ async def run_ffmpeg(cmd, timeout: float = 1800.0, capture: bool = True,
         cmd, script_path = externalize_long_filter_complex(cmd)
     try:
         async with _get_semaphore():
-            proc = await _spawn_with_retry(cmd, stdout=stdout, stderr=stderr)
+            # This helper passes media by filename and has no stdin payload.
+            # Never let an interactive child consume the Host/worker control
+            # pipe or compete with the worker's JSON callback reader.
+            proc = await _spawn_with_retry(cmd, stdin=asyncio.subprocess.DEVNULL, stdout=stdout, stderr=stderr)
             if job_id:
                 try:
                     register_proc(job_id, proc)

@@ -211,7 +211,8 @@
     "h_ago": "{{count}}시간 전",
     "failed": "받아쓰기 실패",
     "missing_model": "음성 인식 모델이 설치되어 있지 않습니다 — 이 기능으로 오디오를 전사하려면 모델이 필요합니다.",
-    "original_transcript": "원본 대본"
+    "original_transcript": "원본 대본",
+    "input_language": "파일 / 녹음 언어"
   },
   "engineRuntime": {
     "ready": "준비",
@@ -1372,7 +1373,9 @@
     "probe_placeholder": "/Users/you/Movies/sample.mp4",
     "probe_failed": "프로브 실패: {{message}}",
     "parse_failed": "구문 분석 실패: {{message}}",
-    "fit_failed": "맞춤 실패: {{message}}"
+    "fit_failed": "맞춤 실패: {{message}}",
+    "duration_estimate": "예상 길이(초)",
+    "estimate_notice": "텍스트 길이를 기준으로 추정합니다. 실제 길이를 측정하려면 오디오를 생성하세요."
   },
   "projects": {
     "title": "프로젝트",
@@ -2574,7 +2577,10 @@
     "configuration": "Nimi AI 설정",
     "configuration_description": "음성, 전사 및 번역에 사용할 AI 리소스를 선택하세요.",
     "provenance": "내보낸 파일의 메타데이터에 합성 음성임을 표시합니다. 신경망 워터마크는 적용되지 않습니다.",
-    "referenceControls": "참조 음성은 표현 태그나 말투 지시를 지원하지 않습니다. 생성 전에 표현 태그를 제거하세요. 원문은 편집할 수 있도록 유지됩니다."
+    "referenceControls": "참조 음성은 표현 태그나 말투 지시를 지원하지 않습니다. 생성 전에 표현 태그를 제거하세요. 원문은 편집할 수 있도록 유지됩니다.",
+    "referenceUrl": "공개 오디오 URL",
+    "referenceUrlHint": "공개 오디오 URL을 가져와 재생하고 음성을 복제합니다. 가져오기는 AI를 실행하지 않습니다. 편집 또는 노이즈 제거 후에는 URL 대신 수정된 파일을 사용합니다. 로컬 파일은 공개되지 않습니다.",
+    "referencePreview": "미리 듣기 사본 다운로드"
   },
   "voiceSelector": {
     "engineDefault": "엔진 기본값",

@@ -1,3 +1,6 @@
+@import '@nimiplatform/kit/ui/styles.css';
+@import '@nimiplatform/kit/ui/themes/light.css';
+@import '@nimiplatform/kit/ui/themes/dark.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';

@@ -7,7 +7,8 @@ import type { NimiLocalAppScenarioJobSpec } from '@nimiplatform/sdk/app';
 type Services = RegisteredNimiElectronAppBridge['services'];
 type SpeechInput = {
   text: string; language?: string; speed?: number; instruction?: string;
-  reference?: { base64: string; mimeType: string; text: string };
+  voiceAssetId?: string;
+  reference?: ({ base64: string; uri?: never } | { uri: string; base64?: never }) & { mimeType: string; text: string };
 };
 type AudioInput = { base64: string; mimeType: string; language?: string; timestamps?: boolean };
 
@@ -151,20 +152,37 @@ export class NimiJobs {
 
   private async synthesize(input: SpeechInput, signal: AbortSignal) {
     if (typeof input.text !== 'string' || !input.text.trim()) throw new Error('Speech text is required');
-    let voiceId: string | undefined;
-    if (input.reference || input.instruction?.trim()) {
+    let voiceId = input.voiceAssetId;
+    if (voiceId && typeof voiceId !== 'string') throw new Error('Invalid saved Nimi voice identity');
+    if (!voiceId && (input.reference || input.instruction?.trim())) {
       const configuration = await this.services.aiConfig.get();
+      let referenceText = input.reference?.text || '';
+      if (input.reference) {
+        const selected = configuration.effectiveSelections.find((item) => item.capabilityContract === 'voice.create');
+        const resource = selected?.resource;
+        const capabilities = resource?.oneofKind === 'local' ? resource.local.referenceAudioInput
+          : resource?.oneofKind === 'cloud' ? resource.cloud.target.referenceAudioInput : undefined;
+        if (!capabilities) throw new Error('The selected voice configuration does not describe its reference-audio inputs. Review Nimi AI settings.');
+        if (input.reference.uri ? !capabilities.supportsUri : !capabilities.supportsBytes)
+          throw new Error(input.reference.uri ? 'This voice configuration does not accept audio URLs.' : 'This voice configuration requires a public audio URL. Choose a URL reference or a configuration that accepts files.');
+        if (capabilities.mimeTypes.length && !capabilities.mimeTypes.includes(input.reference.mimeType))
+          throw new Error(`This voice configuration does not accept ${input.reference.mimeType}.`);
+        if (capabilities.textMode === 'unsupported') referenceText = '';
+        if (capabilities.textMode === 'required' && !referenceText.trim())
+          throw new Error('This voice configuration requires the reference transcript.');
+      }
       const key = createHash('sha256').update(JSON.stringify({ reference: input.reference, instruction: input.instruction,
         language: input.language, selections: configuration.effectiveSelections })).digest('hex');
       voiceId = input.reference ? this.voices.get(key) : undefined;
       if (!voiceId) {
         const spec: NimiLocalAppScenarioJobSpec = input.reference
           ? { type: 'voice-create', creationSource: 'reference-audio',
-              referenceAudio: { type: 'bytes', bytes: this.audioBytes(input.reference) },
-              referenceAudioMime: input.reference.mimeType, text: input.reference.text,
+              referenceAudio: input.reference.uri ? { type: 'uri', uri: input.reference.uri }
+                : { type: 'bytes', bytes: this.audioBytes(input.reference as AudioInput) },
+              referenceAudioMime: input.reference.mimeType, text: referenceText,
               languageHints: [], preferredName: 'VoiceStudio' }
           : { type: 'voice-create', creationSource: 'text-description', instructionText: input.instruction!,
-              previewText: input.text, language: input.language || '', preferredName: 'VoiceStudio' };
+              previewText: 'This is a preview of my voice.', language: 'en', preferredName: 'VoiceStudio' };
         const created = await this.job(spec, signal);
         voiceId = created.voiceReference?.voiceAssetId;
         if (!voiceId || created.asset?.status !== 'active') throw new Error('Nimi voice creation returned no active voice');
@@ -179,7 +197,7 @@ export class NimiJobs {
     if (!artifact) throw new Error('Nimi synthesis returned no audio artifact');
     try {
       return { ...await this.artifact(artifact.artifactId, signal),
-        sampleRate: artifact.sampleRateHz, channels: artifact.channels, jobId: result.job.jobId };
+        sampleRate: artifact.sampleRateHz, channels: artifact.channels, jobId: result.job.jobId, voiceAssetId: voiceId || '' };
     } catch (error) {
       throw new Error(`Receive audio from completed job ${result.job.jobId}, artifact ${artifact.artifactId}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
     }

@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Utenti/tu/Film/sample.mp4",
     "probe_failed": "Sonda fallita: {{message}}",
     "parse_failed": "Analisi non riuscita: {{message}}",
-    "fit_failed": "Adattamento non riuscito: {{message}}"
+    "fit_failed": "Adattamento non riuscito: {{message}}",
+    "duration_estimate": "Durata stimata (s)",
+    "estimate_notice": "Stima basata sulla lunghezza del testo. Genera l’audio per misurare la durata effettiva."
   },
   "projects": {
     "title": "Progetti",
@@ -1549,7 +1551,8 @@
     "exported": "Trascrizioni esportate",
     "just_now": "Proprio adesso",
     "m_ago": "{{count}}m fa",
-    "h_ago": "{{count}}h fa"
+    "h_ago": "{{count}}h fa",
+    "input_language": "Lingua del file / registrazione"
   },
   "setup": {
     "welcome": "Benvenuto",
@@ -2837,6 +2840,9 @@
     "configuration": "Configurazione IA di Nimi",
     "configuration_description": "Scegli le risorse IA per voci, trascrizione e traduzione.",
     "provenance": "I metadati dei file esportati identificano l’audio sintetico. Non viene applicata una filigrana neurale.",
-    "referenceControls": "Le voci di riferimento non supportano tag espressivi o indicazioni di stile. Rimuovi i tag prima della generazione; il testo resta modificabile."
+    "referenceControls": "Le voci di riferimento non supportano tag espressivi o indicazioni di stile. Rimuovi i tag prima della generazione; il testo resta modificabile.",
+    "referenceUrl": "URL audio pubblico",
+    "referenceUrlHint": "Importa un URL pubblico per ascoltare e clonare la voce. L’importazione non esegue IA. Dopo la modifica o la riduzione del rumore viene usato il file modificato al posto dell’URL. I file locali non vengono mai pubblicati.",
+    "referencePreview": "Scarica copia da ascoltare"
   }
 }

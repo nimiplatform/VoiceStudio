@@ -5,12 +5,14 @@ export function cloneBlocker({
   profileId,
   profiles,
   fileSize,
+  sourceUri,
   busy = false,
 }: {
   text: string;
   profileId: string | null;
   profiles: Profile[] | undefined;
   fileSize: number;
+  sourceUri?: string;
   busy?: boolean;
 }): CloneBlocker {
   if (busy) return 'preparing';
@@ -19,11 +21,11 @@ export function cloneBlocker({
     if (
       !profiles.some(
         (profile) =>
-          profile.id === profileId && profile.kind === 'clone' && Boolean(profile.ref_audio_path),
+          profile.id === profileId && profile.kind === 'clone' && Boolean(profile.ref_audio_path || profile.ref_audio_uri || profile.nimi_voice_asset_id),
       )
     )
       return 'reference';
-  } else if (fileSize <= 0) return 'reference';
+  } else if (fileSize <= 0 && !sourceUri) return 'reference';
   if (!text.trim()) return 'text';
   return null;
 }

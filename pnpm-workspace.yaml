@@ -3,10 +3,10 @@ packages:
   - frontend
   - electron
 overrides:
-  '@nimiplatform/app-tools': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-ecd93c916-voicestudio/nimiplatform-app-tools-0.7.0.tgz
-  '@nimiplatform/sdk': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-ecd93c916-voicestudio/nimiplatform-sdk-0.14.0.tgz
-  '@nimiplatform/kit': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-ecd93c916-voicestudio/nimiplatform-kit-0.10.0.tgz
-  '@nimiplatform/kit-protected-local-win32-x64': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-ecd93c916-voicestudio/nimiplatform-kit-protected-local-win32-x64-0.10.0.tgz
+  '@nimiplatform/app-tools': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-1c5baa05f-voicestudio/nimiplatform-app-tools-0.7.5.tgz
+  '@nimiplatform/sdk': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-1c5baa05f-voicestudio/nimiplatform-sdk-0.15.0.tgz
+  '@nimiplatform/kit': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-1c5baa05f-voicestudio/nimiplatform-kit-0.11.0.tgz
+  '@nimiplatform/kit-protected-local-win32-x64': file:D:/nimi-realm/nimi-apps/.local/nimi-packages/dev-1c5baa05f-voicestudio/nimiplatform-kit-protected-local-win32-x64-0.11.0.tgz
 
 onlyBuiltDependencies:
   - esbuild

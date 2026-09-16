@@ -38,3 +38,7 @@ it('keeps raw and refined transcripts separately', () => {
   addTranscription({ text: 'um original', refined_text: 'Original.' });
   expect(loadTranscriptions()[0]).toMatchObject({ text: 'um original', refined_text: 'Original.' });
 });
+it('keeps requested language separate from an unknown detected language', () => {
+  addTranscription({ text: 'Hello.', input_language: 'en', language: '' });
+  expect(loadTranscriptions()[0]).toMatchObject({ input_language: 'en', language: 'unknown' });
+});

@@ -12,6 +12,13 @@ If the task includes Nimi expansion or repair and a required gap is found, follo
 
 Install a selected app-tools package and read this package skill before init. For local SDK/Kit/app-tools iteration, use the complete tarball override workflow in its README; do not wait for publication or link to the source workspace. Install its matching SDK/Kit and exact nimi-coding. Follow the package's manifest version matrix and use the lockfile to pin actual resolutions.
 
+When adopting Kit UI, compile `@nimiplatform/kit/ui/styles.css` in the same
+Tailwind 4 CSS entry as `@import 'tailwindcss'`, and include the appropriate
+Kit foundation theme. A separate JavaScript CSS import can leave Kit utilities
+uncompiled. Verify a long model list and its confirmation button in the real
+App before treating an overflow or transparent dialog as a missing primitive;
+follow the Kit README rather than adding App-local overlay overrides.
+
 Before writing Nimi foundation wiring, use that same app-tools package to generate a minimal reference App with its own identity under `.nimi/local/`. Choose the smallest admitted feature closure that exposes the needed session, App Access, AIConfig and AI call surfaces; use `nimi-app --help` for the actual features and create options. Install the same SDK/Kit/native package combination in the reference, then run its generated setup and Desktop-supervised path. Start from its working Host, preload, renderer bridge and public client calls when integrating the existing App. Align or reuse that code; do not reconstruct these foundation pieces freely from API prose. SDK/Kit documentation defines the contracts and fills gaps in the generated implementation.
 
 When installation and launch are in scope, establish the reference's local installed Access baseline using the acceptance guide before attributing an installed failure to App wiring. A reference failure under the same conditions points to the toolchain or environment; a passing reference makes its wiring differences with the App the next inspection target. Direct evidence of a platform defect remains actionable. Reuse current passing reference results; repeat this baseline for first integration or affected foundation changes, not ordinary business edits. Record only the necessary result in existing project notes, with no extra proof files or state ledger. Missing prerequisites pause the dependent wiring checks, not independent product restoration.
@@ -57,5 +64,11 @@ For an existing App, a generic `/api/...` route or provider `/v1/...` URL alone
 does not prove a Nimi Realm/Runtime bypass. The checker retains explicit
 protected-custody/private-import checks; review actual product call paths to
 establish Nimi AI routing. Do not edit vendor code just to remove a keyword.
+App-owned login and refresh route literals are not Realm identity evidence.
+Python virtual environments identified by `pyvenv.cfg` are installed dependency
+trees, not App source; their bundled web clients do not establish App custody.
+Custom `.next-*` output trees with Next build/routes manifests and server/static
+directories (including the `dev` layout) are also excluded. A similarly named
+App source directory without those output markers remains checked.
 
 Separate development instructions from product-operation guides, including other host entry files actually used by the repository. Upstream supplier examples may remain as knowledge; check the active product/agent route instead of deleting by keyword. Keep unimplemented original workflows explicit rather than counting a visible menu or retained source as completion.

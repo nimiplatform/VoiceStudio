@@ -60,16 +60,17 @@ export function ClonePage() {
   const selectedId = useCloneSetting('selectedProfileId');
   const text = useCloneSetting('text');
   const reference = useReference();
-  const transcription = useReferenceTranscript(selectedId ? null : reference.file);
+  const transcription = useReferenceTranscript(selectedId || reference.sourceUri ? null : reference.file);
   const selectedVoice = profiles.data?.find(
-    (profile) => profile.id === selectedId && profile.kind === 'clone' && profile.ref_audio_path,
+    (profile) => profile.id === selectedId && profile.kind === 'clone' && (profile.ref_audio_path || profile.ref_audio_uri || profile.nimi_voice_asset_id),
   );
-  const hasVoice = selectedId ? Boolean(selectedVoice) : Boolean(reference.file?.size);
+  const hasVoice = selectedId ? Boolean(selectedVoice) : Boolean(reference.file?.size || reference.sourceUri);
   const [changingVoice, setChangingVoice] = useState(false);
   const [showDemoCoachmark, setShowDemoCoachmark] = useState(false);
   const [skippedFile, setSkippedFile] = useState<File | null>(null);
+  const [skippedUri, setSkippedUri] = useState<string>();
   const savingUpload =
-    !selectedId && Boolean(reference.file) && reference.file !== skippedFile && !changingVoice;
+    !selectedId && !changingVoice && ((Boolean(reference.file) && reference.file !== skippedFile) || (Boolean(reference.sourceUri) && reference.sourceUri !== skippedUri));
   const choosingVoice = !hasVoice || changingVoice;
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export function ClonePage() {
   const previousVoice = useRef({
     id: selectedId,
     file: reference.file,
+    sourceUri: reference.sourceUri,
     ready: hasVoice,
   });
   const focusScript = () =>
@@ -104,7 +106,7 @@ export function ClonePage() {
     const previous = previousVoice.current;
     if (
       hasVoice &&
-      (!previous.ready || previous.id !== selectedId || previous.file !== reference.file)
+      (!previous.ready || previous.id !== selectedId || previous.file !== reference.file || previous.sourceUri !== reference.sourceUri)
     ) {
       setChangingVoice(false);
       setWorkspace({ panel: null });
@@ -113,9 +115,10 @@ export function ClonePage() {
     previousVoice.current = {
       id: selectedId,
       file: reference.file,
+      sourceUri: reference.sourceUri,
       ready: hasVoice,
     };
-  }, [hasVoice, selectedId, reference.file]);
+  }, [hasVoice, selectedId, reference.file, reference.sourceUri]);
   const wasGenerating = useRef(false);
   if (isGenerating) wasGenerating.current = true;
 
@@ -203,14 +206,17 @@ export function ClonePage() {
                     : () => runRendererTask('Leave voice selection', () => navigate({ to: '/' }))
                 }
               />
-            ) : savingUpload && reference.file ? (
+            ) : savingUpload ? (
               <div className="w-full space-y-5">
                 <SaveProfileForm
-                  key={reference.file.name + reference.file.lastModified}
+                  key={reference.sourceUri || reference.file?.name}
                   file={reference.file}
+                  sourceUri={reference.sourceUri}
+                  sourceMime={reference.sourceMime}
                   transcribing={transcription.state === 'busy'}
                   onDone={() => {
                     setSkippedFile(reference.file);
+                    setSkippedUri(reference.sourceUri);
                     finishChoice();
                   }}
                 />

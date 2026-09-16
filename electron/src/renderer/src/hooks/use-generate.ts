@@ -173,7 +173,7 @@ function useGenerateController(): UseGenerateClone {
           ? designBlocker || !design.text.trim()
           : blocker ||
             !settings.text.trim() ||
-            (!settings.selectedProfileId && !reference.file?.size)
+            (!settings.selectedProfileId && !reference.file?.size && !reference.sourceUri)
       ) {
         if (blocker === 'reference') setWorkspace({ panel: 'voice' });
         return;
@@ -212,6 +212,8 @@ function useGenerateController(): UseGenerateClone {
           language: design?.language ?? settings.language,
           profileId: design ? (design.profileId ?? null) : settings.selectedProfileId,
           refAudio: design || settings.selectedProfileId ? null : reference.file,
+          refAudioUri: design || settings.selectedProfileId ? undefined : reference.sourceUri,
+          refAudioMime: design || settings.selectedProfileId ? undefined : reference.sourceMime,
           refText: design ? undefined : settings.refText,
           instruct,
           steps: settings.steps,

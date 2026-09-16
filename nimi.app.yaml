@@ -1,6 +1,6 @@
 app_id: nimiplatform.voicestudio
 display_name: VoiceStudio
-version: 0.5.4
+version: 0.5.5
 profile: standalone
 manifest_role: submitted-input
 app_access:

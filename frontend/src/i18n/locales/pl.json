@@ -1371,7 +1371,9 @@
     "probe_placeholder": "/Użytkownicy/ty/Filmy/przykład.mp4",
     "probe_failed": "Sonda nie powiodła się: {{message}}",
     "parse_failed": "Analiza nie powiodła się: {{message}}",
-    "fit_failed": "Dopasowanie nie powiodło się: {{message}}"
+    "fit_failed": "Dopasowanie nie powiodło się: {{message}}",
+    "duration_estimate": "Szacowany czas (s)",
+    "estimate_notice": "Szacunek na podstawie długości tekstu. Wygeneruj dźwięk, aby zmierzyć rzeczywisty czas."
   },
   "projects": {
     "title": "Projekty",
@@ -1549,7 +1551,8 @@
     "exported": "Eksportowane transkrypcje",
     "just_now": "Właśnie teraz",
     "m_ago": "{{count}}m temu",
-    "h_ago": "{{count}}h temu"
+    "h_ago": "{{count}}h temu",
+    "input_language": "Język pliku / nagrania"
   },
   "setup": {
     "welcome": "Witamy",
@@ -2837,6 +2840,9 @@
     "configuration": "Konfiguracja AI Nimi",
     "configuration_description": "Wybierz zasoby AI do głosów, transkrypcji i tłumaczenia.",
     "provenance": "Metadane eksportowanych plików oznaczają dźwięk syntetyczny. Neuronowy znak wodny nie jest stosowany.",
-    "referenceControls": "Głosy referencyjne nie obsługują znaczników ekspresji ani wskazówek stylu. Usuń znaczniki przed generowaniem; tekst pozostaje do edycji."
+    "referenceControls": "Głosy referencyjne nie obsługują znaczników ekspresji ani wskazówek stylu. Usuń znaczniki przed generowaniem; tekst pozostaje do edycji.",
+    "referenceUrl": "Publiczny adres audio",
+    "referenceUrlHint": "Zaimportuj publiczny adres audio do odsłuchu i klonowania głosu. Import nie uruchamia AI. Po edycji lub odszumieniu używany jest zmieniony plik zamiast adresu. Pliki lokalne nigdy nie są publikowane.",
+    "referencePreview": "Pobierz kopię do odsłuchu"
   }
 }

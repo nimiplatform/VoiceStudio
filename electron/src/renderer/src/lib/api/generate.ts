@@ -133,13 +133,17 @@ export function toGenerateForm(input: CloneGenerateInput): FormData {
 
   if (input.profileId) {
     form.append('profile_id', input.profileId);
-  } else if (input.refAudio) {
+  } else if (input.refAudio || input.refAudioUri) {
     const name =
       input.refAudioName ||
       (input.refAudio instanceof File ? input.refAudio.name : '') ||
       'audio.wav';
-    form.append('ref_audio', input.refAudio, name);
+    if (input.refAudio) form.append('ref_audio', input.refAudio, name);
     form.append('ref_text', input.refText ?? '');
+    if (input.refAudioUri) {
+      form.append('ref_audio_uri', input.refAudioUri);
+      form.append('ref_audio_mime', input.refAudioMime || '');
+    }
   }
 
   if (input.instruct) {

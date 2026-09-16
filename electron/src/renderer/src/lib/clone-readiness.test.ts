@@ -8,6 +8,12 @@ describe('clone readiness', () => {
     expect(cloneBlocker({ ...ready, text: ' \n ' })).toBe('text');
     expect(cloneBlocker(ready)).toBeNull();
   });
+  it('accepts a URI source without pretending a local file exists', () => {
+    expect(cloneBlocker({ ...ready, fileSize: 0, sourceUri: 'https://example.com/voice.wav' })).toBeNull();
+    expect(cloneBlocker({ ...ready, fileSize: 0, profileId: 'uri-voice', profiles: [
+      { id: 'uri-voice', kind: 'clone', ref_audio_path: null, ref_audio_uri: 'https://example.com/voice.wav' } as Profile,
+    ] })).toBeNull();
+  });
   it('rejects missing saved profiles and profiles without reference audio', () => {
     expect(cloneBlocker({ ...ready, profileId: 'deleted' })).toBe('reference');
     expect(

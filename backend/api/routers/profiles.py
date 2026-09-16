@@ -25,6 +25,8 @@ logger = logging.getLogger("omnivoice.profiles")
 
 def _profile_record(row):
     result = dict(row)
+    if result.get('is_locked') and result.get('locked_ref_text') is not None:
+        result['ref_text'] = result['locked_ref_text']
     image_path = _voices_path(f"{result['id']}.portrait.jpg")
     result["image_url"] = (
         f"/profiles/{result['id']}/image?v={os.stat(image_path).st_mtime_ns}"
@@ -66,6 +68,9 @@ async def create_profile(
     kind: str = Form("clone"),
     vd_states: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
+    ref_audio_uri: str = Form(''),
+    ref_audio_mime: str = Form(''),
+    history_id: str = Form(''),
 ):
     """Create a voice profile (spec: docs/specs/voice-studio-unification.md §5).
 
@@ -80,8 +85,8 @@ async def create_profile(
         raise HTTPException(status_code=400, detail="A voice profile needs a name.")
     if kind not in ("clone", "design"):
         raise HTTPException(status_code=422, detail="kind must be 'clone' or 'design'")
-    if kind == "clone" and ref_audio is None:
-        raise HTTPException(status_code=422, detail="clone profiles require ref_audio")
+    if kind == "clone" and ref_audio is None and not ref_audio_uri and not history_id:
+        raise HTTPException(status_code=422, detail="clone profiles require reference audio or a public audio URL")
     if kind == "design":
         if not (vd_states or "").strip():
             raise HTTPException(status_code=422, detail="design profiles require vd_states")
@@ -124,36 +129,40 @@ async def create_profile(
         instruct = sanitize_instruct(instruct)
 
     profile_id = str(uuid.uuid4())[:8]
+    voice_asset_id = ''
+    if ref_audio_uri:
+        from business.reference import public_audio_url
+        ref_audio_uri = public_audio_url(ref_audio_uri)
+        if not ref_audio_mime.startswith('audio/'):
+            raise HTTPException(422, detail='Reference URL requires its original audio MIME type')
+    if history_id:
+        with db_conn() as conn:
+            take = conn.execute('SELECT * FROM generation_history WHERE id=?', (history_id,)).fetchone()
+        if not take or not take['audio_path']:
+            raise HTTPException(404, detail='The auditioned take no longer exists')
+        voice_asset_id = take['nimi_voice_asset_id'] or ''
+        # The business record, not a client-supplied ID or blob, binds the voice.
+        ref_text = take['text'] or ''
+        from io import BytesIO
+        ref_audio = UploadFile(file=BytesIO(resolve_within(OUTPUTS_DIR, take['audio_path']).read_bytes()), filename='take.wav')
+        ref_audio_uri = ref_audio_mime = ''
     portrait = None
     if isinstance(image, StarletteUploadFile):
         portrait = normalize_portrait(await image.read(MAX_IMAGE_BYTES + 1))
     portrait_path = os.path.join(VOICES_DIR, f"{profile_id}.portrait.jpg")
 
     if kind == "clone":
-        ext = os.path.splitext(ref_audio.filename or ".wav")[1]
-        audio_filename = f"{profile_id}{ext}"
-        audio_path = os.path.join(VOICES_DIR, audio_filename)
+        ext = os.path.splitext(ref_audio.filename or '.wav')[1] if ref_audio else '.wav'
+        audio_filename = f"{profile_id}{ext}" if ref_audio else None
+        audio_path = os.path.join(VOICES_DIR, audio_filename or f'{profile_id}.wav')
         # Storage can be removed after startup; recover before persisting uploads.
         os.makedirs(VOICES_DIR, exist_ok=True)
-        with open(audio_path, "wb") as f:
-            f.write(await ref_audio.read())
-        # A matching transcript defines the boundary between the reference and
-        # the requested line. Saving a blank transcript and waiting until the
-        # first generation made that first take depend on the TTS model's
-        # internal ASR fallback; short lines could then start with stray words
-        # from the reference. Resolve it while the profile is being created so
-        # every synthesis, including the first, uses stable conditioning. This
-        # remains best-effort and local-only: transcribe_reference considers
-        # only already-installed ASR/dictation models.
-        if not ref_text.strip():
-            try:
-                from business.audio import transcribe_file
-
-                ref_text = (await transcribe_file(audio_path))["text"].strip()
-            except Exception as exc:  # noqa: BLE001 — profile save remains usable
-                logger.warning(
-                    "reference transcription during profile save failed: %s", exc
-                )
+        if ref_audio:
+            with open(audio_path, "wb") as f:
+                f.write(await ref_audio.read())
+        # Saving business state never launches extra inference. The reference
+        # editor owns transcription; the selected voice contract decides
+        # whether the retained transcript is optional, required or unused.
         used_seed = seed
     else:
         # Saving a design keeps the auditioned bytes; it never silently designs another voice.
@@ -180,10 +189,10 @@ async def create_profile(
         with db_conn() as conn:
             conn.execute(
                 "INSERT INTO voice_profiles (id, name, ref_audio_path, ref_text, instruct, "
-                "language, seed, personality, kind, vd_states, created_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "language, seed, personality, kind, vd_states, created_at, ref_audio_uri, ref_audio_mime, nimi_voice_asset_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (profile_id, name, audio_filename, ref_text, instruct, language,
-                 used_seed, personality, kind, vd_states, time.time())
+                 used_seed, personality, kind, vd_states, time.time(), ref_audio_uri, ref_audio_mime, voice_asset_id)
             )
     except Exception:
         if os.path.exists(portrait_path):
@@ -379,7 +388,8 @@ async def get_profile_audio(profile_id: str):
     audio_path = _voices_path(str(audio_file))
     if audio_path is None or not os.path.exists(audio_path):
         return Response("Audio file missing", status_code=404)
-    return FileResponse(audio_path, media_type="audio/wav")
+    import mimetypes
+    return FileResponse(audio_path, media_type=mimetypes.guess_type(audio_path)[0] or 'application/octet-stream')
 
 
 async def _materialize_design_sample(profile_id: str, row) -> Optional[str]:
@@ -407,7 +417,7 @@ async def _materialize_design_sample(profile_id: str, row) -> Optional[str]:
     if audio_path is None:
         raise HTTPException(status_code=400, detail="invalid profile identifier")
     try:
-        await _render_archetype_wav(
+        info = await _render_archetype_wav(
             {
                 "language": row["language"] or "Auto",
                 "sample_script": row["ref_text"] or "",
@@ -430,8 +440,8 @@ async def _materialize_design_sample(profile_id: str, row) -> Optional[str]:
 
     with db_conn() as conn:
         conn.execute(
-            "UPDATE voice_profiles SET ref_audio_path=? WHERE id=?",
-            (audio_filename, profile_id),
+            "UPDATE voice_profiles SET ref_audio_path=?, nimi_voice_asset_id=? WHERE id=?",
+            (audio_filename, (info or {}).get('voice_asset_id') or '', profile_id),
         )
     return audio_filename
 
@@ -466,11 +476,11 @@ async def lock_profile(
             raise HTTPException(status_code=400, detail="Invalid profile id")
         shutil.copy2(str(src_path), locked_path)
 
-        ref_text = history["text"][:100] if history["text"] else ""
+        ref_text = history["text"] or ""
 
         conn.execute(
-            "UPDATE voice_profiles SET locked_audio_path=?, seed=?, is_locked=1, ref_text=? WHERE id=?",
-            (locked_filename, seed, ref_text, profile_id)
+            "UPDATE voice_profiles SET locked_audio_path=?, seed=?, is_locked=1, locked_ref_text=?, locked_nimi_voice_asset_id=? WHERE id=?",
+            (locked_filename, seed, ref_text, history['nimi_voice_asset_id'] or '', profile_id)
         )
     event_bus.emit("profiles", {"action": "locked", "id": profile_id})
     return {"locked": True, "profile_id": profile_id, "locked_audio_path": locked_filename}
@@ -491,7 +501,7 @@ async def unlock_profile(profile_id: str):
                 os.remove(locked_path)
 
         conn.execute(
-            "UPDATE voice_profiles SET locked_audio_path='', seed=NULL, is_locked=0 WHERE id=?",
+            "UPDATE voice_profiles SET locked_audio_path='', locked_nimi_voice_asset_id='', locked_ref_text=NULL, seed=NULL, is_locked=0 WHERE id=?",
             (profile_id,)
         )
     event_bus.emit("profiles", {"action": "unlocked", "id": profile_id})

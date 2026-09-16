@@ -34,6 +34,7 @@ let current = snapshot();
 function apply() {
   const root = document.documentElement;
   root.classList.toggle('dark', current.theme === 'dark');
+  root.dataset.nimiScheme = current.theme === 'dark' ? 'dark' : 'light';
   root.style.colorScheme = current.theme;
   const colors = paletteColors(current.paletteId, current.theme);
   if (colors) {

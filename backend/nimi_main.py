@@ -204,8 +204,8 @@ def watermark_settings(invisible: bool | None = None, visible_audio: bool | None
 
 
 from api.routers import projects, profiles, exports, glossary, pronunciation, describe_voice, profile_images, audiobook, dub_core, dub_export, longform_jobs, gallery, archetypes, media_tools, batch
-from business import history, transcription, dubbing, media, tools
-for module in (projects, profiles, exports, glossary, pronunciation, describe_voice, profile_images, history, transcription, audiobook, dub_core, dub_export, longform_jobs, dubbing, gallery, archetypes, media, media_tools, batch, tools):
+from business import history, transcription, dubbing, media, tools, reference
+for module in (projects, profiles, exports, glossary, pronunciation, describe_voice, profile_images, history, transcription, audiobook, dub_core, dub_export, longform_jobs, dubbing, gallery, archetypes, media, media_tools, batch, tools, reference):
     app.include_router(module.router)
 
 # Only App-owned preferences; old credentials and model installation are not exposed.

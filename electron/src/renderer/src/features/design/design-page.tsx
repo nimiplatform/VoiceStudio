@@ -15,6 +15,7 @@ import {
   STORAGE,
   readDraft,
   restoreDesignProfile,
+  editDesignAttributes,
   type DesignDraft,
 } from './design-draft';
 import { useDescription } from './use-description';
@@ -54,7 +55,6 @@ import { CATEGORIES, PRESETS } from '../../../../../../frontend/src/utils/consta
 import {
   applyVdState,
   buildDesignInstruct,
-  mergeDescribedAttrs,
 } from '../../../../../../frontend/src/utils/voiceInstruct';
 export function DesignPage() {
   const { t } = useTranslation();
@@ -67,7 +67,7 @@ export function DesignPage() {
   const [description, setDescription] = useState('');
   const [startingOpen, setStartingOpen] = useState(true);
   const mapper = useDescription((attrs) =>
-    setDraft((current) => ({ ...current, attrs: mergeDescribedAttrs(attrs) })),
+    setDraft((current) => editDesignAttributes(current, attrs)),
   );
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -101,13 +101,11 @@ export function DesignPage() {
   const change = (category: string, value: string) => {
     mapper.cancel();
     const changed = applyVdState(draft.attrs, category, value);
-    setDraft((current) => ({
-      ...current,
-      attrs:
+    setDraft((current) => editDesignAttributes(current,
         current.attrs === draft.attrs
           ? changed.vdStates
           : applyVdState(current.attrs, category, value).vdStates,
-    }));
+    ));
     if (changed.clearedCategory) {
       toast(
         t('clone.vd_exclusive_cleared', {
@@ -132,6 +130,7 @@ export function DesignPage() {
         && latestOutput.details.language === cloneSettingsStore.state.language) {
         body.set('ref_audio', latestOutput.result.blob, 'design-reference.wav');
         body.set('ref_text', latestOutput.text);
+        if (latestOutput.result.id) body.set('history_id', latestOutput.result.id);
       }
       const created = await apiJson<Profile>('/profiles', {
         method: 'POST',
@@ -308,10 +307,7 @@ export function DesignPage() {
                 attrs={draft.attrs}
                 onSelect={(attrs) => {
                   mapper.cancel();
-                  setDraft((current) => ({
-                    ...current,
-                    attrs: mergeDescribedAttrs(attrs),
-                  }));
+                  setDraft((current) => editDesignAttributes(current, attrs));
                 }}
               />
               <div className="flex flex-wrap gap-1">
@@ -323,10 +319,7 @@ export function DesignPage() {
                     disabled={generation.isGenerating}
                     onClick={() => {
                       mapper.cancel();
-                      setDraft((current) => ({
-                        ...current,
-                        attrs: mergeDescribedAttrs(preset.attrs),
-                      }));
+                      setDraft((current) => editDesignAttributes(current, preset.attrs));
                     }}
                   >
                     {t('clone.preset_' + preset.id)
@@ -443,9 +436,8 @@ export function DesignPage() {
               onUse={(preset) => {
                 mapper.cancel();
                 setDraft((current) => ({
-                  ...current,
+                  ...editDesignAttributes(current, preset.attrs),
                   text: preset.script || current.text,
-                  attrs: mergeDescribedAttrs(preset.attrs),
                 }));
                 setCloneSetting('language', preset.language || 'Auto');
               }}

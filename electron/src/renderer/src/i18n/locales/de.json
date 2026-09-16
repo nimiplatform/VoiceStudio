@@ -211,7 +211,8 @@
     "h_ago": "Vor {{count}}h",
     "failed": "Transkription fehlgeschlagen",
     "missing_model": "Es ist kein Sprache-zu-Text-Modell installiert — diese Funktion benötigt eines zum Transkribieren.",
-    "original_transcript": "Originaltranskript"
+    "original_transcript": "Originaltranskript",
+    "input_language": "Sprache der Datei / Aufnahme"
   },
   "engineRuntime": {
     "ready": "Bereit",
@@ -1372,7 +1373,9 @@
     "probe_placeholder": "/Users/you/Movies/sample.mp4",
     "probe_failed": "Probe fehlgeschlagen: {{message}}",
     "parse_failed": "Analyse fehlgeschlagen: {{message}}",
-    "fit_failed": "Anpassung fehlgeschlagen: {{message}}"
+    "fit_failed": "Anpassung fehlgeschlagen: {{message}}",
+    "duration_estimate": "Geschätzte Dauer (s)",
+    "estimate_notice": "Aus der Textlänge geschätzt. Erzeuge Audio, um die tatsächliche Dauer zu messen."
   },
   "projects": {
     "title": "Projekte",
@@ -2574,7 +2577,10 @@
     "configuration": "Nimi-KI-Konfiguration",
     "configuration_description": "Wähle die KI-Ressourcen für Stimmen, Transkription und Übersetzung.",
     "provenance": "Exportierte Dateien kennzeichnen synthetisches Audio in den Metadaten. Neuronale Wasserzeichen werden nicht angewendet.",
-    "referenceControls": "Referenzstimmen unterstützen keine Ausdruckstags oder Stilhinweise. Entferne Ausdruckstags vor der Erzeugung; dein Text bleibt bearbeitbar."
+    "referenceControls": "Referenzstimmen unterstützen keine Ausdruckstags oder Stilhinweise. Entferne Ausdruckstags vor der Erzeugung; dein Text bleibt bearbeitbar.",
+    "referenceUrl": "Öffentliche Audio-URL",
+    "referenceUrlHint": "Eine öffentliche Audio-URL zum Anhören und Klonen importieren. Der Import führt keine KI aus. Nach Bearbeitung oder Entrauschen wird die bearbeitete Datei statt der URL verwendet. Lokale Dateien werden nie veröffentlicht.",
+    "referencePreview": "Vorschaukopie herunterladen"
   },
   "voiceSelector": {
     "engineDefault": "Motorstandard",

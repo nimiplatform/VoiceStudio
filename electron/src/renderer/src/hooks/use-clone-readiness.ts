@@ -17,6 +17,7 @@ export function useCloneInputsReadiness() {
     profileId: settings.selectedProfileId,
     profiles: profiles.isError ? [] : profiles.data,
     fileSize: reference.file?.size ?? 0,
+    sourceUri: reference.sourceUri,
     busy: recording || reference.pending,
   });
 }

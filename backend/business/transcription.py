@@ -82,6 +82,9 @@ async def transcribe(request: Request):
     upload = form.get("audio")
     if not upload:
         raise ValueError("Audio is required")
+    from omnivoice.utils.lang_map import LANG_NAME_TO_ID
+    language = str(form.get('language', '')).strip()
+    language = '' if language in {'', 'Auto'} else LANG_NAME_TO_ID.get(language.lower(), language)
     started = time.monotonic()
     suffix = Path(upload.filename or "audio.wav").suffix
     with tempfile.TemporaryDirectory(prefix="voicestudio-transcribe-") as directory:
@@ -99,7 +102,7 @@ async def transcribe(request: Request):
                 raise asyncio.CancelledError()
             window = Path(directory) / "window.wav"
             sf.write(window, samples[offset:offset + 240 * rate], rate)
-            operation = asyncio.create_task(transcribe_file(window))
+            operation = asyncio.create_task(transcribe_file(window, language=language))
             try:
                 while not operation.done():
                     if await request.is_disconnected():
@@ -117,6 +120,7 @@ async def transcribe(request: Request):
         text = ' '.join(texts)
         refinement = await until_disconnected(request, refine_text(text)) if form.get('refine') == 'true' else {}
         return {"text": text, **refinement, "segments": [], "language": next(iter(languages)) if len(languages) == 1 else '',
+                'input_language': language,
                 'status': 'transcribed' if text else 'no-speech',
                 "duration_s": len(samples) / rate, "transcription_time_s": time.monotonic() - started,
                 "engine": "Nimi", "mode": form.get("mode", "accurate")}

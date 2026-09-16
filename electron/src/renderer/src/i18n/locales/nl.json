@@ -211,7 +211,8 @@
     "h_ago": "{{count}}u geleden",
     "failed": "Transcriptie mislukt",
     "missing_model": "Er is geen spraak-naar-tekstmodel geïnstalleerd — deze functie heeft er een nodig om audio te transcriberen.",
-    "original_transcript": "Oorspronkelijk transcript"
+    "original_transcript": "Oorspronkelijk transcript",
+    "input_language": "Taal van bestand / opname"
   },
   "engineRuntime": {
     "ready": "Klaar",
@@ -1372,7 +1373,9 @@
     "probe_placeholder": "/Gebruikers/jij/Films/sample.mp4",
     "probe_failed": "Sonde mislukt: {{message}}",
     "parse_failed": "Parseren mislukt: {{message}}",
-    "fit_failed": "Passen mislukt: {{message}}"
+    "fit_failed": "Passen mislukt: {{message}}",
+    "duration_estimate": "Geschatte duur (s)",
+    "estimate_notice": "Geschat op basis van de tekstlengte. Genereer audio om de werkelijke duur te meten."
   },
   "projects": {
     "title": "Projecten",
@@ -2574,7 +2577,10 @@
     "configuration": "Nimi AI-configuratie",
     "configuration_description": "Kies de AI-bronnen voor stemmen, transcriptie en vertaling.",
     "provenance": "Geëxporteerde bestanden vermelden synthetische audio in de metadata. Er wordt geen neuraal watermerk toegepast.",
-    "referenceControls": "Referentiestemmen ondersteunen geen expressietags of stijlinstructies. Verwijder de tags vóór het genereren; de tekst blijft bewerkbaar."
+    "referenceControls": "Referentiestemmen ondersteunen geen expressietags of stijlinstructies. Verwijder de tags vóór het genereren; de tekst blijft bewerkbaar.",
+    "referenceUrl": "Openbare audio-URL",
+    "referenceUrlHint": "Importeer een openbare audio-URL om te beluisteren en stemmen te klonen. Importeren voert geen AI uit. Na bewerken of ruisonderdrukking wordt het gewijzigde bestand gebruikt in plaats van de URL. Lokale bestanden worden nooit gepubliceerd.",
+    "referencePreview": "Voorbeeldkopie downloaden"
   },
   "voiceSelector": {
     "engineDefault": "Standaard motor",
