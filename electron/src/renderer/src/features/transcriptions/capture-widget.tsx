@@ -4,6 +4,7 @@ import { CopyIcon, MicIcon, PauseIcon, PlayIcon, SquareIcon, XIcon } from 'lucid
 import { Button } from '@/components/ui/button';
 import { useBackendStatus } from '@/hooks/use-backend-status';
 import { LiveDictation } from './live-dictation';
+import { DictationErrorDetails } from './dictation-error-details';
 import { addTranscription } from '../../../../../../frontend/src/utils/transcriptionsStore';
 
 /** Native recorder stays separate from page navigation and the script editor. */
@@ -134,10 +135,8 @@ export function CaptureWidget() {
       ? t('common.error')
       : delivery === 'copied'
         ? t('transcriptions.copied')
-        : state.issue === 'model'
-          ? t('transcriptions.missing_model')
-          : state.stage === 'error'
-            ? t('transcriptions.capture_failed')
+        : state.stage === 'error'
+            ? t('transcriptions.failed')
             : state.modelStage === 'loading'
               ? t('capture.model_loading')
               : state.stage === 'transcribing'
@@ -174,6 +173,7 @@ export function CaptureWidget() {
       {state.inputLanguage && <p className="text-xs text-muted-foreground">
         {t('transcriptions.input_language')}: {state.inputLanguage === 'Auto' ? t('clone.auto') : state.inputLanguage}
       </p>}
+      {state.stage === 'error' && <DictationErrorDetails detail={state.errorDetail} />}
       <p className="min-h-0 flex-1 overflow-auto text-sm leading-relaxed text-muted-foreground">
         {state.text}
       </p>

@@ -216,7 +216,13 @@
     "original_transcript": "Trascrizione originale",
     "input_language": "Lingua in ingresso",
     "input_language_scope": "Condivisa da file, registrazioni e nuove dettature, anche tramite scorciatoia globale. Le sessioni attive mantengono la lingua iniziale.",
-    "refinement_data_flow": "Se attivo, il testo riconosciuto viene inviato al modello di testo scelto in Nimi tramite il percorso locale o cloud. Se disattivo, le nuove trascrizioni non vengono rifinite."
+    "refinement_data_flow": "Se attivo, il testo riconosciuto viene inviato al modello di testo scelto in Nimi tramite il percorso locale o cloud. Se disattivo, le nuove trascrizioni non vengono rifinite.",
+    "live_error_connection": "Connessione di dettatura non riuscita. Controlla la connessione e i log dell’App.",
+    "live_error_transcription": "Riconoscimento non riuscito senza ulteriori dettagli. Controlla la configurazione Nimi e i log dell’App.",
+    "live_error_model": "Il riconoscimento vocale Nimi non è pronto. Controlla App Access e la configurazione IA.",
+    "live_error_storage": "Impossibile salvare la trascrizione. Il testo attuale può ancora essere copiato.",
+    "live_error_backpressure": "La trasmissione audio non riusciva a tenere il passo. La dettatura è stata interrotta.",
+    "live_error_timeout": "Tempo scaduto in attesa del risultato finale dopo l’arresto. Il testo salvato viene conservato."
   },
   "engineRuntime": {
     "ready": "Pronto",

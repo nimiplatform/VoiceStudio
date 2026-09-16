@@ -15,6 +15,8 @@ import { apiJson } from '@/lib/api/client';
 import { backendWebSocketUrl } from '@/lib/api/websocket';
 import { beginAppActivity } from '@/lib/app-activity';
 import { getAecEnabled, getDictationInputLanguage } from '@/lib/store/dictation-settings';
+import { scrubText } from '../../../../../../frontend/src/utils/scrub';
+import { tr } from '@/lib/i18n-text';
 
 export interface DictationState {
   stage: 'idle' | 'starting' | 'recording' | 'transcribing' | 'done' | 'error';
@@ -23,12 +25,14 @@ export interface DictationState {
   issue?: 'model' | 'microphone' | 'connection' | 'transcription' | 'storage';
   paused: boolean;
   inputLanguage?: string;
+  errorDetail?: string;
 }
 interface Frame extends Partial<TranscriptEntry> {
   type: string;
   final_kind?: string;
   stage?: string;
   model_silent?: boolean;
+  message?: string;
 }
 
 /** One microphone/WS session; stale async completions cannot publish into a later one. */
@@ -82,6 +86,7 @@ export class LiveDictation {
       inputLanguage,
       text: '',
       issue: undefined,
+      errorDetail: undefined,
       modelStage: undefined,
       paused: false,
     });
@@ -115,12 +120,12 @@ export class LiveDictation {
         if (!current()) return;
         try {
           this.frame(JSON.parse(String(event.data)) as Frame);
-        } catch {
-          this.fail('transcription');
+        } catch (error) {
+          this.fail('transcription', error);
         }
       };
       await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('Connection timeout')), 10_000);
+        const timer = setTimeout(() => reject(new Error(tr('transcriptions.live_error_connection') + ' [timeout: 10000ms]')), 10_000);
         const finish = (error?: Error) => {
           clearTimeout(timer);
           request.signal.removeEventListener('abort', aborted);
@@ -130,23 +135,28 @@ export class LiveDictation {
         const aborted = () => finish(new Error('Cancelled'));
         request.signal.addEventListener('abort', aborted, { once: true });
         socket.onopen = () => finish();
-        socket.onerror = () => finish(new Error('Connection failed'));
-        socket.onclose = () => finish(new Error('Connection closed'));
+        socket.onerror = () => finish(new Error(tr('transcriptions.live_error_connection')));
+        socket.onclose = (event) => finish(new Error(event?.reason || (event?.code ? `WebSocket close ${event.code}` : tr('transcriptions.live_error_connection'))));
       });
       if (!current()) return;
       socket.onerror = () => {
         if (current()) this.fail('connection');
       };
-      socket.onclose = () => {
-        if (current() && this.state.stage !== 'done') this.fail('connection');
+      socket.onclose = (event) => {
+        if (current() && this.state.stage !== 'done')
+          this.fail('connection', event?.reason || (event?.code ? `WebSocket close ${event.code}` : undefined));
       };
       issue = 'microphone';
       const stop = await startMicCapture(
         stream,
         (frame) => {
           if (!current() || this.state.paused || this.state.stage !== 'recording') return;
-          if (socket.readyState !== WebSocket.OPEN || socket.bufferedAmount > 1024 * 1024) {
+          if (socket.readyState !== WebSocket.OPEN) {
             this.fail('connection');
+            return;
+          }
+          if (socket.bufferedAmount > 1024 * 1024) {
+            this.fail('connection', tr('transcriptions.live_error_backpressure'));
             return;
           }
           const pcm = floatToInt16(frame);
@@ -168,8 +178,8 @@ export class LiveDictation {
       }
       this.startedAt = Date.now();
       this.publish({ stage: 'recording' });
-    } catch {
-      if (current()) this.fail(issue);
+    } catch (error) {
+      if (current()) this.fail(issue, error);
     }
   }
 
@@ -194,7 +204,7 @@ export class LiveDictation {
     }
     this.socket.send('EOF');
     this.deadline = setTimeout(
-      () => this.fail('transcription'),
+      () => this.fail('transcription', tr('transcriptions.live_error_timeout')),
       Math.min(120_000, Math.max(15_000, Date.now() - this.startedAt + 10_000)),
     );
   }
@@ -208,6 +218,7 @@ export class LiveDictation {
       paused: false,
       modelStage: undefined,
       issue: undefined,
+      errorDetail: undefined,
     });
   }
   private frame(message: Frame): void {
@@ -218,7 +229,7 @@ export class LiveDictation {
       return;
     }
     if (message.type === 'error' || (message.model_silent && !message.text?.trim())) {
-      this.fail('transcription');
+      this.fail('transcription', message.message || (message.model_silent ? tr('capture.no_speech') : undefined));
       return;
     }
     if (message.type === 'partial') {
@@ -237,8 +248,8 @@ export class LiveDictation {
       this.publish({ text: this.committed.join(' ') });
       try {
         this.onResult(message);
-      } catch {
-        this.fail('storage');
+      } catch (error) {
+        this.fail('storage', error);
       }
       return;
     }
@@ -252,20 +263,31 @@ export class LiveDictation {
             ? { ...message, text: tail, refined_text: undefined, segments: [] }
             : message,
         );
-    } catch {
-      this.fail('storage');
+    } catch (error) {
+      this.fail('storage', error);
       return;
     }
     this.generation++;
     this.release();
     this.publish({ stage: 'done', modelStage: undefined, paused: false });
   }
-  private fail(issue: DictationState['issue']): void {
+  private fail(issue: NonNullable<DictationState['issue']>, cause?: unknown): void {
+    const error = cause && typeof cause === 'object' ? cause as { name?: unknown; message?: unknown } : null;
+    const raw = typeof cause === 'string' ? cause : typeof error?.message === 'string'
+      ? `${typeof error.name === 'string' && error.name !== 'Error' ? error.name + ': ' : ''}${error.message}` : '';
+    const detail = scrubText(raw).replace(/\s+/g, ' ').trim().slice(0, 2000)
+      || (issue === 'microphone' ? tr('recording.mic_error', { message: tr('common.error') })
+        : tr('transcriptions.live_error_' + issue));
+    // Class/Job identity are useful in the existing log ring; never log PCM,
+    // recognized text, a raw exception stack or the worker's socket URL.
+    const job = detail.match(/speech-transcribe job ([A-Za-z0-9_-]{1,64}):/)?.[1];
+    console.warn(`[VoiceStudio dictation] ${issue}${job ? ' job=' + job : ''}`);
     this.generation++;
     this.release();
     this.publish({
       stage: 'error',
       issue,
+      errorDetail: detail,
       modelStage: undefined,
       paused: false,
     });

@@ -214,7 +214,13 @@
     "original_transcript": "원본 대본",
     "input_language": "입력 언어",
     "input_language_scope": "파일, 녹음 및 전역 단축키를 포함한 새 받아쓰기 세션에 공통으로 적용됩니다. 진행 중인 세션은 시작 시 언어를 유지합니다.",
-    "refinement_data_flow": "켜면 인식된 텍스트를 Nimi에서 선택한 텍스트 모델로 설정된 로컬 또는 클라우드 경로를 통해 보냅니다. 끄면 새 전사 내용을 다듬지 않습니다."
+    "refinement_data_flow": "켜면 인식된 텍스트를 Nimi에서 선택한 텍스트 모델로 설정된 로컬 또는 클라우드 경로를 통해 보냅니다. 끄면 새 전사 내용을 다듬지 않습니다.",
+    "live_error_connection": "받아쓰기 연결에 실패했습니다. App 연결과 로그를 확인하세요.",
+    "live_error_transcription": "추가 설명 없이 인식에 실패했습니다. Nimi 설정과 App 로그를 확인하세요.",
+    "live_error_model": "Nimi 음성 인식이 준비되지 않았습니다. App Access와 AI 설정을 확인하세요.",
+    "live_error_storage": "전사 내용을 저장하지 못했습니다. 현재 텍스트는 복사할 수 있습니다.",
+    "live_error_backpressure": "오디오 전송이 속도를 따라가지 못해 받아쓰기를 중지했습니다.",
+    "live_error_timeout": "중지 후 최종 결과 대기 시간이 초과되었습니다. 저장된 텍스트는 유지됩니다."
   },
   "engineRuntime": {
     "ready": "준비",

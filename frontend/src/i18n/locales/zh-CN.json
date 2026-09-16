@@ -1809,7 +1809,13 @@
     "h_ago": "{{count}} 小时前",
     "input_language": "输入语种",
     "input_language_scope": "文件、录音和新听写会话（含全局快捷键）共用此设置。进行中的会话保持开始时的语种。",
-    "refinement_data_flow": "开启后，识别文本会发送给 Nimi 中选定的文本模型，按其本地或云端路由处理。关闭后，新转录不再润色。"
+    "refinement_data_flow": "开启后，识别文本会发送给 Nimi 中选定的文本模型，按其本地或云端路由处理。关闭后，新转录不再润色。",
+    "live_error_connection": "听写连接失败。请检查 App 连接及日志。",
+    "live_error_transcription": "识别失败，未提供更多详情。请检查 Nimi 配置及 App 日志。",
+    "live_error_model": "Nimi 语音识别尚未就绪。请检查 App Access 和 AI 配置。",
+    "live_error_storage": "无法保存转录，当前文本仍可复制。",
+    "live_error_backpressure": "音频传输无法跟上，听写已停止。",
+    "live_error_timeout": "停止后等待最终结果超时。已保存的文本会保留。"
   },
   "setup": {
     "welcome": "欢迎",

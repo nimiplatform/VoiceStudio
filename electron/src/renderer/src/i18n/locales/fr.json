@@ -216,7 +216,13 @@
     "original_transcript": "Transcription originale",
     "input_language": "Langue d’entrée",
     "input_language_scope": "Commune aux fichiers, enregistrements et nouvelles dictées, y compris via le raccourci global. Les sessions actives gardent leur langue initiale.",
-    "refinement_data_flow": "Si activé, le texte reconnu est envoyé au modèle de texte choisi dans Nimi, via sa route locale ou cloud. Désactivé, les nouvelles transcriptions ne sont pas retouchées."
+    "refinement_data_flow": "Si activé, le texte reconnu est envoyé au modèle de texte choisi dans Nimi, via sa route locale ou cloud. Désactivé, les nouvelles transcriptions ne sont pas retouchées.",
+    "live_error_connection": "La connexion de dictée a échoué. Vérifiez la connexion et les journaux de l’App.",
+    "live_error_transcription": "La reconnaissance a échoué sans autre détail. Vérifiez la configuration Nimi et les journaux de l’App.",
+    "live_error_model": "La reconnaissance vocale Nimi n’est pas prête. Vérifiez App Access et la configuration IA.",
+    "live_error_storage": "La transcription n’a pas pu être enregistrée. Le texte actuel peut toujours être copié.",
+    "live_error_backpressure": "La transmission audio ne suivait plus. La dictée a été arrêtée.",
+    "live_error_timeout": "Le délai d’attente du résultat final après l’arrêt a expiré. Le texte enregistré est conservé."
   },
   "engineRuntime": {
     "ready": "Prêt",

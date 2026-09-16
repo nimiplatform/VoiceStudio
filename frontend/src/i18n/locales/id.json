@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}}jam yang lalu",
     "input_language": "Bahasa masukan",
     "input_language_scope": "Digunakan bersama oleh file, rekaman, dan sesi dikte baru, termasuk pintasan global. Sesi aktif tetap memakai bahasa awalnya.",
-    "refinement_data_flow": "Saat aktif, teks yang dikenali dikirim ke model teks pilihan di Nimi melalui rute lokal atau cloud. Saat nonaktif, transkrip baru tidak diperhalus."
+    "refinement_data_flow": "Saat aktif, teks yang dikenali dikirim ke model teks pilihan di Nimi melalui rute lokal atau cloud. Saat nonaktif, transkrip baru tidak diperhalus.",
+    "live_error_connection": "Koneksi dikte gagal. Periksa koneksi dan log App.",
+    "live_error_transcription": "Pengenalan gagal tanpa rincian lebih lanjut. Periksa konfigurasi Nimi dan log App.",
+    "live_error_model": "Pengenalan suara Nimi belum siap. Periksa App Access dan konfigurasi AI.",
+    "live_error_storage": "Transkrip tidak dapat disimpan. Teks saat ini masih dapat disalin.",
+    "live_error_backpressure": "Transmisi audio tidak dapat mengimbangi. Dikte dihentikan.",
+    "live_error_timeout": "Waktu tunggu hasil akhir setelah berhenti habis. Teks yang sudah disimpan tetap tersedia."
   },
   "setup": {
     "welcome": "Selamat datang",

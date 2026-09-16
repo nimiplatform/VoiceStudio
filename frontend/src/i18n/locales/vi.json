@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}}giờ trước",
     "input_language": "Ngôn ngữ đầu vào",
     "input_language_scope": "Dùng chung cho tệp, bản ghi và phiên nhập giọng nói mới, kể cả phím tắt toàn cục. Phiên đang chạy giữ ngôn ngữ lúc bắt đầu.",
-    "refinement_data_flow": "Khi bật, văn bản được nhận dạng sẽ được gửi tới mô hình văn bản đã chọn trong Nimi qua tuyến cục bộ hoặc đám mây. Khi tắt, bản chép lời mới không được trau chuốt."
+    "refinement_data_flow": "Khi bật, văn bản được nhận dạng sẽ được gửi tới mô hình văn bản đã chọn trong Nimi qua tuyến cục bộ hoặc đám mây. Khi tắt, bản chép lời mới không được trau chuốt.",
+    "live_error_connection": "Kết nối nhập giọng nói thất bại. Kiểm tra kết nối và nhật ký App.",
+    "live_error_transcription": "Nhận dạng thất bại mà không có thêm chi tiết. Kiểm tra cấu hình Nimi và nhật ký App.",
+    "live_error_model": "Nhận dạng giọng nói Nimi chưa sẵn sàng. Kiểm tra App Access và cấu hình AI.",
+    "live_error_storage": "Không thể lưu bản chép lời. Vẫn có thể sao chép văn bản hiện tại.",
+    "live_error_backpressure": "Truyền âm thanh không theo kịp. Đã dừng nhập giọng nói.",
+    "live_error_timeout": "Hết thời gian chờ kết quả cuối sau khi dừng. Văn bản đã lưu vẫn được giữ."
   },
   "setup": {
     "welcome": "Chào mừng",

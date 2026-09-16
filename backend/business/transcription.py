@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import io
+import logging
 import os
 from pathlib import Path
 import tempfile
@@ -15,6 +16,7 @@ from business.audio import transcribe_file
 from services.aec import NlmsEchoCanceller
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def normalize_input_language(value):
@@ -144,11 +146,12 @@ async def live(ws: WebSocket):
     committed = []
     total_samples = 0
     quiet_samples = 0
+    speech_seen = False
     epoch = 0
     canceller = NlmsEchoCanceller(sample_rate=16000) if ws.query_params.get("aec") == "1" else None
 
     async def receive():
-        nonlocal total_samples, quiet_samples
+        nonlocal total_samples, quiet_samples, speech_seen
         while True:
             message = await ws.receive()
             if message["type"] == "websocket.disconnect":
@@ -172,25 +175,34 @@ async def live(ws: WebSocket):
                 total_samples += len(samples)
                 rms = float(np.sqrt(np.mean(samples * samples))) if len(samples) else 0
                 quiet_samples = quiet_samples + len(samples) if rms < 0.01 else 0
+                if rms >= 0.01:
+                    speech_seen = True
                 buffer.extend(data)
+                if not speech_seen:
+                    # Retain 200 ms before activity, but never submit a quiet
+                    # waiting period as speech or grow it into a queued job.
+                    del buffer[:-6400]
                 # Bounded audio queue; never silently drop frames under backpressure.
                 if len(buffer) > 16000 * 2 * 120:
                     raise ValueError("Transcription cannot keep up with this recording")
                 changed.set()
 
     async def recognize():
-        nonlocal quiet_samples, epoch
+        nonlocal quiet_samples, epoch, speech_seen
         last_partial_size = 0
         last_partial = 0.0
         while True:
             await changed.wait()
             changed.clear()
+            if ended.is_set() and not speech_seen:
+                buffer.clear()
             seconds = len(buffer) / 32000
-            commit = ended.is_set() or (quiet_samples >= 9600 and seconds >= 0.3) or seconds >= 15
+            commit = speech_seen and (ended.is_set() or (quiet_samples >= 9600 and seconds >= 0.3) or seconds >= 15)
             if commit and buffer:
                 pcm = bytes(buffer)
                 buffer.clear()
                 quiet_samples = 0
+                speech_seen = False
                 epoch += 1
                 last_partial_size = 0
                 started = time.monotonic()
@@ -202,7 +214,7 @@ async def live(ws: WebSocket):
                         **refinement,
                         "segments": [], "language": result["language"], "input_language": language, "engine": "Nimi",
                         "duration_s": len(pcm) / 32000, "transcription_time_s": time.monotonic() - started})
-            elif seconds >= 1 and len(buffer) != last_partial_size and time.monotonic() - last_partial >= 2:
+            elif speech_seen and seconds >= 1 and len(buffer) != last_partial_size and time.monotonic() - last_partial >= 2:
                 snapshot = bytes(buffer)
                 last_partial_size = len(snapshot)
                 partial_epoch = epoch
@@ -226,7 +238,10 @@ async def live(ws: WebSocket):
     except WebSocketDisconnect:
         pass
     except Exception as error:
-        await ws.send_json({"type": "error", "message": str(error)})
+        # Keep content out of logs; the protected client receives the actual
+        # failure (including a Runtime Job ID when provided by the carrier).
+        logger.warning('Live dictation failed (%s)', type(error).__name__)
+        await ws.send_json({"type": "error", "message": str(error).strip() or type(error).__name__})
     finally:
         receiver.cancel()
         recognizer.cancel()

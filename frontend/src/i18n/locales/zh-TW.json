@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}} 小時前",
     "input_language": "輸入語言",
     "input_language_scope": "檔案、錄音和新聽寫工作階段（含全域快捷鍵）共用此設定。進行中的工作階段保留開始時的語言。",
-    "refinement_data_flow": "啟用後，識別文字會傳送給 Nimi 中選定的文字模型，依其本機或雲端路由處理。關閉後，新轉錄不再潤飾。"
+    "refinement_data_flow": "啟用後，識別文字會傳送給 Nimi 中選定的文字模型，依其本機或雲端路由處理。關閉後，新轉錄不再潤飾。",
+    "live_error_connection": "聽寫連線失敗。請檢查 App 連線及日誌。",
+    "live_error_transcription": "識別失敗，未提供更多詳情。請檢查 Nimi 設定及 App 日誌。",
+    "live_error_model": "Nimi 語音識別尚未就緒。請檢查 App Access 和 AI 設定。",
+    "live_error_storage": "無法儲存轉錄，目前文字仍可複製。",
+    "live_error_backpressure": "音訊傳輸無法跟上，聽寫已停止。",
+    "live_error_timeout": "停止後等待最終結果逾時。已儲存的文字會保留。"
   },
   "setup": {
     "welcome": "歡迎",

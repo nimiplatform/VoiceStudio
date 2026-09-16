@@ -235,3 +235,21 @@ it('deduplicates raw EOF against raw utterances while preserving the refined dis
   expect(result).toHaveBeenCalledTimes(1);
   expect(live.getSnapshot()).toMatchObject({ stage: 'done', text: 'Meet Pat at three.' });
 });
+
+it('retains a backend Job failure and does not replace it with a later socket close', async () => {
+  await live.start(vi.fn());
+  const socket = Socket.instances[0];
+  const closed = socket.onclose!;
+  socket.frame({ type: 'error', message: 'speech-transcribe job 01M2MS32QDMK76GY125Z7GVTYG: ai-output-invalid: provider returned invalid output' });
+  closed();
+  expect(live.getSnapshot()).toMatchObject({ stage: 'error', issue: 'transcription',
+    errorDetail: expect.stringContaining('01M2MS32QDMK76GY125Z7GVTYG: ai-output-invalid') });
+});
+
+it('keeps microphone failure details and redacts credentials rather than blaming a model', async () => {
+  microphone.mockRejectedValueOnce(new DOMException('Device failed; worker_token=private-value', 'NotReadableError'));
+  await live.start(vi.fn());
+  expect(live.getSnapshot()).toMatchObject({ issue: 'microphone',
+    errorDetail: expect.stringContaining('NotReadableError') });
+  expect(JSON.stringify(live.getSnapshot())).not.toContain('private-value');
+});

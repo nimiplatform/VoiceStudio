@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}}sa önce",
     "input_language": "Giriş dili",
     "input_language_scope": "Dosyalar, kayıtlar ve genel kısayol dahil yeni dikte oturumlarında ortaktır. Etkin oturumlar başlangıç dilini korur.",
-    "refinement_data_flow": "Açıkken tanınan metin, Nimi’de seçilen metin modeline yerel veya bulut yolu üzerinden gönderilir. Kapatıldığında yeni transkriptler düzenlenmez."
+    "refinement_data_flow": "Açıkken tanınan metin, Nimi’de seçilen metin modeline yerel veya bulut yolu üzerinden gönderilir. Kapatıldığında yeni transkriptler düzenlenmez.",
+    "live_error_connection": "Dikte bağlantısı başarısız oldu. App bağlantısını ve günlüklerini kontrol edin.",
+    "live_error_transcription": "Tanıma ek ayrıntı olmadan başarısız oldu. Nimi yapılandırmasını ve App günlüklerini kontrol edin.",
+    "live_error_model": "Nimi konuşma tanıma hazır değil. App Access ve AI yapılandırmasını kontrol edin.",
+    "live_error_storage": "Transkript kaydedilemedi. Mevcut metin hâlâ kopyalanabilir.",
+    "live_error_backpressure": "Ses aktarımı yetişemedi. Dikte durduruldu.",
+    "live_error_timeout": "Durdurma sonrası son sonucu bekleme süresi doldu. Kaydedilmiş metin korundu."
   },
   "setup": {
     "welcome": "Hoş geldiniz",

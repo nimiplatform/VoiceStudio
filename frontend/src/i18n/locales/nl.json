@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}}u geleden",
     "input_language": "Invoertaal",
     "input_language_scope": "Gedeeld door bestanden, opnamen en nieuwe dicteersessies, ook via de globale sneltoets. Actieve sessies behouden hun oorspronkelijke taal.",
-    "refinement_data_flow": "Indien ingeschakeld wordt herkende tekst naar het gekozen tekstmodel in Nimi gestuurd via de lokale of cloudroute. Uitgeschakeld worden nieuwe transcripties niet bijgewerkt."
+    "refinement_data_flow": "Indien ingeschakeld wordt herkende tekst naar het gekozen tekstmodel in Nimi gestuurd via de lokale of cloudroute. Uitgeschakeld worden nieuwe transcripties niet bijgewerkt.",
+    "live_error_connection": "De dicteerverbinding is mislukt. Controleer de App-verbinding en logboeken.",
+    "live_error_transcription": "Herkenning is mislukt zonder verdere details. Controleer Nimi-instellingen en App-logboeken.",
+    "live_error_model": "Nimi-spraakherkenning is niet gereed. Controleer App Access en de AI-configuratie.",
+    "live_error_storage": "Het transcript kon niet worden opgeslagen. De huidige tekst kan nog worden gekopieerd.",
+    "live_error_backpressure": "De audio-overdracht kon niet volgen. Het dicteren is gestopt.",
+    "live_error_timeout": "De wachttijd voor het eindresultaat na stoppen is verstreken. Opgeslagen tekst blijft behouden."
   },
   "setup": {
     "welcome": "Welkom",

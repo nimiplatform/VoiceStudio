@@ -4,6 +4,7 @@ import { LANGUAGES } from '@/lib/languages';
 import { useDictationInputLanguage, setDictationInputLanguage } from '@/lib/store/dictation-settings';
 import { WorkspaceHeader } from '@/components/app-shell/workspace-header';
 import { LiveDictation } from './live-dictation';
+import { DictationErrorDetails } from './dictation-error-details';
 import { DictationSetup } from './dictation-setup';
 import {
   segTimeRange,
@@ -471,16 +472,12 @@ export function TranscriptionsPage() {
             <div className="space-y-2 border-b border-border/50 px-6 py-4">
               <div
                 className="flex items-center gap-3 text-sm"
-                role={liveState.stage === 'error' ? 'alert' : 'status'}
+                role={liveState.stage === 'error' ? undefined : 'status'}
               >
                 <KeyboardIcon className="size-4 text-primary" />
                 <span>
                   {liveState.stage === 'error'
-                    ? t(
-                        liveState.issue === 'model'
-                          ? 'transcriptions.missing_model'
-                          : 'transcriptions.failed',
-                      )
+                    ? t('transcriptions.failed')
                     : liveState.stage === 'done'
                       ? t('capture.no_speech')
                       : liveState.modelStage
@@ -501,7 +498,7 @@ export function TranscriptionsPage() {
                 </span>
                 {liveState.issue === 'model' && (
                   <>
-                    <AgentFixButton request="Restore live dictation readiness. Install and activate the best compatible dictation model through VoiceStudio, preserve this transcription workspace, and verify recording can start." />
+                    <AgentFixButton request="Restore Nimi speech recognition readiness for this App. Check App Access and the committed AI configuration; preserve user data and the selected Local or Cloud route." />
                     <Link
                       to="/settings/models/$family"
                       params={{ family: 'dictation' }}
@@ -537,6 +534,7 @@ export function TranscriptionsPage() {
                   </Button>
                 )}
               </div>
+              {liveState.stage === 'error' && <DictationErrorDetails detail={liveState.errorDetail} />}
               {liveState.text && (
                 <p
                   className="max-w-4xl select-text text-sm leading-relaxed whitespace-pre-wrap"

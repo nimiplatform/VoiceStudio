@@ -1,6 +1,6 @@
 app_id: nimiplatform.voicestudio
 display_name: VoiceStudio
-version: 0.5.7
+version: 0.5.8
 profile: standalone
 npm_package_name: omnivoice-studio-monorepo
 cargo_package_name: omnivoice-studio-monorepo-shell

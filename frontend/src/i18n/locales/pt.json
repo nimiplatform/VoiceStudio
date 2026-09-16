@@ -1554,7 +1554,13 @@
     "h_ago": "{{count}}h atrás",
     "input_language": "Idioma de entrada",
     "input_language_scope": "Compartilhado por arquivos, gravações e novos ditados, inclusive pelo atalho global. Sessões ativas mantêm o idioma inicial.",
-    "refinement_data_flow": "Quando ativado, o texto reconhecido é enviado ao modelo de texto escolhido no Nimi pela rota local ou na nuvem. Quando desativado, novas transcrições não são refinadas."
+    "refinement_data_flow": "Quando ativado, o texto reconhecido é enviado ao modelo de texto escolhido no Nimi pela rota local ou na nuvem. Quando desativado, novas transcrições não são refinadas.",
+    "live_error_connection": "A conexão de ditado falhou. Verifique a conexão e os logs da App.",
+    "live_error_transcription": "O reconhecimento falhou sem mais detalhes. Verifique a configuração do Nimi e os logs da App.",
+    "live_error_model": "O reconhecimento de fala do Nimi não está pronto. Verifique App Access e a configuração de IA.",
+    "live_error_storage": "Não foi possível salvar a transcrição. O texto atual ainda pode ser copiado.",
+    "live_error_backpressure": "A transmissão de áudio não conseguiu acompanhar. O ditado foi interrompido.",
+    "live_error_timeout": "O tempo de espera pelo resultado final após parar expirou. O texto salvo foi mantido."
   },
   "setup": {
     "welcome": "Bem vindo",

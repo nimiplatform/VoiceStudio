@@ -200,6 +200,57 @@ def test_cleanup_disabled_does_not_send_recognized_text_to_any_model(monkeypatch
     assert asyncio.run(transcription.refine_text('Raw recognition must remain unchanged.')) == {}
 
 
+def test_live_silence_never_submits_asr_and_keeps_capture_duration(monkeypatch):
+    from fastapi.testclient import TestClient
+    import nimi_main
+    from business import transcription
+    calls = []
+    async def unexpected(operation, payload):
+        calls.append(payload)
+        raise RuntimeError('Silence must not reach the recognizer')
+    monkeypatch.setattr(transcription, 'call', unexpected)
+    monkeypatch.setenv('VOICESTUDIO_WORKER_SECRET', 'silence-test')
+    monkeypatch.setattr(nimi_main, '_secret', 'silence-test')
+    with TestClient(nimi_main.app) as client:
+        with client.websocket_connect('/ws/transcribe?worker_token=silence-test&language=English') as ws:
+            ws.send_bytes(np.zeros(32000, dtype='<i2').tobytes())
+            ws.send_text('EOF')
+            result = ws.receive_json()
+            assert result['type'] == 'final', result
+            assert result['final_kind'] == 'summary'
+            assert result['text'] == '' and result['duration_s'] == 2
+            assert calls == []
+
+
+def test_live_keeps_short_preroll_and_all_speech_after_idle(monkeypatch):
+    import base64
+    from fastapi.testclient import TestClient
+    import nimi_main
+    from business import transcription
+    received = []
+    async def recognize(operation, payload):
+        samples, rate = sf.read(io.BytesIO(base64.b64decode(payload['base64'])), dtype='int16')
+        received.append((samples, rate))
+        return {'text': 'Speech contract fixture.', 'language': ''}
+    async def no_refinement(text): return {}
+    monkeypatch.setattr(transcription, 'call', recognize)
+    monkeypatch.setattr(transcription, 'refine_text', no_refinement)
+    monkeypatch.setenv('VOICESTUDIO_WORKER_SECRET', 'preroll-test')
+    monkeypatch.setattr(nimi_main, '_secret', 'preroll-test')
+    with TestClient(nimi_main.app) as client:
+        with client.websocket_connect('/ws/transcribe?worker_token=preroll-test') as ws:
+            ws.send_bytes(np.zeros(32000, dtype='<i2').tobytes())
+            ws.send_bytes(np.full(3200, 4000, dtype='<i2').tobytes())
+            ws.send_text('EOF')
+            while (result := ws.receive_json()).get('final_kind') != 'summary':
+                assert result['type'] != 'error', result
+            assert result['duration_s'] == 2.2
+    assert len(received) == 1
+    samples, rate = received[0]
+    assert rate == 16000 and len(samples) == 6400
+    assert np.all(samples[:3200] == 0) and np.all(samples[3200:] == 4000)
+
+
 def test_provenance_preserves_stereo_samples_and_real_timing():
     samples = np.column_stack([np.linspace(-0.6, 0.6, 1001), np.linspace(0.4, -0.4, 1001)])
     output = io.BytesIO()

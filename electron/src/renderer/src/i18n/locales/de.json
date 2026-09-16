@@ -214,7 +214,13 @@
     "original_transcript": "Originaltranskript",
     "input_language": "Eingabesprache",
     "input_language_scope": "Gilt für Dateien, Aufnahmen und neue Diktate, auch per globalem Tastenkürzel. Laufende Sitzungen behalten ihre Startsprache.",
-    "refinement_data_flow": "Wenn aktiviert, wird erkannter Text an das in Nimi gewählte Textmodell über dessen lokalen oder Cloud-Pfad gesendet. Ausgeschaltet bleiben neue Transkripte unbearbeitet."
+    "refinement_data_flow": "Wenn aktiviert, wird erkannter Text an das in Nimi gewählte Textmodell über dessen lokalen oder Cloud-Pfad gesendet. Ausgeschaltet bleiben neue Transkripte unbearbeitet.",
+    "live_error_connection": "Die Diktatverbindung ist fehlgeschlagen. Prüfen Sie App-Verbindung und Protokolle.",
+    "live_error_transcription": "Die Erkennung ist ohne weitere Details fehlgeschlagen. Prüfen Sie Nimi-Konfiguration und App-Protokolle.",
+    "live_error_model": "Die Nimi-Spracherkennung ist nicht bereit. Prüfen Sie App Access und KI-Konfiguration.",
+    "live_error_storage": "Das Transkript konnte nicht gespeichert werden. Der aktuelle Text kann weiterhin kopiert werden.",
+    "live_error_backpressure": "Die Audioübertragung konnte nicht mithalten. Das Diktat wurde gestoppt.",
+    "live_error_timeout": "Zeitüberschreitung beim Warten auf das Endergebnis nach Stopp. Gespeicherter Text bleibt erhalten."
   },
   "engineRuntime": {
     "ready": "Bereit",

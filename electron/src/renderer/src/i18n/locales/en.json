@@ -522,7 +522,13 @@
     "original_transcript": "Original transcript",
     "input_language": "Input language",
     "input_language_scope": "Shared by files, recordings and new dictation sessions, including the global shortcut. Active sessions keep their starting language.",
-    "refinement_data_flow": "When enabled, recognized text is sent to the text model selected in Nimi, using its Local or Cloud route. Turning this off leaves new transcripts unrefined."
+    "refinement_data_flow": "When enabled, recognized text is sent to the text model selected in Nimi, using its Local or Cloud route. Turning this off leaves new transcripts unrefined.",
+    "live_error_connection": "The dictation connection failed. Check the App connection and logs.",
+    "live_error_transcription": "Recognition failed without further details. Check Nimi configuration and App logs.",
+    "live_error_model": "Nimi speech recognition is not ready. Check App Access and AI configuration.",
+    "live_error_storage": "The transcript could not be saved. The current text is still available to copy.",
+    "live_error_backpressure": "Audio transmission could not keep up. Dictation was stopped.",
+    "live_error_timeout": "Timed out waiting for the final result after Stop. Already saved text is retained."
   },
   "engineRuntime": {
     "ready": "Ready",
