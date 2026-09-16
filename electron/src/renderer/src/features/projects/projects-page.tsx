@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiJson, apiPath, describeError } from '@/lib/api/client';
+import { saveExport } from '@/lib/export-history';
 import { runRendererTask } from '@/lib/global-error-recovery';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useHistory } from '@/hooks/use-history';
@@ -701,10 +702,24 @@ export function ProjectsPage() {
                         </Button>
                       )}
                       {row.render && (
-                        <AudioPreviewButton
-                          src={apiPath('/audio/' + encodeURIComponent(row.render.output))}
-                          source={'projects-render-' + row.render.job_id}
-                        />
+                        <>
+                          <AudioPreviewButton
+                            src={apiPath('/audio/' + encodeURIComponent(row.render.output))}
+                            source={'projects-render-' + row.render.job_id}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={locked}
+                            onClick={() => void act(async () => {
+                              const output = row.render!.output;
+                              await saveExport(apiPath('/audio/' + encodeURIComponent(output)), output.split('/').pop() || output);
+                            })}
+                          >
+                            <DownloadIcon />
+                            {t('audiobook.download')}
+                          </Button>
+                        </>
                       )}
                       {row.projectKind && (
                         <>
