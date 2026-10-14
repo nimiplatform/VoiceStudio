@@ -27,7 +27,7 @@ The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it c
 [0.5.9](https://github.com/nimiplatform/VoiceStudio/releases/tag/v0.5.9) has now
 completed its protected tag publication. Exact package, source license, digest
 and build provenance passed Registry preparation. [PR 106](https://github.com/nimiplatform/nimi-app-registry/pull/106)
-passes candidate checks and awaits human admission. Published-package business
+completed final checks and merged after explicit human approval for Windows x86_64 / stable, accepting the recorded limits. Published-package business
 and Catalog acceptance remain pending; the earlier development results below
 are not relabeled as installed-package results.
 
