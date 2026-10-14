@@ -45,6 +45,13 @@ to bypass it. Published-package launch, cloud speech and Catalog acceptance rema
 NOT-VERIFIED pending a supported installation path. The prior development
 acceptance below remains applicable only within its recorded scope.
 
+The proposed next path is ordinary Catalog first installation after explicit
+human admission. Runtime's Catalog installer checks the `verified` release
+source separately from `user_imported`; the observed stale imported record
+therefore does not establish a Catalog collision. This is a code-supported
+installation plan, not a claim that Catalog installation or cloud speech has
+already passed. Keep the old record and App-owned assets intact.
+
 The Windows x86_64 release line uses published SDK 0.21.0,
 Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
 563 business tests with an empty offline Hugging Face cache, the installed-scheme
