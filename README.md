@@ -24,13 +24,16 @@ The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it c
 
 ### Windows release preparation (2026-10-14)
 
-The Windows x86_64 candidate remains version 0.5.8 and uses published SDK 0.21.0,
+The Windows x86_64 release line uses published SDK 0.21.0,
 Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
 563 business tests with an empty offline Hugging Face cache, the installed-scheme
 proxy regression and 30 native bridge tests pass. Windows build and production
 pack pass. Setup now prepares its pinned uv and Python worker dependencies in
 project-local directories before tests/builds, including on a clean CI runner.
 Installed-App business acceptance and public downloading are still pending.
+Version 0.5.8's protected tag workflow published successfully, but its portable
+release-notes field was empty. Version 0.5.9 adds that required declaration;
+the immutable 0.5.8 Release is retained and business behavior is unchanged.
 
 The publisher declaration covers general-audience voice creation, realistic
 voice replication, optional usage analytics and local export of text/audio/video.

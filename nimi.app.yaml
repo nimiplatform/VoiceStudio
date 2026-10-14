@@ -1,6 +1,6 @@
 app_id: nimiplatform.voicestudio
 display_name: VoiceStudio
-version: 0.5.8
+version: 0.5.9
 profile: standalone
 manifest_role: submitted-input
 app_access:
@@ -22,6 +22,7 @@ metadata:
   summary: Create voices, dub video, transcribe speech and produce audiobooks with Nimi.
   icon: frontend/src-tauri/icons/128x128.png
   readme: README.md
+  release_notes: NIMI_RELEASE_NOTES.md
   author: VoiceStudio contributors
 local_development:
   electron:

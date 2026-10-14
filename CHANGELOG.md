@@ -6,6 +6,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/).
 `frontend/package.json` is the app-version source of truth; Cargo, Python, and
 the frozen-backend fallback mirror it for their toolchains.
 
+## [0.5.9] — 2026-10-14
+
+**Highlights**
+
+- Include portable release notes in the Nimi package so Registry admission can validate the release information.
+
 ## [0.5.8] — 2026-10-14
 
 **Highlights**
