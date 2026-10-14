@@ -4,6 +4,31 @@ VoiceStudio 0.5.9 adapts the existing [VoiceStudio](https://github.com/debpalash
 
 Nimi supplies the platform account, App Access, AI configuration and all model inference. VoiceStudio keeps its business orchestration, audio editing, media processing, voice library and project state. There is no separate VoiceStudio account. Choose models in **Settings → Nimi**; no automatic cloud fallback or App-managed model installation is used.
 
+## Dashscope transcription repair (2026-10-15, development)
+
+The original `catalog-0.5.9-cloud.wav` reproduced the finite ASR failure through
+VoiceStudio 0.5.9's supervised development renderer. The provider finalized an
+empty 0–710 ms segment, then returned the complete sentence with word timings
+and `task-finished`. Runtime had rejected that first segment and discarded the
+later speech. The repair consumes bounded empty segments without inventing text
+or `no_speech`; contradictory results, missing completion and an empty total
+transcript still fail. The original 24 kHz WAV needs no resampling.
+
+Job `01M4XSS9AB5QXJV63F8X34Q76M` now completes with “A quiet morning brings a
+new story, and every voice deserves to be heard.” and 14 actual word timings
+(1.64–6.88 s). The App displays and retains the transcript. Runtime adapter
+regressions fail before the repair and pass after it; the full `nimillm` package
+tests pass. Temporary raw-response diagnostics were removed.
+
+The Runtime repair checkpoint is `b2368a2d8` in the Nimi repository.
+This used the existing development registration and complete local SDK 0.21.0,
+Kit/native 0.21.0 and App Tools 0.13.1 tarballs to match the source supervisor;
+the original dependency declarations and lockfile were restored afterward.
+Runtime was built from the current Nimi worktree, including its pre-existing
+uncommitted work; the task's product fix changes only the finite ASR adapter.
+This is independent of release, Registry and Catalog acceptance. No version was
+published, and the repaired path in the installed release remains NOT-VERIFIED.
+
 ## Development
 
 The current package combination uses published App Tools 0.12.0, SDK 0.21.0, Kit/native 0.19.3 and Nimi Coding 0.6.5 with Electron 44. Kit 0.19 selects the formal Nimi Beta service; the earlier 0.18.1 source-development acceptance below remains historical. Kit/native 0.19.3 is published by its formal tag workflow; the installed Windows binding loads successfully. The lockfile pins registry resolutions, so this checkout no longer needs external Nimi tarballs. The accepted installed 0.5.4 artifact remains historical evidence for `dev-ecd93c916-voicestudio` (App Tools 0.7.0, SDK 0.14.0, Kit/native 0.10.0); it does not verify this new package combination. This checkout uses Node 24 and pnpm 10.34.5.
