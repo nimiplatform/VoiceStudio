@@ -36,11 +36,33 @@ worker; the original six saved voice profiles were visible. Cloud synthesis and
 voice-creation selections were blocked because the model list had changed.
 Through public AIConfig, both were explicitly reselected as the same
 `qwen-audio-3.0-tts-plus` on the existing Dashscope connector and saved successfully.
-No endpoint or credential was changed. Before a fresh generation could be
-submitted, native window control failed with `failed to activate captured window`
-and then `GetCursorPos failed: access denied (0x80070005)`; user desktop recovery
-is pending. Fresh cloud generation/playback remains NOT-VERIFIED. Earlier
-development results below are not relabeled as installed-package results.
+No endpoint or credential was changed. After the user restored desktop access,
+the actual Catalog cloud return completed as recorded below. Earlier development
+results retain their original scope.
+
+On 2026-10-15, a new free description and the text “A quiet morning brings a new
+story, and every voice deserves to be heard.” completed real voice creation
+(`01M4XQ18J7HWA7VHM0JMMHYCXW`) and speech synthesis
+(`01M4XQ1E64VRWHT2T16RJVKY5W`) on `qwen-audio-3.0-tts-plus`.
+The player reached the end without a decoding error. The native Save As dialog
+exported `.nimi/local/exports/catalog-0.5.9-cloud.wav` (330,406 bytes; mono 24 kHz
+16-bit PCM; 6.88 seconds). `Catalog 0.5.9 cloud narrator` was saved as a new
+profile. Normal close and Home relaunch retained the new profile, its full
+description, the input text and the prior six profiles. No old profile was
+overwritten, and no subjective voice-quality guarantee is inferred.
+
+The additional finite cloud transcription test did **not** pass. After explicitly
+reselecting the same `qwen-audio-3.0-asr-flash-streaming` target from the current
+catalog, the native file picker submitted that exported WAV. Job
+`01M4XQXAMVE9KMX47MTBWB6XE2` failed with `AI_OUTPUT_INVALID` and action hint
+`inspect_dashscope_asr_empty_final_sentence`. The Runtime driver rejects a final
+sentence with empty text. The file is valid mono PCM WAV; the [official client
+events](https://www.alibabacloud.com/help/en/model-studio/qwen-audio-asr-streaming-client-events)
+allow PCM WAV and arbitrary sample rates. This narrows the failure to the
+provider/driver response boundary but does not establish which side is wrong.
+No parser relaxation, fabricated transcript, automatic model switch or repeated
+resubmission was used. Cloud transcription remains failed for this input; it is
+separate from the successful cloud creation/synthesis/export result.
 
 The exact published 0.5.9 package was downloaded and its SHA-256 verified. Its
 Home local-import preview passed, but installation on Nimi 0.2.4 was rejected
@@ -69,8 +91,8 @@ Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
 proxy regression and 30 native bridge tests pass. Windows build and production
 pack pass. Setup now prepares its pinned uv and Python worker dependencies in
 project-local directories before tests/builds, including on a clean CI runner.
-Public Catalog download/install and launch passed; fresh cloud business output
-is pending as described above.
+Public Catalog download/install/launch and fresh cloud voice creation/synthesis
+passed. The additional cloud transcription failure is recorded above.
 Version 0.5.8's protected tag workflow published successfully, but its portable
 release-notes field was empty. Version 0.5.9 adds that required declaration;
 the immutable 0.5.8 Release is retained and business behavior is unchanged.
