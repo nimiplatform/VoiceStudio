@@ -24,6 +24,13 @@ The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it c
 
 ### Windows release preparation (2026-10-14)
 
+[0.5.9](https://github.com/nimiplatform/VoiceStudio/releases/tag/v0.5.9) has now
+completed its protected tag publication. Exact package, source license, digest
+and build provenance passed Registry preparation. [PR 106](https://github.com/nimiplatform/nimi-app-registry/pull/106)
+passes candidate checks and awaits human admission. Published-package business
+and Catalog acceptance remain pending; the earlier development results below
+are not relabeled as installed-package results.
+
 The Windows x86_64 release line uses published SDK 0.21.0,
 Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
 563 business tests with an empty offline Hugging Face cache, the installed-scheme
