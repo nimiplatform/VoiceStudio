@@ -4,6 +4,29 @@ VoiceStudio 0.5.9 adapts the existing [VoiceStudio](https://github.com/debpalash
 
 Nimi supplies the platform account, App Access, AI configuration and all model inference. VoiceStudio keeps its business orchestration, audio editing, media processing, voice library and project state. There is no separate VoiceStudio account. Choose models in **Settings → Nimi**; no automatic cloud fallback or App-managed model installation is used.
 
+## Dashscope endpoint regression (2026-10-15, development)
+
+Nimi checkpoint `604adac4a` materializes Qwen/Qwen3 HTTP TTS on the documented
+regional origin while preserving the captured workspace route for Qwen Audio
+3.0, transcription and voice creation. Through VoiceStudio's existing supervised
+development registration and its own CDP, the same Beijing workspace connection
+completed new `qwen-audio-3.0-tts-plus` voice creation
+(`01M4XW3N2K21VJRSV689MC077Y`) and synthesis
+(`01M4XW3T9FCH6Z5PRWBFQNHRJC`). The 6.16-second audio played to the end without
+a decoding error. The original 24 kHz `catalog-0.5.9-cloud.wav` also completed
+`qwen-audio-3.0-asr-flash-streaming` Job `01M4XW6QXPNHMZMD5F4B9F1DCH`, retaining
+the full sentence and 14 real word timings. All three Jobs captured the workspace
+endpoint. No App inference bypass or model fallback was added.
+
+Runtime `remoteexecution` and `nimillm` package tests and canonical authority
+checks pass. The existing complete local SDK 0.21.0, Kit/native 0.21.0 and App
+Tools 0.13.1 tarballs matched the source supervisor; original dependency files
+and the temporary development endpoint were restored afterward. The running
+Runtime also included pre-existing unrelated worktree changes. These results
+cover the actual Beijing development paths; Singapore live calls and a repaired
+installed release remain NOT-VERIFIED. No new version or Registry/Catalog run
+was performed.
+
 ## Dashscope transcription repair (2026-10-15, development)
 
 The original `catalog-0.5.9-cloud.wav` reproduced the finite ASR failure through
