@@ -31,10 +31,16 @@ completed final checks and merged after explicit human approval for Windows x86_
 downloaded, verified and installed the exact 0.5.9 Catalog package. The committed
 release is `verified` 0.5.9; the old `user_imported` 0.5.8 record remains intact.
 This completes Catalog installation without modifying the old binding or App
-assets. Final launch/cloud-speech acceptance remains pending: Windows' network
-prompt for the preceding OpenWhispr Catalog launch currently blocks desktop
-interaction and was left for the user. Earlier development results below are
-not relabeled as installed-package results.
+assets. Formal Home launched the Catalog package and its bundled Python business
+worker; the original six saved voice profiles were visible. Cloud synthesis and
+voice-creation selections were blocked because the model list had changed.
+Through public AIConfig, both were explicitly reselected as the same
+`qwen-audio-3.0-tts-plus` on the existing Dashscope connector and saved successfully.
+No endpoint or credential was changed. Before a fresh generation could be
+submitted, native window control failed with `failed to activate captured window`
+and then `GetCursorPos failed: access denied (0x80070005)`; user desktop recovery
+is pending. Fresh cloud generation/playback remains NOT-VERIFIED. Earlier
+development results below are not relabeled as installed-package results.
 
 The exact published 0.5.9 package was downloaded and its SHA-256 verified. Its
 Home local-import preview passed, but installation on Nimi 0.2.4 was rejected
@@ -46,9 +52,9 @@ when any committed imported release exists. Consequently Home exposes neither
 that old package's update action nor a usable new import on this machine. This
 is a Nimi installation-lifecycle limitation; it is not a VoiceStudio cloud-provider
 failure. No binding, managed database, old package, voice or project was modified
-to bypass it. Published-package launch, cloud speech and Catalog acceptance remain
-NOT-VERIFIED pending a supported installation path. The prior development
-acceptance below remains applicable only within its recorded scope.
+to bypass it. This describes the earlier local-import blocker; the subsequent
+Catalog install and launch above passed. The prior development acceptance below
+remains applicable only within its recorded scope.
 
 The ordinary Catalog first installation subsequently passed after explicit
 human admission. Runtime's Catalog installer checks the `verified` release
@@ -63,7 +69,8 @@ Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
 proxy regression and 30 native bridge tests pass. Windows build and production
 pack pass. Setup now prepares its pinned uv and Python worker dependencies in
 project-local directories before tests/builds, including on a clean CI runner.
-Installed-App business acceptance and public downloading are still pending.
+Public Catalog download/install and launch passed; fresh cloud business output
+is pending as described above.
 Version 0.5.8's protected tag workflow published successfully, but its portable
 release-notes field was empty. Version 0.5.9 adds that required declaration;
 the immutable 0.5.8 Release is retained and business behavior is unchanged.
