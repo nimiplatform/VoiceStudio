@@ -6,6 +6,23 @@ Nimi supplies the platform account, App Access, AI configuration and all model i
 
 ## Dashscope endpoint regression (2026-10-15, development)
 
+The workspace-header review fix has now passed a fresh real App regression.
+After the shared Runtime was released, Nimi pulled `3de016ae4` with autostash
+and rebase without conflicts; `e35db098d` became `ef91a3ca6` with an identical
+patch. The rebuilt source Runtime reports that revision and retains the
+pre-existing unrelated worktree changes. Through the existing supervised
+VoiceStudio registration and its own CDP, the Beijing workspace connection
+completed new `qwen-audio-3.0-tts-plus` voice creation
+`01M4XZ453S6YDRJJ5Q065GZ2QP` and synthesis `01M4XZ4AQRDC8VZ1MZAJCV2KY3`.
+Both Jobs captured the workspace endpoint; the new 5.04-second audio played
+to the end without a decoding error. MoneyPrinterTurbo also passed Qwen3 TTS
+with the explicit workspace header in the same run. This supersedes the earlier
+NOT-VERIFIED status for the new header's Beijing live regression, without
+claiming Singapore or installed-release verification. Temporary development
+endpoint and dependency changes were restored, and the App closed normally.
+No new product code, version publication or Registry/Catalog acceptance was
+performed in this follow-up.
+
 Nimi checkpoint `604adac4a` materializes Qwen/Qwen3 HTTP TTS on the documented
 regional origin while preserving the captured workspace route for Qwen Audio
 3.0, transcription and voice creation. Through VoiceStudio's existing supervised
