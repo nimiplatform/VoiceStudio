@@ -1,5 +1,4 @@
 import { apiFetch, apiJson } from './client';
-import { sanitizeInstruct } from './generate';
 import type { Profile } from './types';
 
 export interface CreateCloneProfileInput {
@@ -44,9 +43,7 @@ export async function createCloneProfile(input: CreateCloneProfileInput): Promis
     form.append('ref_audio_mime', input.refAudioMime || '');
   }
   if (input.historyId) form.append('history_id', input.historyId);
-  // Same whitelist as /generate: a saved profile must never carry an instruct
-  // the engine will reject on every later synthesis.
-  form.append('instruct', input.instruct ? sanitizeInstruct(input.instruct).instruct : '');
+  form.append('instruct', input.instruct?.trim() ?? '');
   form.append('language', input.language || 'Auto');
   form.append('kind', 'clone');
   if (input.seed != null) form.append('seed', String(input.seed));

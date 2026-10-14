@@ -6,7 +6,24 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/).
 `frontend/package.json` is the app-version source of truth; Cargo, Python, and
 the frozen-backend fallback mirror it for their toolchains.
 
-## [Unreleased]
+## [0.5.8] — 2026-10-14
+
+**Highlights**
+
+- Prepare the Nimi-supervised Windows edition with voice creation, transcription, dubbing and audiobook workflows.
+- Preserve existing voices, projects and recordings while using Nimi-managed AI resources.
+
+### Fixed
+
+- Preserve complete voice descriptions and saved instructions when generating or restoring a voice.
+- Prepare canonical stereo audio for separation and downmix only the transcription request copy.
+- Restore protected sessions before backend AI work and keep failed dictation visible.
+
+### CI
+
+- Use published dependencies and prepare the pinned Python worker on clean Windows build machines.
+
+## [Unreleased] — upstream history
 
 **Highlights**
 

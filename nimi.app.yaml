@@ -16,7 +16,7 @@ storage_policy:
   kind: app-owned-os-storage
   os_storage_disclosure:
     - path_pattern: "%APPDATA%/OmniVoice"
-      purpose: VoiceStudio voices, media, projects, settings and installed Electron browser profile
+      purpose: VoiceStudio voices, media, projects and business settings
       expected_size_band: Varies with imported and generated media
 metadata:
   summary: Create voices, dub video, transcribe speech and produce audiobooks with Nimi.
@@ -27,3 +27,40 @@ local_development:
   electron:
     renderer_origin: http://127.0.0.1:3902
     host_source_directory: electron
+safety_profile:
+  intended_audience: general
+  content_descriptors: []
+  ai:
+    direct_interaction: true
+    interaction_notice: absent
+    risk_features:
+      - realistic-voice-replication
+    subject_notice: not-applicable
+    outputs:
+      - modality: text
+        exposure: exportable
+        publication_control: not-applicable
+        in_product_notice: absent
+        export_visible_marking: absent
+        machine_readable_marking: absent
+      - modality: audio
+        exposure: exportable
+        publication_control: not-applicable
+        in_product_notice: absent
+        export_visible_marking: absent
+        machine_readable_marking: absent
+      - modality: video
+        exposure: exportable
+        publication_control: not-applicable
+        in_product_notice: absent
+        export_visible_marking: absent
+        machine_readable_marking: absent
+  data_practices:
+    publisher_direct_external_network: true
+    telemetry:
+      - usage-analytics
+    third_party_account: none
+    user_content_sharing: none
+    commercial_features: []
+    sensitive_data_categories: []
+  high_impact_decision_uses: []

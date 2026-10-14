@@ -3,7 +3,7 @@ const mock = vi.hoisted(() => ({ json: vi.fn() }));
 vi.mock('./client', () => ({ apiJson: mock.json, apiFetch: vi.fn() }));
 import { createCloneProfile, updateProfileImage } from './profiles';
 afterEach(() => vi.clearAllMocks());
-it('preserves take seed zero and full transcript while sanitizing style', async () => {
+it('preserves take seed zero and full transcript and the complete voice description', async () => {
   mock.json.mockResolvedValue({});
   const text =
     'A complete transcript longer than fifty characters must remain aligned with the full audio.';
@@ -13,13 +13,13 @@ it('preserves take seed zero and full transcript while sanitizing style', async 
     refText: text,
     seed: 0,
     language: 'French',
-    instruct: 'female, unsupported',
+    instruct: 'A warm female narrator with gentle delivery.',
   });
   const form = mock.json.mock.calls[0][1].body as FormData;
   expect(form.get('seed')).toBe('0');
   expect(form.get('ref_text')).toBe(text);
   expect(form.get('language')).toBe('French');
-  expect(form.get('instruct')).toBe('female');
+  expect(form.get('instruct')).toBe('A warm female narrator with gentle delivery.');
 });
 it('does not invent a seed when saving an ordinary recording', async () => {
   mock.json.mockResolvedValue({});

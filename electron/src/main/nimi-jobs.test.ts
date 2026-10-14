@@ -3,6 +3,39 @@ import type { RegisteredNimiElectronAppBridge } from '@nimiplatform/kit/shell/el
 import { NimiJobs } from './nimi-jobs';
 
 describe('Nimi business artifact custody', () => {
+  it.each([[1, 24000], [2, 48000], [2, 44100]])('submits separation using canonical owned audio (%i channels, %i Hz)', async (channels, rate) => {
+    const upload = vi.fn(async (input) => ({ artifactId: input.source ? 'stereo-input' : 'prepared-input',
+      audioInfo: { channels: input.source ? 2 : channels, sampleRateHz: input.source ? 44100 : rate, frameCount: rate, durationMs: 1000 } }));
+    const submit = vi.fn(async () => ({ job: { jobId: 'separation-job' } }));
+    const services = {
+      ai: { artifacts: { upload }, scenarioJobs: { submit, get: async () => ({ job: { status: 'completed',
+        audioSeparation: { vocalsArtifactId: 'vocals', backgroundArtifactId: 'background' } } }) } },
+      storage: { assets: { adoptArtifact: async ({ artifactId }: { artifactId: string }) => ({ relativePath: `${artifactId}.wav` }),
+        read: async () => ({ body: (async function* () { yield new Uint8Array([1]); })() }), remove: async () => ({}) } },
+    } as unknown as RegisteredNimiElectronAppBridge['services'];
+    await new NimiJobs(services).run('separate', { base64: 'AQ==', mimeType: 'audio/wav' }, new AbortController().signal);
+    expect(Array.from(upload.mock.calls[0][0].bytes)).toEqual([1]);
+    expect(upload.mock.calls[0][0]).toMatchObject({ mimeType: 'audio/wav',
+      audioPreparation: { profile: 'canonical-pcm-v1' } });
+    const converted = channels === 1 || rate !== 44100;
+    expect(upload).toHaveBeenCalledTimes(converted ? 2 : 1);
+    if (converted) expect(upload.mock.calls[1][0]).toMatchObject({ source: { kind: 'artifact', artifactId: 'prepared-input' },
+      audioPreparation: { targetSampleRateHz: 44100, channelMode: channels === 1 ? 'MONO_TO_STEREO' : 'PRESERVE' } });
+    expect(submit).toHaveBeenCalledWith({ type: 'audio-separate', mimeType: 'audio/wav',
+      sourceAudio: { artifactId: converted ? 'stereo-input' : 'prepared-input' } });
+  });
+
+  it('does not submit separation after cancellation during audio preparation', async () => {
+    const controller = new AbortController();
+    const submit = vi.fn();
+    const services = { ai: { artifacts: { upload: async () => {
+      controller.abort();
+      return { artifactId: 'prepared-input', audioInfo: { channels: 2 } };
+    } }, scenarioJobs: { submit } } } as unknown as RegisteredNimiElectronAppBridge['services'];
+    await expect(new NimiJobs(services).run('separate', { base64: 'AQ==', mimeType: 'audio/wav' }, controller.signal)).rejects.toThrow();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it('maps URI transcripts from capability metadata and reuses an owned saved asset', async () => {
     const submit = vi.fn(async (spec) => ({ job: { jobId: spec.type } }));
     const get = vi.fn(async (id) => id === 'voice-create'

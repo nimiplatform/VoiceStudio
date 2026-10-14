@@ -1,6 +1,7 @@
 import { protocol, session, webContents, ipcMain } from 'electron';
 import {
   registerNimiElectronAppBridge,
+  type RegisteredNimiElectronAppBridge,
 } from '@nimiplatform/kit/shell/electron/main';
 
 // Foundation copied from this combination's generated reference Host.
@@ -25,12 +26,14 @@ export function readDevelopmentRendererUrl(): string {
 }
 
 
-export function registerNimiHost(rendererUrl: string, onSessionInvalidated: () => void) {
+export function registerNimiHost(rendererUrl: string, onSessionInvalidated: () => void,
+  onSessionReady: (services: RegisteredNimiElectronAppBridge['services']) => void) {
   return registerNimiElectronAppBridge({
     appId: NIMI_APP_ID,
     allowedRendererUrls: [rendererUrl],
     assetMediaPlatform: { protocol, webRequest: session.defaultSession.webRequest, webContents },
     ipcMain,
     onSessionInvalidated,
+    onSessionReady,
   });
 }

@@ -14,8 +14,12 @@ export function NimiSettings() {
     setLoading(true);
     setError(null);
     try {
-      setSnapshot(await getNimiClient().aiConfig.get());
+      const client = getNimiClient();
+      const status = await client.auth.status();
+      if (!status.sessionBound) throw new Error(status.reasonCode);
+      setSnapshot(await client.aiConfig.get());
     } catch (cause) {
+      setSnapshot(null);
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally { setLoading(false); }
   }, []);

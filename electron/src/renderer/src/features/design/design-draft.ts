@@ -2,13 +2,23 @@ import type { HistoryItem, Profile } from '@/lib/api/types';
 import {
   instructToVdStates,
   mergeDescribedAttrs,
+  buildDesignInstruct,
 } from '../../../../../../frontend/src/utils/voiceInstruct';
 import { pickDesignSeed } from '../../../../../../frontend/src/utils/seed';
 export const STORAGE = 'voicestudio.design.v1';
 export const DESIGN_DRAFT_EVENT = 'voicestudio:design-draft';
 
+/** Keep the full description while making explicit trait controls take priority. */
+export function designInstruction(attrs: Record<string, string>, description: string): string {
+  const traits = buildDesignInstruct(attrs, '').instruct;
+  const prose = description.trim();
+  if (!prose) return traits;
+  return traits ? `${prose}\nVoice traits (take priority): ${traits}.` : prose;
+}
+
 export interface DesignDraft {
   text: string;
+  description?: string;
   attrs: Record<string, string>;
   seed: number;
   profileId: string | null;
@@ -20,11 +30,12 @@ export function editDesignAttributes(draft: DesignDraft, attrs: Record<string, s
   return changed ? { ...draft, attrs: next, profileId: null } : draft;
 }
 
-export function readDraft() {
+export function readDraft(): DesignDraft {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE) || '{}');
     return {
       text: typeof value.text === 'string' ? value.text : '',
+      description: typeof value.description === 'string' ? value.description : '',
       attrs: mergeDescribedAttrs(value.attrs),
       seed: Number.isInteger(value.seed) ? value.seed : pickDesignSeed(false, null),
       profileId: typeof value.profileId === 'string' ? value.profileId : null,
@@ -32,6 +43,7 @@ export function readDraft() {
   } catch {
     return {
       text: '',
+      description: '',
       attrs: mergeDescribedAttrs(),
       seed: pickDesignSeed(false, null),
       profileId: null,
@@ -52,6 +64,7 @@ export function writeDraft(draft: DesignDraft) {
 export function designDraftFromTake(item: HistoryItem): DesignDraft {
   return {
     text: item.text,
+    description: item.instruct ?? '',
     attrs: mergeDescribedAttrs(instructToVdStates(item.instruct ?? '')),
     seed: item.seed ?? pickDesignSeed(false, null),
     profileId: item.profile_id,

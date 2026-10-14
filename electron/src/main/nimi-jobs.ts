@@ -68,8 +68,21 @@ export class NimiJobs {
         }
         case 'separate': {
           const audio = input as AudioInput;
+          if (audio.mimeType !== 'audio/wav') throw new Error('The separation worker must provide WAV audio');
+          let prepared = await this.services.ai.artifacts.upload({ mimeType: 'audio/wav', bytes: this.audioBytes(audio),
+            audioPreparation: { profile: 'canonical-pcm-v1' } });
+          controller.signal.throwIfAborted();
+          const channels = prepared.audioInfo?.channels;
+          if (channels !== 1 && channels !== 2) throw new Error('Separation needs canonical mono or stereo audio');
+          if (prepared.audioInfo?.sampleRateHz !== 44100 || channels === 1) {
+            prepared = await this.services.ai.artifacts.upload({ mimeType: 'audio/wav',
+              source: { kind: 'artifact', artifactId: prepared.artifactId },
+              audioPreparation: { profile: 'canonical-pcm-v1', targetSampleRateHz: 44100,
+                channelMode: channels === 1 ? 'MONO_TO_STEREO' : 'PRESERVE' } });
+            controller.signal.throwIfAborted();
+          }
           const result = await this.job({ type: 'audio-separate', mimeType: audio.mimeType,
-            audioSource: { type: 'bytes', bytes: this.audioBytes(audio) } }, controller.signal);
+            sourceAudio: { artifactId: prepared.artifactId } }, controller.signal);
           const pair = result.job.audioSeparation;
           if (!pair) throw new Error('Nimi did not return a complete separation result');
           const vocals = await this.artifact(pair.vocalsArtifactId, controller.signal);
@@ -84,12 +97,12 @@ export class NimiJobs {
     }
   }
 
-  private audioBytes(input: AudioInput): number[] {
+  private audioBytes(input: AudioInput): Uint8Array {
     if (typeof input.base64 !== 'string' || typeof input.mimeType !== 'string')
       throw new Error('Audio bytes and MIME type are required');
     const bytes = Buffer.from(input.base64, 'base64');
     if (!bytes.length || bytes.length > 32 * 1024 * 1024) throw new Error('Audio must be between 1 byte and 32 MiB');
-    return Array.from(bytes);
+    return bytes;
   }
 
   private async job(spec: NimiLocalAppScenarioJobSpec, signal: AbortSignal) {

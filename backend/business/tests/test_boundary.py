@@ -23,6 +23,41 @@ from core import job_store
 from core.tasks import TaskManager
 
 
+def test_transcription_downmixes_separated_stereo_without_changing_timing_or_source(monkeypatch, tmp_path):
+    import base64
+    from business import audio
+    source = tmp_path / 'separated-vocals.wav'
+    samples = np.column_stack([np.full(4410, .5), np.full(4410, -.25)])
+    sf.write(source, samples, 44100, subtype='FLOAT')
+    original = source.read_bytes()
+    async def recognize(operation, payload):
+        assert operation == 'transcribe'
+        assert payload['language'] == 'en' and payload['timestamps'] is True
+        encoded = io.BytesIO(base64.b64decode(payload['base64']))
+        with sf.SoundFile(encoded) as wav:
+            assert wav.channels == 1
+            assert wav.samplerate == 44100 and len(wav) == 4410
+            assert wav.subtype == 'PCM_16'
+            np.testing.assert_allclose(wav.read(), .125, atol=1 / 32768)
+        return {'status': 'no-speech', 'text': '', 'words': [], 'language': ''}
+    monkeypatch.setattr(audio, 'call', recognize)
+    asyncio.run(audio.transcribe_file(source, language='en', timestamps=True))
+    assert source.read_bytes() == original
+
+
+def test_empty_voice_design_is_rejected_before_inference(monkeypatch):
+    import pytest
+    from business import audio
+    calls = []
+    async def infer(**kwargs):
+        calls.append(kwargs)
+        raise RuntimeError('An empty design reached inference')
+    monkeypatch.setattr(audio, 'synthesize', infer)
+    with pytest.raises(ValueError, match='voice description'):
+        asyncio.run(audio.generate_take({'text': 'A quiet story beside the sea.', 'instruct': '  '}))
+    assert calls == []
+
+
 def test_public_reference_url_rejects_local_destinations_and_credentials():
     import pytest
     from business.reference import public_audio_url

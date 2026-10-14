@@ -4,13 +4,9 @@ import {
   REF_HARD_MAX_SECONDS,
   generateClone,
   parseGenerateHeaders,
-  sanitizeInstruct,
   toGenerateForm,
 } from './generate';
 import type { CloneGenerateInput } from './types';
-
-// Engine vocabulary (a regional Chinese dialect tag), escaped to keep the source ASCII.
-const DIALECT = '\u56DB\u5DDD\u8BDD';
 
 const BASE_INPUT: CloneGenerateInput = {
   text: 'Hello there',
@@ -36,47 +32,6 @@ describe('constants', () => {
   it('exposes the clip limits', () => {
     expect(CLONE_MAX_SECONDS).toBe(15);
     expect(REF_HARD_MAX_SECONDS).toBe(75);
-  });
-});
-
-describe('sanitizeInstruct', () => {
-  it('keeps valid tags and drops unsupported prose', () => {
-    const result = sanitizeInstruct('whisper, warm and friendly narrator, Low Pitch');
-    expect(result.instruct).toBe('whisper, low pitch');
-    expect(result.unsupported).toEqual(['warm and friendly narrator']);
-    expect(result.duplicates).toEqual([]);
-    expect(result.conflicts).toEqual([]);
-  });
-
-  it('buckets a second tag in an already-set category as a duplicate', () => {
-    const result = sanitizeInstruct('low pitch, high pitch, male, female');
-    expect(result.instruct).toBe('low pitch, male');
-    expect(result.duplicates).toEqual(['high pitch', 'female']);
-  });
-
-  it('refuses to mix a Chinese dialect with an English accent', () => {
-    const accentFirst = sanitizeInstruct(`british accent, ${DIALECT}`);
-    expect(accentFirst.instruct).toBe('british accent');
-    expect(accentFirst.conflicts).toEqual([DIALECT]);
-
-    const dialectFirst = sanitizeInstruct(`${DIALECT}, british accent`);
-    expect(dialectFirst.instruct).toBe(DIALECT);
-    expect(dialectFirst.conflicts).toEqual(['british accent']);
-  });
-
-  it('accepts the fullwidth comma and ignores empty items', () => {
-    const result = sanitizeInstruct('male\uFF0C , , elderly');
-    expect(result.instruct).toBe('male, elderly');
-    expect(result.unsupported).toEqual([]);
-  });
-
-  it('returns empty buckets for empty input', () => {
-    expect(sanitizeInstruct('')).toEqual({
-      instruct: '',
-      unsupported: [],
-      duplicates: [],
-      conflicts: [],
-    });
   });
 });
 
@@ -135,15 +90,15 @@ describe('toGenerateForm', () => {
     expect((form.get('ref_audio') as File).name).toBe('rec.webm');
   });
 
-  it('sanitises the instruct and omits it when nothing survives', () => {
+  it('preserves Nimi voice descriptions beyond the retired engine tag list', () => {
     expect(
       toGenerateForm({ ...BASE_INPUT, profileId: 'p1', instruct: 'whisper, gentle' }).get(
         'instruct',
       ),
-    ).toBe('whisper');
+    ).toBe('whisper, gentle');
     expect(
-      toGenerateForm({ ...BASE_INPUT, profileId: 'p1', instruct: 'just prose' }).has('instruct'),
-    ).toBe(false);
+      toGenerateForm({ ...BASE_INPUT, instruct: 'A calm adult English narrator.' }).get('instruct'),
+    ).toBe('A calm adult English narrator.');
   });
 });
 

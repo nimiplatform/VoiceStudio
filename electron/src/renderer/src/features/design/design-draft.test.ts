@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Profile } from '@/lib/api/types';
-import { readDraft, restoreDesignProfile, STORAGE, editDesignAttributes } from './design-draft';
+import { readDraft, restoreDesignProfile, STORAGE, editDesignAttributes, designInstruction } from './design-draft';
 
 const profile = {
   id: 'designed-voice',
@@ -18,6 +18,14 @@ const profile = {
 } satisfies Profile;
 
 describe('designed voice drafts', () => {
+  it('keeps a free description when the old trait mapper recognizes nothing', () => {
+    const description = 'A calm adult English narrator with a warm, clear voice.';
+    expect(designInstruction({ Gender: 'Auto' }, description)).toBe(description);
+    expect(designInstruction({ Pitch: 'low pitch' }, description)).toBe(
+      `${description}\nVoice traits (take priority): low pitch.`,
+    );
+    expect(designInstruction({}, '  ')).toBe('');
+  });
   beforeEach(() => localStorage.clear());
   it('keeps an unchanged saved voice but detaches identity when its design changes', () => {
     const draft = { ...readDraft(), ...restoreDesignProfile(profile, 9), text: 'Keep my script.' };
@@ -31,9 +39,9 @@ describe('designed voice drafts', () => {
   it('persists the selected profile identity with the draft', () => {
     localStorage.setItem(
       STORAGE,
-      JSON.stringify({ text: 'Hello', attrs: { Gender: 'female' }, seed: 7, profileId: 'voice' }),
+      JSON.stringify({ text: 'Hello', description: 'A warm, clear voice.', attrs: { Gender: 'female' }, seed: 7, profileId: 'voice' }),
     );
-    expect(readDraft()).toMatchObject({ text: 'Hello', seed: 7, profileId: 'voice' });
+    expect(readDraft()).toMatchObject({ text: 'Hello', description: 'A warm, clear voice.', seed: 7, profileId: 'voice' });
   });
 
   it('restores profile language, seed and a complete recipe without stale values', () => {

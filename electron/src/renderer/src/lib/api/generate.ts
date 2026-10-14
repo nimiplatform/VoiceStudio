@@ -15,113 +15,6 @@ export const REF_HARD_MAX_SECONDS = 75;
  */
 export const GENERATE_ABORT_MS = 21 * 60 * 1000;
 
-// ── Instruct whitelist ─────────────────────────────────────────────────────
-// The engine validator (omnivoice/models/omnivoice.py::_resolve_instruct)
-// accepts ONLY these tags, one per category; anything else 400s with
-// "Unsupported instruct items". Dialect names are engine vocabulary and are
-// written as escapes so the source stays ASCII (tests/test_no_hardcoded_cjk.py).
-const CATEGORIES: Readonly<Record<string, readonly string[]>> = {
-  Gender: ['male', 'female'],
-  Age: ['child', 'teenager', 'young adult', 'middle-aged', 'elderly'],
-  Pitch: ['very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch'],
-  Style: ['whisper'],
-  EnglishAccent: [
-    'american accent',
-    'british accent',
-    'australian accent',
-    'canadian accent',
-    'indian accent',
-    'chinese accent',
-    'korean accent',
-    'japanese accent',
-    'portuguese accent',
-    'russian accent',
-  ],
-  ChineseDialect: [
-    '\u6CB3\u5357\u8BDD',
-    '\u9655\u897F\u8BDD',
-    '\u56DB\u5DDD\u8BDD',
-    '\u8D35\u5DDE\u8BDD',
-    '\u4E91\u5357\u8BDD',
-    '\u6842\u6797\u8BDD',
-    '\u6D4E\u5357\u8BDD',
-    '\u77F3\u5BB6\u5E84\u8BDD',
-    '\u7518\u8083\u8BDD',
-    '\u5B81\u590F\u8BDD',
-    '\u9752\u5C9B\u8BDD',
-    '\u4E1C\u5317\u8BDD',
-  ],
-};
-
-// EnglishAccent and ChineseDialect are separate categories but the engine
-// rejects an instruct that sets both ("Cannot mix Chinese dialect and English
-// accent"). Grouping them here enforces that exclusivity client-side; a future
-// exclusive pair joins by adding an entry.
-const EXCLUSIVE_GROUPS: Readonly<Record<string, string>> = {
-  EnglishAccent: 'accent_dialect',
-  ChineseDialect: 'accent_dialect',
-};
-
-const TAG_TO_CATEGORY: ReadonlyMap<string, string> = new Map(
-  Object.entries(CATEGORIES).flatMap(([category, tags]) =>
-    tags.map((tag) => [tag.toLowerCase(), category] as const),
-  ),
-);
-
-function groupOf(category: string): string {
-  return EXCLUSIVE_GROUPS[category] ?? category;
-}
-
-// Users type the fullwidth comma (U+FF0C) on CJK keyboards.
-const ITEM_SEPARATOR = /[,\uFF0C]/;
-
-export interface SanitizedInstruct {
-  /** Comma-joined valid tags, one per category, in the order they were accepted. */
-  instruct: string;
-  /** Free-text items that are not whitelist tags (prose descriptions). */
-  unsupported: string[];
-  /** Valid tags whose category was already claimed by an earlier item. */
-  duplicates: string[];
-  /** Valid tags whose exclusive group (accent vs dialect) was already claimed. */
-  conflicts: string[];
-}
-
-/**
- * Reduce a free-text style field to a validator-safe instruct. Port of the
- * main app's `buildDesignInstruct` with no picker state (clone has no design
- * sliders): first valid tag per category wins, the rest are bucketed so the
- * caller can tell the user exactly what was dropped instead of round-tripping
- * a 400 from the engine.
- */
-export function sanitizeInstruct(free: string): SanitizedInstruct {
-  const byCategory = new Map<string, string>();
-  const claimedGroups = new Set<string>();
-  const unsupported: string[] = [];
-  const duplicates: string[] = [];
-  const conflicts: string[] = [];
-
-  for (const raw of String(free ?? '').split(ITEM_SEPARATOR)) {
-    const item = raw.trim();
-    if (!item) continue;
-    const normalized = item.toLowerCase();
-    const category = TAG_TO_CATEGORY.get(normalized);
-    if (!category) {
-      unsupported.push(item);
-    } else if (byCategory.has(category)) {
-      duplicates.push(item);
-    } else if (claimedGroups.has(groupOf(category))) {
-      conflicts.push(item);
-    } else {
-      byCategory.set(category, normalized);
-      claimedGroups.add(groupOf(category));
-    }
-  }
-
-  return { instruct: [...byCategory.values()].join(', '), unsupported, duplicates, conflicts };
-}
-
-// ── Request ────────────────────────────────────────────────────────────────
-
 /** Multipart body for `POST /generate` (classic whole-file path). */
 export function toGenerateForm(input: CloneGenerateInput): FormData {
   const form = new FormData();
@@ -146,10 +39,8 @@ export function toGenerateForm(input: CloneGenerateInput): FormData {
     }
   }
 
-  if (input.instruct) {
-    const { instruct } = sanitizeInstruct(input.instruct);
-    if (instruct) form.append('instruct', instruct);
-  }
+  const instruction = input.instruct?.trim();
+  if (instruction) form.append('instruct', instruction);
   return form;
 }
 

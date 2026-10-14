@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { throttle } from '@tanstack/react-pacer';
 import { toast } from 'sonner';
 import { ApiError, describeError, isAbortError } from '@/lib/api/client';
-import { generateClone, sanitizeInstruct } from '@/lib/api/generate';
+import { generateClone } from '@/lib/api/generate';
 import type { GenerateResult } from '@/lib/api/types';
 import { tr } from '@/lib/i18n-text';
 import { queryKeys } from '@/lib/query';
@@ -79,20 +79,6 @@ function isModelNotDownloaded(err: unknown): boolean {
     detail !== null &&
     (detail as { error?: unknown }).error === MODEL_NOT_DOWNLOADED
   );
-}
-
-function announceInstructWarnings(free: string): string {
-  const { instruct, unsupported, duplicates, conflicts } = sanitizeInstruct(free);
-  if (unsupported.length) {
-    toast.warning(tr('tts_errors.ignored_unsupported', { items: unsupported.join(', ') }));
-  }
-  if (duplicates.length) {
-    toast.warning(tr('tts_errors.ignored_duplicate', { items: duplicates.join(', ') }));
-  }
-  if (conflicts.length) {
-    toast.warning(tr('tts_errors.ignored_conflict', { items: conflicts.join(', ') }));
-  }
-  return instruct;
 }
 
 function announceResultNotices(result: GenerateResult): void {
@@ -205,7 +191,7 @@ function useGenerateController(): UseGenerateClone {
       abortRef.current = controller;
       try {
         const free = design?.instruct ?? settings.instruct;
-        const instruct = free.trim() ? announceInstructWarnings(free) : '';
+        const instruct = free.trim();
         const input = {
           text: design?.text ?? settings.text,
           seed: design?.seed,

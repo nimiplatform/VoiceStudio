@@ -11,11 +11,11 @@
     "test:frontend": "node --test tests/frontend/*.test.mjs",
     "deps:check": "taze -r --maturity-period 7",
     "postinstall": "install-electron --no",
-    "dev:renderer": "pnpm --dir electron exec vite --config nimi.vite.config.ts --host 127.0.0.1 --port 3902 --strictPort",
+    "dev:renderer": "corepack pnpm --dir electron exec vite --config nimi.vite.config.ts --host 127.0.0.1 --port 3902 --strictPort",
     "build:electron": "node scripts/build-nimi-host.mjs",
     "build:renderer": "pnpm --dir electron exec vite build --config nimi.vite.config.ts",
-    "test:app": "pnpm --dir electron run typecheck && pnpm --dir electron run test && pnpm run test:protocol && pnpm run test:business && cargo test --manifest-path native/desktop-bridge/Cargo.toml --locked --release",
-    "build:electron:production": "pnpm run build:renderer && node scripts/build-nimi-host.mjs --production && pnpm run build:business && node scripts/package-nimi.mjs",
+    "test:app": "pnpm run setup:business && pnpm --dir electron run typecheck && pnpm --dir electron run test && pnpm run test:protocol && pnpm run test:business && cargo test --manifest-path native/desktop-bridge/Cargo.toml --locked --release",
+    "build:electron:production": "pnpm run setup:business && pnpm run build:renderer && node scripts/build-nimi-host.mjs --production && pnpm run build:business && node scripts/package-nimi.mjs",
     "setup:business": "node scripts/setup-business.mjs",
     "dev:shell": "nimi-app dev",
     "dev:electron": "nimi-app dev --shell electron",
@@ -26,27 +26,27 @@
     "test:protocol": "node scripts/test-electron-protocol.mjs"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@nimiplatform/app-tools": "^0.12.0",
+    "@nimiplatform/nimi-coding": "0.6.5",
+    "@types/node": "^24.13.3",
     "concurrently": "^10",
+    "electron": "^44.5.1",
+    "esbuild": "^0.28.2",
     "playwright": "^1.63.0",
     "taze": "^21",
     "turbo": "^2.10.12",
     "typescript": "^6.0.3",
     "wait-on": "^9.1.0",
-    "@electron/packager": "^20.3.0",
-    "electron": "^42.10.1",
-    "esbuild": "^0.28.2",
-    "yaml": "^2.9.0",
-    "@types/node": "^24.13.3",
-    "@nimiplatform/app-tools": "^0.7.5",
-    "@nimiplatform/nimi-coding": "0.6.3"
+    "yaml": "^2.9.0"
   },
   "type": "module",
   "main": "dist-electron/main.js",
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
-    "word-extractor": "1.0.4",
-    "@nimiplatform/sdk": "^0.15.0",
-    "@nimiplatform/kit": "^0.11.0"
+    "@nimiplatform/kit": "^0.19.0",
+    "@nimiplatform/sdk": "^0.21.0",
+    "word-extractor": "1.0.4"
   },
   "author": "VoiceStudio contributors"
 }

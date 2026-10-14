@@ -25,7 +25,6 @@ vi.mock('./use-clone-readiness', () => ({ useCloneInputsReadiness: () => null })
 vi.mock('./use-tts-readiness', () => ({ useTtsReadiness: () => null }));
 vi.mock('@/lib/api/generate', () => ({
   generateClone: vi.fn(),
-  sanitizeInstruct: () => ({ instruct: '', unsupported: [], duplicates: [], conflicts: [] }),
 }));
 vi.mock('@/lib/store/output', () => ({ setLatestOutput: vi.fn() }));
 function Consumer({ name }: { name: string }) {
@@ -175,7 +174,7 @@ it('design generation ignores a selected clone profile and sends its own script 
       <>
         <button
           onClick={() =>
-            void state.generateDesign({ text: 'Design script', instruct: 'male', seed: 42 })
+            void state.generateDesign({ text: 'Design script', instruct: 'A calm adult English narrator.', seed: 42 })
           }
         >
           design test
@@ -196,6 +195,7 @@ it('design generation ignores a selected clone profile and sends its own script 
   expect(generateClone).toHaveBeenCalledWith(
     expect.objectContaining({
       text: 'Design script',
+      instruct: 'A calm adult English narrator.',
       seed: 42,
       profileId: null,
       refAudio: null,

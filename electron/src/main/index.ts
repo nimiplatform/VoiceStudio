@@ -4,14 +4,12 @@ import { isTrustedRenderer } from './trusted-renderer';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { mkdirSync } from 'node:fs';
 import { app, BrowserWindow, ipcMain, nativeImage, session, shell, Tray } from 'electron';
+import { configureNimiElectronAppHostProfile } from '@nimiplatform/kit/shell/electron/host-profile';
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BackendSupervisor, backendRoot } from './business-backend';
-import { registerNimiHost, readDevelopmentRendererUrl } from './nimi-host';
 import { NimiJobs } from './nimi-jobs';
 import { registerIpc, wireWindowMaximizeEvents } from './ipc';
-import { APP_ORIGIN, installAppProtocol, registerAppScheme } from './protocol';
 import { startDevBackendProxy } from './dev-backend-proxy';
 import { installRendererPermissions } from './media-permissions';
 import { installBlankWindowGuard } from './blank-window-guard';
@@ -23,6 +21,16 @@ import {
 } from './main-error-journal';
 import { activateLiveWindow, isLiveWindow } from './window-safety';
 
+try {
+  configureNimiElectronAppHostProfile(app);
+} catch (error) {
+  process.stderr.write(`[nimi-app-host-profile] ${error instanceof Error ? error.message : String(error)}\n`);
+  app.exit(78);
+  throw error;
+}
+const { registerNimiHost, readDevelopmentRendererUrl } = await import('./nimi-host');
+const { APP_ORIGIN, installAppProtocol, registerAppScheme } = await import('./protocol');
+
 // Packaged GUI launches can inherit a short-lived terminal pipe. When that
 // launcher exits, diagnostic console writes emit EPIPE asynchronously and can
 // otherwise take down the healthy Electron main process. In-app log rings keep
@@ -32,13 +40,6 @@ process.stderr?.on('error', () => {});
 
 const APP_USER_MODEL_ID = 'com.voicestudio.desktop';
 app.setName('VoiceStudio');
-// Development must retain Desktop's --user-data-dir for its supervised profile
-// and automatic CDP discovery. Installed versions keep one disclosed App root.
-if (app.isPackaged) {
-  const profileDirectory = join(app.getPath('appData'), 'OmniVoice', 'electron-profile');
-  mkdirSync(profileDirectory, { recursive: true });
-  app.setPath('userData', profileDirectory);
-}
 const here = dirname(fileURLToPath(import.meta.url));
 const PRELOAD_PATH = join(here, 'preload.cjs');
 const RENDERER_DIR = join(here, '../dist');
@@ -244,9 +245,15 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
       app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window));
 
       let jobs: NimiJobs | undefined;
-      const nimi = registerNimiHost(supervisedRenderer || APP_ORIGIN + '/index.html', () => { jobs?.invalidate(); supervisor?.cancelTasks(); });
-      jobs = new NimiJobs(nimi.services);
-      const backend = new BackendSupervisor(jobs);
+      const nimi = registerNimiHost(supervisedRenderer || APP_ORIGIN + '/index.html',
+        () => { jobs?.invalidate(); supervisor?.cancelTasks(); },
+        services => { jobs = new NimiJobs(services); });
+      jobs ??= new NimiJobs(nimi.services);
+      const backend = new BackendSupervisor({ run: async (operation, input, signal) => {
+        await nimi.prepareSession(signal);
+        signal.throwIfAborted();
+        return jobs!.run(operation, input, signal);
+      } });
       supervisor = backend;
       console.log(`[supervisor] backend root: ${backendRoot()} (packaged=${app.isPackaged})`);
       backend.subscribe((s) => {

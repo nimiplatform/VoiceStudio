@@ -16,6 +16,7 @@ import {
   readDraft,
   restoreDesignProfile,
   editDesignAttributes,
+  designInstruction,
   type DesignDraft,
 } from './design-draft';
 import { useDescription } from './use-description';
@@ -54,7 +55,6 @@ import type { Profile } from '@/lib/api/types';
 import { CATEGORIES, PRESETS } from '../../../../../../frontend/src/utils/constants';
 import {
   applyVdState,
-  buildDesignInstruct,
 } from '../../../../../../frontend/src/utils/voiceInstruct';
 export function DesignPage() {
   const { t } = useTranslation();
@@ -64,7 +64,7 @@ export function DesignPage() {
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [productionOpen, setProductionOpen] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(draft.description ?? '');
   const [startingOpen, setStartingOpen] = useState(true);
   const mapper = useDescription((attrs) =>
     setDraft((current) => editDesignAttributes(current, attrs)),
@@ -77,10 +77,13 @@ export function DesignPage() {
   const savedProfilesRef = useRef<HTMLDetailsElement>(null);
   const designProfiles = profiles.data?.filter((profile) => profile.kind === 'design') ?? [];
   const activeProfile = designProfiles.find((profile) => profile.id === draft.profileId);
+  const instruction = activeProfile?.instruct?.trim() || designInstruction(draft.attrs, description);
   const editingProfile = profiles.data?.find((profile) => profile.id === editingId);
   useEffect(() => {
     const restore = (event: Event) => {
-      setDraft((event as CustomEvent<DesignDraft>).detail ?? readDraft());
+      const restored = (event as CustomEvent<DesignDraft>).detail ?? readDraft();
+      setDraft(restored);
+      setDescription(restored.description ?? '');
     };
     window.addEventListener(DESIGN_DRAFT_EVENT, restore);
     return () => window.removeEventListener(DESIGN_DRAFT_EVENT, restore);
@@ -123,10 +126,10 @@ export function DesignPage() {
       body.set('name', name.trim());
       body.set('kind', 'design');
       body.set('vd_states', JSON.stringify(draft.attrs));
-      body.set('instruct', buildDesignInstruct(draft.attrs, '').instruct);
+      body.set('instruct', instruction);
       body.set('language', cloneSettingsStore.state.language);
       if (latestOutput.result && latestOutput.details?.mode === 'design'
-        && latestOutput.details.instruct === buildDesignInstruct(draft.attrs, '').instruct
+        && latestOutput.details.instruct === instruction
         && latestOutput.details.language === cloneSettingsStore.state.language) {
         body.set('ref_audio', latestOutput.result.blob, 'design-reference.wav');
         body.set('ref_text', latestOutput.text);
@@ -209,8 +212,10 @@ export function DesignPage() {
               value={description}
               placeholder={t('clone.describe_placeholder')}
               onChange={(event) => {
-                setDescription(event.target.value);
-                mapper.describe(event.target.value);
+                const value = event.target.value;
+                setDescription(value);
+                setDraft((current) => ({ ...current, description: value, profileId: null }));
+                mapper.describe(value);
               }}
             />
             <p role="status" className="text-xs text-muted-foreground">
@@ -250,8 +255,10 @@ export function DesignPage() {
                     onClick={() => {
                       mapper.cancel();
                       const restored = restoreDesignProfile(profile, draft.seed);
+                      setDescription(profile.instruct ?? '');
                       setDraft((current) => ({
                         ...current,
+                        description: profile.instruct ?? '',
                         attrs: restored.attrs,
                         seed: restored.seed,
                         profileId: restored.profileId,
@@ -307,7 +314,8 @@ export function DesignPage() {
                 attrs={draft.attrs}
                 onSelect={(attrs) => {
                   mapper.cancel();
-                  setDraft((current) => editDesignAttributes(current, attrs));
+                  setDescription('');
+                  setDraft((current) => editDesignAttributes({ ...current, description: '' }, attrs));
                 }}
               />
               <div className="flex flex-wrap gap-1">
@@ -319,7 +327,8 @@ export function DesignPage() {
                     disabled={generation.isGenerating}
                     onClick={() => {
                       mapper.cancel();
-                      setDraft((current) => editDesignAttributes(current, preset.attrs));
+                      setDescription('');
+                      setDraft((current) => editDesignAttributes({ ...current, description: '' }, preset.attrs));
                     }}
                   >
                     {t('clone.preset_' + preset.id)
@@ -385,7 +394,7 @@ export function DesignPage() {
             <Button
               type="submit"
               size="sm"
-              disabled={!name.trim() || saving || mapper.pending || generation.isGenerating}
+              disabled={!name.trim() || !instruction || saving || mapper.pending || generation.isGenerating}
             >
               <SaveIcon />
               {t('clone.save_as_profile')}
@@ -506,13 +515,13 @@ export function DesignPage() {
               <div className="flex w-64 justify-end gap-2 justify-self-end">
                 <Button
                   className="h-10 w-52 shrink-0 overflow-hidden rounded-lg px-4"
-                  disabled={!draft.text.trim() || mapper.pending || !generation.canGenerateDesign}
+                  disabled={!draft.text.trim() || !instruction || mapper.pending || !generation.canGenerateDesign}
                   aria-busy={generation.isGenerating}
                   aria-label={generationLabel}
                   onClick={() =>
                     void generation.generateDesign({
                       text: draft.text,
-                      instruct: buildDesignInstruct(draft.attrs, '').instruct,
+                      instruct: instruction,
                       seed: draft.seed,
                       profileId: profiles.data?.some(
                         (profile) => profile.id === draft.profileId && profile.kind === 'design',

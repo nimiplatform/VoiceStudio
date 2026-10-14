@@ -29,7 +29,7 @@ export class BackendSupervisor {
     stage: 'idle', baseUrl: this.baseUrl, port: this.port, managed: false,
     remote: false, elapsedMs: 0, logTail: [],
   };
-  constructor(private readonly jobs: NimiJobs) {}
+  constructor(private readonly jobs: Pick<NimiJobs, 'run'>) {}
   get status(): BackendStatus { return { ...this.value, elapsedMs: this.startedAt ? Date.now() - this.startedAt : 0 }; }
   requestHeaders(): Record<string, string> { return { 'X-VoiceStudio-Worker': this.secret }; }
   subscribe(listener: (status: BackendStatus) => void) {

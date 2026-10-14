@@ -6,7 +6,7 @@ Nimi supplies the platform account, App Access, AI configuration and all model i
 
 ## Development
 
-The current package combination is `dev-1c5baa05f-voicestudio`: app-tools 0.7.5, SDK 0.15.0, Kit/native 0.11.0 and nimi-coding 0.6.3. The accepted installed 0.5.4 artifact used `dev-ecd93c916-voicestudio` (app-tools 0.7.0, SDK 0.14.0, Kit/native 0.10.0). The delivered tarball paths are explicit in `pnpm-workspace.yaml`, with integrity pins in `pnpm-lock.yaml`. Same-version package replacements require a normal install and updated lockfile. This checkout uses Node 24 and pnpm 10.34.5.
+The current package combination uses published App Tools 0.12.0, SDK 0.21.0, Kit/native 0.19.3 and Nimi Coding 0.6.5 with Electron 44. Kit 0.19 selects the formal Nimi Beta service; the earlier 0.18.1 source-development acceptance below remains historical. Kit/native 0.19.3 is published by its formal tag workflow; the installed Windows binding loads successfully. The lockfile pins registry resolutions, so this checkout no longer needs external Nimi tarballs. The accepted installed 0.5.4 artifact remains historical evidence for `dev-ecd93c916-voicestudio` (App Tools 0.7.0, SDK 0.14.0, Kit/native 0.10.0); it does not verify this new package combination. This checkout uses Node 24 and pnpm 10.34.5.
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -21,6 +21,57 @@ Development also requires `uv` and a Rust toolchain for the native helper. Deskt
 The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it contains deterministic business/media dependencies, not Torch or model engines. Setup is explicit. Normal launch never installs dependencies. The original standalone instructions are archived in [README.upstream.md](README.upstream.md) and do not describe this distribution.
 
 ## Build and local installation
+
+### Windows release preparation (2026-10-14)
+
+The Windows x86_64 candidate remains version 0.5.8 and uses published SDK 0.21.0,
+Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
+563 business tests with an empty offline Hugging Face cache, the installed-scheme
+proxy regression and 30 native bridge tests pass. Windows build and production
+pack pass. Setup now prepares its pinned uv and Python worker dependencies in
+project-local directories before tests/builds, including on a clean CI runner.
+Installed-App business acceptance and public downloading are still pending.
+
+The publisher declaration covers general-audience voice creation, realistic
+voice replication, optional usage analytics and local export of text/audio/video.
+It introduces no account, publication service or new permission. Some WAV/video
+paths carry synthetic-content metadata, but the declaration does not claim
+uniform marking across every export format. Existing voices and projects remain
+in App-owned storage; the technical Electron profile belongs to Nimi.
+
+### Formal Beta acceptance and Bailian endpoint migration (2026-10-12)
+
+The registry-only dependency upgrade passes App Tools sync/check, frozen lockfile validation, renderer/Host typechecks and builds, and all 542 Electron tests. A real fixed-service launch exposed nested pnpm selecting global pnpm 11 under a Corepack-owned pnpm 10 lifecycle. The renderer command now explicitly uses Corepack, preserving its pinned package manager. The original supervised launch failed before this one-line correction and passed afterward; App check passes. Current installed dependencies are SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.0 and Electron 44.7.0. The existing 563 business-test passes remain applicable to unchanged business code.
+
+[Nimi 0.2.2 Beta](https://github.com/nimiplatform/nimi/releases/tag/nimi/v0.2.2), source `161b7bc29e1ec0e6134e0775d7eeb22adb0fc1ae`, passed CI/security and the complete formal publisher. Its published Windows installer completed successfully, and installed Home/Runtime match the signed inventory. VoiceStudio resumed its existing registration on that fixed service; the five original voice profiles and prior exports remain intact. This is actual Desktop-supervised development acceptance with published dependencies, not a new packaged VoiceStudio release.
+
+Through formal Home's Cloud Services UI, the existing Dashscope connector was migrated from the shared domain to this account's Beijing workspace endpoint, `https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1`. The saved API key was retained. Save & check succeeded with 69 available models. VoiceStudio's stale source-development connector selections were explicitly rebound to this existing fixed-service connector through public AIConfig, retaining `qwen-audio-3.0-tts-plus` for both voice creation and synthesis and `qwen-audio-3.0-asr-flash-streaming` for transcription.
+
+The original design page sent a fresh free description and `Today we begin a quiet story beside the sea.` through the new endpoint, producing a 4.16-second take. Playback reached its end with no decoding error. The `Nimi 0.2.2 Bailian narrator` profile and original description survived reload, and the new take played to completion again from history. The original audio-file input then transcribed the existing 0.8-second `installed-welcome.wav` clip to `Welcome back.` through the selected Cloud ASR; its saved result survived reload. This finite-file check is not a new human microphone test. The native picker was displayed, but the automation tool could not target its child window; it was canceled normally and the existing renderer file input supplied the same file. Native file-picker completion is not claimed from that check.
+
+The retired `qwen-voice-design` creation path is excluded from accepted operation under the official notice cited below; changing endpoint does not restore it. No MiMo substitution, forced success or broader Qwen3 retirement claim was made. Nimi 0.2.2's catalog still offers the historical Qwen3 VD selection, so it must not be selected for fresh voice creation; catalog cleanup is not included in the immutable 0.2.2 release. A separate minor App presentation issue remains: the optional trait mapper may show “unrecognized” words even though the complete free description is retained and generation succeeds. Gemma and Jev Ultrafast model-quality work remains deferred. Newly packaged-App, macOS/Linux and other unrun journeys remain **NOT-VERIFIED**.
+
+### Published-package acceptance (2026-10-11)
+
+The original Windows development registration launches through Desktop with the published SDK 0.21.0 / Kit 0.18.1 / App Tools 0.11.4 combination and retains the existing voices, projects and result library. Prior upgrade checks, 541 Electron tests, 561 business tests, the installed-scheme protocol regression, renderer/Host builds and frozen-lockfile validation remain applicable. A real Runtime restart exposed a configuration Retry that never reopened the technical session; settings now checks the public auth status before reading and clears a refused snapshot. Its regression and type checks pass, and a second real Runtime restart verified recovery through Retry without restarting the App.
+
+The old Cloud selections required explicit reselection after the model catalog changed. Reselecting the original ASR model restored readiness: the normal file input transcribed the existing `installed-welcome.wav` acceptance clip to `Welcome back.`, and the result remained readable and editable after reload. Local voice creation and synthesis also ran: Home repaired the existing VoxCPM2 and Qwen3 voice-library environments; an imported 3.6-second acceptance reference was saved as `Published packages reference 2026-10-11`. With matching local Qwen3 voice creation and Qwen3 TTS Base synthesis, a fresh 97-character request produced 6.8 seconds of audio and played to the end with no decoding error. The new result survived reload and played again from the history panel. Cross-model use of a Qwen3 voice with VoxCPM2 was correctly rejected. The device speech default was restored to its original VoxCPM2 after this temporary Qwen3 acceptance.
+
+Source separation now uploads canonical audio through the public artifacts API, explicitly converts the owned input to 44100 Hz stereo when required, and submits `sourceAudio` instead of inline bytes. Eight focused Host/settings regressions and type checking pass, including cancellation while preparing audio; App Tools check passes.
+
+The original dubbing workspace transcribed the existing short video locally, translated its two lines into Spanish through Nimi, and generated both speech segments. The new 5.12-second Spanish preview played to completion without a media error and remained available after reload. That video reused its prior ingest, so separation was checked independently by importing the real 3.6-second `cloud-public-clone.wav` through the original file input: a new audio-separate Job `01M4NQG1N14ZVVQ3TFCH8RPYGH` ran, fresh vocals and background WAVs were saved in the new App job `1c15c121-72aa-4645-b042-47e60d648842`, and subsequent real transcription returned `A clear voice makes the story easy to follow.` These checks used matching local models; they do not establish Cloud success or subjective voice quality.
+
+Initial Cloud runs failed with `AI_MEDIA_OPTION_UNSUPPORTED` (Job `01M4NJC5YNY2CGXEM82PQM0HFH`), `AI_MODEL_NOT_FOUND` for `qwen3-tts-vd-2026-01-26` (Job `01M4NJN8C195399H73RBYAVVBM`), and `ai-input-invalid` during the short video's timestamped transcription (Job `01M4NPWJR1CYV14AZ5KS5JCVQ4`). Those error codes alone did not establish a provider defect or prove that the failed synthesis request contained a newly created voice. The follow-up below supersedes the earlier attribution.
+
+### Cloud speech repair (2026-10-12)
+
+The failing free-description journey was reproduced through the original design page. The retired OmniVoice tag filter discarded prose in the renderer, generation hook and multipart/profile serializers; the captured synthesis consequently had no voice reference and Dashscope rejected it as an invalid voice. The App now preserves descriptive text through generation and saved profiles, keeps explicit trait controls alongside it, retains the description on reload, and refuses an empty design before inference. The ordinary trait presets remain usable. No SDK, Kit or Runtime patch was required; temporary Runtime diagnostics were removed.
+
+Timestamped dubbing transcription had a separate App input error: separated vocals were stereo, while the selected finite transcription contract requires mono PCM WAV. The request copy is now downmixed without changing the original file, sample rate, frame count or timing. The regression failed before the fix. All 563 business tests, 542 Electron tests, type checking and renderer/Host builds passed; the final description-composition adjustment also passed all 24 affected renderer tests.
+
+With the original Cloud `qwen-audio-3.0-tts-plus` voice creation and synthesis selections, the formerly rejected free description generated a new 3.44-second take for `Today we begin a quiet story beside the sea.` It played to completion without a decoding error, and the description and take remained after reload. Uploading the original `dub-input.mp4` through the dubbing page then completed real Cloud `qwen-audio-3.0-asr-flash-streaming` transcription with word timing, displaying `Schedule a meeting with Pat for Tuesday at three PM and remind me to bring the quarterly report.`
+
+The additional Qwen3 configuration previously **FAILED**: `qwen-voice-design` targeting the documented `qwen3-tts-vd-2026-01-26` returned `AI_MODEL_NOT_FOUND` during voice creation (Job `01M4NTG9JWCYD3953N6ZCRH11N`). The follow-up inspection of the signed-in Alibaba consoles and the [current Qianwen Voice Design API](https://platform.qianwenai.com/docs/api-reference/speech-synthesis/voice-design/http-api) found an explicit notice that Qwen voice design has been retired. Its current disposition is **RETIRED**, not an unresolved endpoint repair. The documented replacement uses `voice-enrollment` with supported Qwen-Audio-TTS/CosyVoice targets; this does not establish availability of the old `qwen-voice-design` target. Separately, the [official migration notice](https://www.aliyun.com/notice/118679) states that the shared DashScope domain entered maintenance on 2026-09-30, with existing service retained. This account's Beijing workspace endpoint migration and the actual published-service VoiceStudio return passed as recorded above. MiMo is not substituted or counted as the retired voice-design path passing. The supported Qwen Audio 3.0 selections remain active. Native export and unrun installed/cross-platform journeys remain **NOT-VERIFIED** on this source revision.
 
 ```powershell
 pnpm exec nimi-app test

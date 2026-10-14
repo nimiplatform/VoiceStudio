@@ -18,8 +18,45 @@ storage_policy:
   kind: app-owned-os-storage
   os_storage_disclosure:
     - path_pattern: "%APPDATA%/OmniVoice"
-      purpose: VoiceStudio voices, media, projects, settings and installed Electron browser profile
+      purpose: VoiceStudio voices, media, projects and business settings
       expected_size_band: Varies with imported and generated media
+safety_profile:
+  ai:
+    direct_interaction: true
+    interaction_notice: absent
+    outputs:
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: text
+        publication_control: not-applicable
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: audio
+        publication_control: not-applicable
+      - export_visible_marking: absent
+        exposure: exportable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: video
+        publication_control: not-applicable
+    risk_features:
+      - realistic-voice-replication
+    subject_notice: not-applicable
+  content_descriptors: []
+  data_practices:
+    commercial_features: []
+    publisher_direct_external_network: true
+    sensitive_data_categories: []
+    telemetry:
+      - usage-analytics
+    third_party_account: none
+    user_content_sharing: none
+  high_impact_decision_uses: []
+  intended_audience: general
 support_manifest:
   diagnostics_bundle_fields:
     - app_version

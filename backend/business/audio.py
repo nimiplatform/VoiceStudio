@@ -42,6 +42,9 @@ async def transcribe_file(path, *, language="", timestamps=False):
     duration = len(audio) / rate
     if duration > 300:
         raise ValueError("Split transcription audio into windows of at most 300 seconds")
+    # Recognition consumes one waveform; separation can return stereo vocals.
+    # Downmix only the request copy, keeping source media and word timing intact.
+    audio = audio.mean(axis=1)
     encoded = io.BytesIO()
     sf.write(encoded, audio, rate, format="WAV", subtype="PCM_16")
     return await call("transcribe", {"base64": base64.b64encode(encoded.getvalue()).decode("ascii"),
@@ -166,6 +169,8 @@ async def generate_take(form):
     started = time.monotonic()
     cleaned_reference = None
     try:
+        if not (instruction.strip() or reference_path or reference_uri or voice_asset_id):
+            raise ValueError('A voice description, starting point or saved voice is required.')
         if reference_uri and not reference_path and str(form.get('denoise', 'false')).lower() == 'true':
             raise ValueError('Denoising requires a local reference file. Turn it off to use the public URL unchanged.')
         if reference_path and str(form.get('denoise', 'false')).lower() == 'true':
