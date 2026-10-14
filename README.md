@@ -27,9 +27,14 @@ The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it c
 [0.5.9](https://github.com/nimiplatform/VoiceStudio/releases/tag/v0.5.9) has now
 completed its protected tag publication. Exact package, source license, digest
 and build provenance passed Registry preparation. [PR 106](https://github.com/nimiplatform/nimi-app-registry/pull/106)
-completed final checks and merged after explicit human approval for Windows x86_64 / stable, accepting the recorded limits. Published-package business
-and Catalog acceptance remain pending; the earlier development results below
-are not relabeled as installed-package results.
+completed final checks and merged after explicit human approval for Windows x86_64 / stable, accepting the recorded limits. Home subsequently discovered,
+downloaded, verified and installed the exact 0.5.9 Catalog package. The committed
+release is `verified` 0.5.9; the old `user_imported` 0.5.8 record remains intact.
+This completes Catalog installation without modifying the old binding or App
+assets. Final launch/cloud-speech acceptance remains pending: Windows' network
+prompt for the preceding OpenWhispr Catalog launch currently blocks desktop
+interaction and was left for the user. Earlier development results below are
+not relabeled as installed-package results.
 
 The exact published 0.5.9 package was downloaded and its SHA-256 verified. Its
 Home local-import preview passed, but installation on Nimi 0.2.4 was rejected
@@ -45,12 +50,12 @@ to bypass it. Published-package launch, cloud speech and Catalog acceptance rema
 NOT-VERIFIED pending a supported installation path. The prior development
 acceptance below remains applicable only within its recorded scope.
 
-The proposed next path is ordinary Catalog first installation after explicit
+The ordinary Catalog first installation subsequently passed after explicit
 human admission. Runtime's Catalog installer checks the `verified` release
-source separately from `user_imported`; the observed stale imported record
-therefore does not establish a Catalog collision. This is a code-supported
-installation plan, not a claim that Catalog installation or cloud speech has
-already passed. Keep the old record and App-owned assets intact.
+source separately from `user_imported`, so the old imported record did not
+collide with this installation. The old record and App-owned assets remain
+intact. This resolves the delivery blockage through a supported source; it
+does not implement recovery of foreign imported bindings or prove cloud speech.
 
 The Windows x86_64 release line uses published SDK 0.21.0,
 Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
