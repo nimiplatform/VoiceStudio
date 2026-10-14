@@ -87,7 +87,7 @@ The independent Python 3.12.14 environment uses `backend/business/uv.lock`; it c
 
 ## Build and local installation
 
-### Windows release preparation (2026-10-14)
+### Windows final delivery (2026-10-15)
 
 [0.5.9](https://github.com/nimiplatform/VoiceStudio/releases/tag/v0.5.9) has now
 completed its protected tag publication. Exact package, source license, digest
@@ -123,11 +123,15 @@ catalog, the native file picker submitted that exported WAV. Job
 `inspect_dashscope_asr_empty_final_sentence`. The Runtime driver rejects a final
 sentence with empty text. The file is valid mono PCM WAV; the [official client
 events](https://www.alibabacloud.com/help/en/model-studio/qwen-audio-asr-streaming-client-events)
-allow PCM WAV and arbitrary sample rates. This narrows the failure to the
-provider/driver response boundary but does not establish which side is wrong.
-No parser relaxation, fabricated transcript, automatic model switch or repeated
-resubmission was used. Cloud transcription remains failed for this input; it is
-separate from the successful cloud creation/synthesis/export result.
+allow PCM WAV and arbitrary sample rates. At that time the provider/driver
+boundary was unresolved; no fabricated transcript, automatic model switch or
+repeated resubmission was used. This remains the historical Catalog failure.
+The separate [media repair session](codex://threads/01a13b90-15af-7813-bd22-004ddd0e5c8e)
+subsequently fixed Runtime's handling of bounded empty final segments and passed
+the original WAV through the real development App. The existing transcription
+and endpoint regression sections above retain the Job IDs, 14 actual word
+timings and subsequent voice-creation/synthesis results. The investigation is
+closed; the repaired installed-release media path remains NOT-VERIFIED.
 
 The exact published 0.5.9 package was downloaded and its SHA-256 verified. Its
 Home local-import preview passed, but installation on Nimi 0.2.4 was rejected
@@ -157,7 +161,20 @@ proxy regression and 30 native bridge tests pass. Windows build and production
 pack pass. Setup now prepares its pinned uv and Python worker dependencies in
 project-local directories before tests/builds, including on a clean CI runner.
 Public Catalog download/install/launch and fresh cloud voice creation/synthesis
-passed. The additional cloud transcription failure is recorded above.
+passed. The user closed delivery at this Windows x86_64 / stable scope on
+2026-10-15, accepting the recorded limits. No superseded pending candidate
+remains, and no further build or publication is part of this closeout. Other
+platforms and a later Catalog version upgrade remain NOT-VERIFIED. The media
+repair results above do not replace the original Catalog transcription outcome.
+
+The separate [Home/Lab exit repair session](codex://threads/01a13b8f-edda-7611-b2cf-b3b13bfefa4c)
+also completed Windows product acceptance on the locally installed Nimi
+0.2.5-rc.1 candidate, including normal and Runtime-offline exit and retained
+data. Development Runtime/Home were restored; the candidate was not publicly
+released. Its detailed record remains in Nimi's
+`.nimi/local/desktop-exit-20261015/acceptance.txt`; it adds no VoiceStudio media
+coverage and does not change the published App package.
+
 Version 0.5.8's protected tag workflow published successfully, but its portable
 release-notes field was empty. Version 0.5.9 adds that required declaration;
 the immutable 0.5.8 Release is retained and business behavior is unchanged.
