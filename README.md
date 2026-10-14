@@ -1,6 +1,6 @@
 # VoiceStudio for Nimi
 
-VoiceStudio 0.5.8 adapts the existing [VoiceStudio](https://github.com/debpalash/VoiceStudio) Electron product to Nimi. Clone and design voices, make stories and audiobooks, transcribe recordings, and dub video while retaining the original editing and media workflows.
+VoiceStudio 0.5.9 adapts the existing [VoiceStudio](https://github.com/debpalash/VoiceStudio) Electron product to Nimi. Clone and design voices, make stories and audiobooks, transcribe recordings, and dub video while retaining the original editing and media workflows.
 
 Nimi supplies the platform account, App Access, AI configuration and all model inference. VoiceStudio keeps its business orchestration, audio editing, media processing, voice library and project state. There is no separate VoiceStudio account. Choose models in **Settings → Nimi**; no automatic cloud fallback or App-managed model installation is used.
 
@@ -30,6 +30,20 @@ and build provenance passed Registry preparation. [PR 106](https://github.com/ni
 passes candidate checks and awaits human admission. Published-package business
 and Catalog acceptance remain pending; the earlier development results below
 are not relabeled as installed-package results.
+
+The exact published 0.5.9 package was downloaded and its SHA-256 verified. Its
+Home local-import preview passed, but installation on Nimi 0.2.4 was rejected
+with “This version is already installed.” Read-only diagnosis found an active
+user-imported 0.5.8 release bound to the previous development Runtime installation,
+not an installed 0.5.9. The formal installation correctly excludes that foreign
+binding from its launch inventory, while the import owner rejects a fresh install
+when any committed imported release exists. Consequently Home exposes neither
+that old package's update action nor a usable new import on this machine. This
+is a Nimi installation-lifecycle limitation; it is not a VoiceStudio cloud-provider
+failure. No binding, managed database, old package, voice or project was modified
+to bypass it. Published-package launch, cloud speech and Catalog acceptance remain
+NOT-VERIFIED pending a supported installation path. The prior development
+acceptance below remains applicable only within its recorded scope.
 
 The Windows x86_64 release line uses published SDK 0.21.0,
 Kit/native 0.19.3 and App Tools 0.12.0. Fresh typechecks, 542 Electron tests,
