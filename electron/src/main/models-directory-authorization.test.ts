@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
@@ -16,14 +16,15 @@ it('mints one-shot models-directory capabilities only after a writable directory
   const selected = join(root, 'model cache');
 
   const result = await authorizeModelsDirectory(dataDir, selected);
-  expect(result.path).toBe(selected);
+  const canonicalSelected = await realpath(selected);
+  expect(result.path).toBe(canonicalSelected);
   const payload = JSON.parse(
     await readFile(join(dataDir, '.path-authorizations', `${result.authorization}.json`), 'utf8'),
   );
   expect(payload).toEqual({
     token: result.authorization,
     kind: 'models_dir',
-    path: selected,
+    path: canonicalSelected,
   });
 });
 
