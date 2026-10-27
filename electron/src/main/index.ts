@@ -4,7 +4,7 @@ import { isTrustedRenderer } from './trusted-renderer';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, ipcMain, nativeImage, session, shell, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, session, shell, Tray } from 'electron';
 import { configureNimiElectronAppHostProfile } from '@nimiplatform/kit/shell/electron/host-profile';
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BackendSupervisor, backendRoot } from './business-backend';
@@ -41,6 +41,7 @@ process.stderr?.on('error', () => {});
 const APP_USER_MODEL_ID = 'com.voicestudio.desktop';
 app.setName('VoiceStudio');
 const here = dirname(fileURLToPath(import.meta.url));
+const nativeAppIconPath = join(here, '..', 'assets', 'native', process.platform === 'win32' ? 'windows.ico' : process.platform === 'darwin' ? 'macos.png' : 'app.png');
 const PRELOAD_PATH = join(here, 'preload.cjs');
 const RENDERER_DIR = join(here, '../dist');
 const supervisedRenderer = readDevelopmentRendererUrl();
@@ -134,7 +135,7 @@ function createWindow(): BrowserWindow {
       : `${APP_ORIGIN}/index.html`;
   console.info('[renderer] loading', appUrl);
   const win = new BrowserWindow({
-    icon: brandIconPath(process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+    icon: nativeAppIconPath,
     width: 1280,
     height: 820,
     minWidth: 960,
@@ -288,8 +289,7 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
         () => backend.baseUrl,
         () => backend.requestHeaders(),
       );
-      const icon = nativeImage.createFromPath(brandIconPath('icon.png'));
-      if (process.platform === 'darwin') app.dock?.setIcon(icon);
+      if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(nativeAppIconPath);
       tray = new Tray(brandIconPath('32x32.png'));
       tray.setToolTip('VoiceStudio');
       closeCapture = installNativeCapture(PRELOAD_PATH, tray, () => mainWindow);

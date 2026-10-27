@@ -1,3 +1,9 @@
+Current development dependencies are SDK 0.22.2, Kit/native 0.22.1, App Tools 0.14.0 and Nimi Coding 0.7.0. The checked-in pnpm lock resolves these packages from the public registry. Run `pnpm install --frozen-lockfile`, `pnpm exec nimi-app check`, then `pnpm dev` with a matching source-built Nimi Runtime and Home. App versions and published App releases are unchanged. Earlier versioned notes retain their original acceptance scope. Home uses the App-owned root `NIMI_APP.md`; this README remains developer documentation.
+
+Upgrade verification: public-registry installation, frozen-lockfile installation, App Tools checks and the applicable type/Host build checks passed. The actual macOS launch reports the missing business worker. `setup:business` currently requires Windows x64, so full worker and voice journeys remain NOT-VERIFIED on this host. Electron type checks and the real GET/POST protocol regression pass; the Electron suite has 539 passing tests and three CUDA/setup assertions that fail on macOS. This upgrade does not claim Windows business acceptance.
+
+[App introduction and usage](NIMI_APP.md)
+
 # VoiceStudio for Nimi
 
 VoiceStudio 0.5.9 adapts the existing [VoiceStudio](https://github.com/debpalash/VoiceStudio) Electron product to Nimi. Clone and design voices, make stories and audiobooks, transcribe recordings, and dub video while retaining the original editing and media workflows.

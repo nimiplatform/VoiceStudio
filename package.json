@@ -3,7 +3,7 @@
   "version": "0.5.9",
   "license": "AGPL-3.0-only",
   "private": true,
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@10.34.7",
   "scripts": {
     "dev": "nimi-app dev --shell electron",
     "build": "pnpm run build:renderer && pnpm run build:electron",
@@ -27,8 +27,8 @@
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
-    "@nimiplatform/app-tools": "^0.12.0",
-    "@nimiplatform/nimi-coding": "0.6.5",
+    "@nimiplatform/app-tools": "^0.14.0",
+    "@nimiplatform/nimi-coding": "0.7.0",
     "@types/node": "^24.13.3",
     "concurrently": "^10",
     "electron": "^44.5.1",
@@ -44,8 +44,8 @@
   "main": "dist-electron/main.js",
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
-    "@nimiplatform/kit": "^0.19.0",
-    "@nimiplatform/sdk": "^0.21.0",
+    "@nimiplatform/kit": "^0.22.1",
+    "@nimiplatform/sdk": "^0.22.2",
     "word-extractor": "1.0.4"
   },
   "author": "VoiceStudio contributors"
